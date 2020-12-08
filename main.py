@@ -16,11 +16,16 @@ import os
 os.environ["PATH"] += os.pathsep + 'C:/Program Files/graphviz/bin/'
 from tensorflow.keras.utils import plot_model
 
-#Visualize Model
 
-def visualize_model(model):
+
+#Visualize Model
+def visualize_model(model,name=""):
     # tf.keras.utils.plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
-    plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
+    if name == "":
+        name = "model_plot.png"
+    else: 
+        name = name + ".png"
+    plot_model(model, to_file=name, show_shapes=True, show_layer_names=True)
 
 def fullprint(*args, **kwargs):
         from pprint import pprint
@@ -45,6 +50,7 @@ def calcEntropy(y_hat):
         entropy = 0
         for i in range(len(y_hat)):
             entropy += y_hat[i] * math.log(y_hat(i))
+            print(entropy)
 
         return results
 
@@ -84,9 +90,9 @@ class BranchyNet:
         output1 = layers.Dense(10, name="output1")(x)
         outputs.append(output1)
         print(len(outputs))
-        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model")
+        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_normal")
         model.summary()
-        visualize_model(model)
+        visualize_model(model,"mnist_normal")
         print(len(model.outputs))
 
         return model
@@ -125,9 +131,9 @@ class BranchyNet:
         # output2 = layers.Dense(10, name="output2")(x)
         outputs.append(output1)
         print(len(outputs))
-        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model")
+        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_branched")
         model.summary()
-        visualize_model(model)
+        visualize_model(model,"mnist_branched")
         print(len(model.outputs))
 
         return model
@@ -183,49 +189,110 @@ class BranchyNet:
             # new_model = load_model("models/mnistNormal2.hdf5")
             new_model.summary()
 
-        print(logs)
+        results = model.predict(x_test[:1])
+        fullprint(results)
+        S = entropy(results)
+        print(S)
+        # print(logs)
         return model
 
 
 
+from scipy.special import (comb, chndtr, entr, rel_entr, xlogy, ive)
+def entropy(pk, qk=None, base=None):
+    #taken from branchynet github
+    """Calculate the entropy of a distribution for given probability values.
+
+    If only probabilities `pk` are given, the entropy is calculated as
+    ``S = -sum(pk * log(pk), axis=0)``.
+
+    If `qk` is not None, then compute the Kullback-Leibler divergence
+    ``S = sum(pk * log(pk / qk), axis=0)``.
+
+    This routine will normalize `pk` and `qk` if they don't sum to 1.
+
+    Parameters
+    ----------
+    pk : sequence
+        Defines the (discrete) distribution. ``pk[i]`` is the (possibly
+        unnormalized) probability of event ``i``.
+    qk : sequence, optional
+        Sequence against which the relative entropy is computed. Should be in
+        the same format as `pk`.
+    base : float, optional
+        The logarithmic base to use, defaults to ``e`` (natural logarithm).
+
+    Returns
+    -------
+    S : float
+        The calculated entropy.
+
+    """
+    pk = np.asarray(pk)
+    print(pk)
+    print(1.0*pk)
+    print(np.sum(pk,axis=0))
+    pk = 1.0*pk / np.sum(pk, axis=0)
+    print(pk)
+    if qk is None:
+        vec = entr(pk)
+    else:
+        qk = np.asarray(qk)
+        if len(qk) != len(pk):
+            raise ValueError("qk and pk must have same length.")
+        qk = 1.0*qk / np.sum(qk, axis=0)
+        vec = rel_entr(pk, qk)
+    print(vec)
+    S = np.sum(vec, axis=0)
+    if base is not None:
+        S /= math.log(base)
+    return S
+
+
 if __name__ == "__main__":
+    x = [[-4.535223 , -1.5143484,  3.982851 ,  2.1995668, -5.4335203,
+        -5.476383 , -8.685219 , 12.729579 , -4.2230687,  0.6178443]]
+    s =entropy(x)
+    print(s)
 
-    branchy = BranchyNet()
-    # x = branchy.mainBranch()
-    # x = branchy.mnistNormal()
 
-    inputs = keras.Input(shape=(784,))
-    x = layers.Flatten(input_shape=(28,28))(inputs)
-    x = layers.Dense(512, activation="relu")(x)
-    x= layers.Dropout(0.2)(x)
-    #exit 2
-    x = layers.Dense(512, activation="relu")(x)
-    x= layers.Dropout(0.2)(x)
-    #exit 3
-    x = layers.Dense(512, activation="relu")(x)
-    x= layers.Dropout(0.2)(x)
-    #exit 4
-    x = layers.Dense(512, activation="relu")(x)
-    x= layers.Dropout(0.2)(x)
-    #exit 5
-    x = layers.Dense(512, activation="relu")(x)
-    x= layers.Dropout(0.2)(x)
-    #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
-    output1 = layers.Dense(10, name="output1")(x)
-    # outputs.append(output1)
-    model = keras.Model(inputs=inputs, outputs=output1, name="mnist_model")
+    if True:        
+        branchy = BranchyNet()
+        # x = branchy.mainBranch()
+        # x = branchy.mnistNormal()
 
-    model.save("models/mnistNormal2.hdf5")
+        inputs = keras.Input(shape=(784,))
+        x = layers.Flatten(input_shape=(28,28))(inputs)
+        x = layers.Dense(512, activation="relu")(x)
+        x= layers.Dropout(0.2)(x)
+        #exit 2
+        x = layers.Dense(512, activation="relu")(x)
+        x= layers.Dropout(0.2)(x)
+        #exit 3
+        x = layers.Dense(512, activation="relu")(x)
+        x= layers.Dropout(0.2)(x)
+        #exit 4
+        x = layers.Dense(512, activation="relu")(x)
+        x= layers.Dropout(0.2)(x)
+        #exit 5
+        x = layers.Dense(512, activation="relu")(x)
+        x= layers.Dropout(0.2)(x)
+        #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
+        output1 = layers.Dense(10, name="output1")(x)
+        # outputs.append(output1)
+        model = keras.Model(inputs=inputs, outputs=output1, name="mnist_model")
 
-    new_model = keras.models.load_model('models/mnistNormal2.hdf5')
-    x = new_model
-    # x = branchy.mnistExample()
-    # x = branchy.loadModel("models/mnistNormal2.hdf5")
+        model.save("models/mnistNormal2.hdf5")
 
-    x = branchy.trainMnist(x, 1,save = False)
-    x.save("models/mnistNormal2_trained.hdf5",)
+        new_model = keras.models.load_model('models/mnistNormal2.hdf5')
+        x = new_model
+        x = branchy.mnistExample()
+        # x = branchy.loadModel("models/mnistNormal2.hdf5")
 
-    new_model = keras.models.load_model('models/mnistNormal2_trained.hdf5')
-    new_model.summary()
+        x = branchy.trainMnist(x, 1,save = False)
+        # x.save("models/mnistNormal2_trained.hdf5",)
+
+        # new_model = keras.models.load_model('models/mnistNormal2_trained.hdf5')
+        new_model.summary()
 
     pass
