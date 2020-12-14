@@ -13,8 +13,8 @@ from keras.initializers import glorot_uniform
 import math
 import pydot
 import os
-os.environ["PATH"] += os.pathsep + 'C:/Program Files/graphviz/bin/'
-from tensorflow.keras.utils import plot_model
+#os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
+#from tensorflow.keras.utils import plot_model
 
 
 
@@ -25,7 +25,7 @@ def visualize_model(model,name=""):
         name = "model_plot.png"
     else: 
         name = name + ".png"
-    plot_model(model, to_file=name, show_shapes=True, show_layer_names=True)
+    #plot_model(model, to_file=name, show_shapes=True, show_layer_names=True)
 
 def fullprint(*args, **kwargs):
         from pprint import pprint
@@ -54,6 +54,22 @@ def calcEntropy(y_hat):
 
         return results
 
+
+def saveModel(model,name,overwrite = True, folder ="models", fileFormat = "hdf5"):
+    from datetime import datetime
+    import os
+    now = datetime.now() # current date and time
+    
+    if not os.path.exists(folder):
+        try:
+            os.mkdir(folder)
+        except FileExistsError:
+            pass
+    try:
+        model.save("{}{}_{}.{}".format(folder+"\\",name,now.strftime("%y-%m-%d_%H%M%S"),fileFormat))
+    except OSError:
+        pass
+    return True
 
 class BranchyNet:
     def mainBranch(self):
@@ -92,12 +108,12 @@ class BranchyNet:
         print(len(outputs))
         model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_normal")
         model.summary()
-        visualize_model(model,"mnist_normal")
+        #visualize_model(model,"mnist_normal")
         print(len(model.outputs))
 
         return model
 
-    def mnistExample(self):
+    def mnistBranchy(self):
 
         outputs =[]
         inputs = keras.Input(shape=(784,))
@@ -260,39 +276,40 @@ if __name__ == "__main__":
         branchy = BranchyNet()
         # x = branchy.mainBranch()
         # x = branchy.mnistNormal()
+        x = branchy.mnistBranchy()
+        # inputs = keras.Input(shape=(784,))
+        # x = layers.Flatten(input_shape=(28,28))(inputs)
+        # x = layers.Dense(512, activation="relu")(x)
+        # x= layers.Dropout(0.2)(x)
+        # #exit 2
+        # x = layers.Dense(512, activation="relu")(x)
+        # x= layers.Dropout(0.2)(x)
+        # #exit 3
+        # x = layers.Dense(512, activation="relu")(x)
+        # x= layers.Dropout(0.2)(x)
+        # #exit 4
+        # x = layers.Dense(512, activation="relu")(x)
+        # x= layers.Dropout(0.2)(x)
+        # #exit 5
+        # x = layers.Dense(512, activation="relu")(x)
+        # x= layers.Dropout(0.2)(x)
+        # #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
+        # output1 = layers.Dense(10, name="output1")(x)
+        # # outputs.append(output1)
+        # model = keras.Model(inputs=inputs, outputs=output1, name="mnist_model")
 
-        inputs = keras.Input(shape=(784,))
-        x = layers.Flatten(input_shape=(28,28))(inputs)
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 2
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 3
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 4
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 5
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
-        output1 = layers.Dense(10, name="output1")(x)
-        # outputs.append(output1)
-        model = keras.Model(inputs=inputs, outputs=output1, name="mnist_model")
+        # model.save("models/mnistNormal2.hdf5")
 
-        model.save("models/mnistNormal2.hdf5")
-
-        new_model = keras.models.load_model('models/mnistNormal2.hdf5')
-        x = new_model
-        x = branchy.mnistExample()
+        # new_model = keras.models.load_model('models/mnistNormal2.hdf5')
+        # x = new_model
+        # x = branchy.mnistExample()
         # x = branchy.loadModel("models/mnistNormal2.hdf5")
 
         x = branchy.trainMnist(x, 1,save = False)
-        # x.save("models/mnistNormal2_trained.hdf5",)
+        # x.save("models/mnistNormal2_trained.hdf5")
+        saveModel(x,"mnist2_trained")
 
-        # new_model = keras.models.load_model('models/mnistNormal2_trained.hdf5')
+        new_model = keras.models.load_model('models/mnistNormal2_trained.hdf5')
         new_model.summary()
 
     pass
