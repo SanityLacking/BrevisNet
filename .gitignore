@@ -1,7 +1,7 @@
 #model files
 *.hdf5
 *.tf
-
+data/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

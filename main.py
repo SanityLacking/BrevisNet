@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, models
 from tensorflow.keras.models import load_model
 import itertools
 
@@ -18,7 +18,7 @@ import os
 
 from utils import *
 
-
+from Alexnet_kaggle_v2 import * 
 
 
 class BranchyNet:
@@ -132,7 +132,9 @@ class BranchyNet:
             customBranch: optional function that can be passed to provide a custom branch to be inserted. Check "newBranch" function for default shape of branches and how to build custom branching function. Can be provided as a list and each branch will iterate through provided customBranches, repeating last the last branch until function completes
         """
         outputs = []
-        outputs.append(model.outputs) #get model outputs that already exist 
+        for i in model.outputs:
+            outputs.append(i)
+        # outputs.append(i in model.outputs) #get model outputs that already exist 
 
         if type(identifier) != list:
             identifier = [identifier]
@@ -162,6 +164,7 @@ class BranchyNet:
                 for i in range(len(model.layers)):
                     print(model.layers[i].name)
                     if any(id in model.layers[i].name for id in identifier):
+                        print("add Branch")
                         # print(customBranch[min(i, len(customBranch))-1])
                         # print(min(i, len(customBranch))-1)
                         outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs)
@@ -179,8 +182,10 @@ class BranchyNet:
             #     print(dir(model.layers[i].inbound_nodes[j]))
             #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
-
-        model = keras.Model(inputs=model.inputs, outputs=outputs, name="{}_branched".format(model.name))
+        print(outputs)
+        print(model.inputs)
+        # input_layer = layers.Input(batch_shape=model.layers[0].input_shape)
+        model = models.Model([model.inputs], outputs, name="{}_branched".format(model.name))
         return model
 
 
@@ -202,18 +207,23 @@ class BranchyNet:
     #         return KerasModel
 
 
+    def loadTrainingData(self):
+        """ load dataset and configure it. 
+        """
+        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+        x_train = x_train.reshape(60000, 784).astype("float32") / 255
+        x_test = x_test.reshape(10000, 784).astype("float32") / 255
+
+        return (x_train, y_train), (x_test, y_test)
 
 
-    def trainModel(self, model, epocs = 2,save = False):
+    def trainModel(self, model, dataset, epocs = 2,save = False):
         """
         Train the model that is passed through. This function works for both single and multiple branch models.
         """
         logs = []
-        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+        (x_train, y_train), (x_test, y_test) = dataset
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-        # print(np.repeat([y_train],1))
-        x_train = x_train.reshape(60000, 784).astype("float32") / 255
-        x_test = x_test.reshape(10000, 784).astype("float32") / 255
         model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
 
         for j in range(epocs):
@@ -241,18 +251,18 @@ class BranchyNet:
         # print(logs)
         return model
 
-    def trainModelTransfer(self, model, resetBranches = False, epocs = 2,save = False):
+    def trainModelTransfer(self, model, dataset, resetBranches = False, epocs = 2,save = False):
         """
         Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
         logs = []
-        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+        
+        print(type(dataset))
+
+        (x_train, y_train), (x_test, y_test) = dataset 
+
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         # print(np.repeat([y_train],1))
-        x_train = x_train.reshape(60000, 784).astype("float32") / 255
-        x_test = x_test.reshape(10000, 784).astype("float32") / 255
-
-
         # print("before reset:")
         # model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
         # test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
@@ -325,7 +335,7 @@ class BranchyNet:
         """ load a mnist model, add branches to it and train using transfer learning function
         """
         x = branchy.mnistNormal()
-        x = branchy.trainModel(x,epocs = numEpocs,save = False)
+        x = branchy.trainModel(x,self.loadTrainingData(), epocs = numEpocs,save = False)
         return x
 
 
@@ -333,10 +343,43 @@ class BranchyNet:
         """ load a mnist model, add branches to it and train using transfer learning function
         """
         x = tf.keras.models.load_model("models/mnist2_trained_.tf")
-        x.summary()
         x = branchy.addBranches(x,["dropout"],newBranch)
+        x = branchy.trainModelTransfer(x,self.loadTrainingData(),epocs = numEpocs, save = False)
+        return x
+    
+    def Run_alexNet(self, numEpocs = 2):
+        
+        x = tf.keras.models.load_model("models/saved-model-alexnet-03-0.80.hdf5")
         x.summary()
-        # x = branchy.trainModelTransfer(x,epocs = numEpocs, save = False)
+        train_generator, validation_generator = loadData()
+        print(train_generator.class_indices)
+        print(validation_generator.class_indices)
+        # x.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'] )
+        # predict = x.evaluate(validation_generator,steps = 32)
+        # print(predict)
+        
+
+        # input_layer = layers.Input(batch_shape=x.layers[0].input_shape)
+        # prev_layer = input_layer
+        # for layer in x.layers:
+        #     layer._inbound_nodes = []
+        #     prev_layer = layer(prev_layer)
+        
+        input_layer = layers.Input(batch_shape=x.layers[0].input_shape)
+        prev_layer = input_layer
+        for layer in x.layers:
+            prev_layer = layer(prev_layer)
+
+        funcModel = models.Model([input_layer], [prev_layer])
+        funcModel = branchy.addBranches(funcModel,["max_pooling2d","dropout_1","dropout_2"],newBranch)
+        funcModel.summary()
+        funcModel = branchy.trainModelTransfer(funcModel,validation_generator,epocs = numEpocs, save = False)
+
+
+        # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
+
+
+
         return x
 
 
@@ -353,25 +396,18 @@ def newBranchCustom(prevLayer, outputs=[]):
 
 
 if __name__ == "__main__":
-    x = [[-4.535223 , -1.5143484,  3.982851 ,  2.1995668, -5.4335203,
-        -5.476383 , -8.685219 , 12.729579 , -4.2230687,  0.6178443]]
-    s =entropy(x)
-    print(s)
+    branchy = BranchyNet()
+    # x = branchy.Run_mnistNormal(1)
+    # x = branchy.Run_mnistTransfer(1)
+    x = branchy.Run_alexNet(1)
 
+    # x = branchy.mnistBranchy()
+    
 
-    if True:        
-        branchy = BranchyNet()
-        # x = branchy.Run_mnistNormal(1)
-        x = branchy.Run_mnistTransfer(1)
+    # x = branchy.loadModel("models/mnist_trained_20-12-15_112434.hdf5")
+    # x = tf.keras.models.load_model("models/mnist2_transfer_trained_.tf")
 
-        # x = branchy.mnistBranchy()
-        
-
-        # x = branchy.loadModel("models/mnist_trained_20-12-15_112434.hdf5")
-        # x = tf.keras.models.load_model("models/mnist2_transfer_trained_.tf")
-
-        # x.save("models/mnistNormal2_trained.hdf5")
-        # saveModel(x,"mnist2_transfer_trained_final",includeDate=False)
-
+    # x.save("models/mnistNormal2_trained.hdf5")
+    # saveModel(x,"mnist2_transfer_trained_final",includeDate=False)
     pass
 
