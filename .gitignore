@@ -1,5 +1,6 @@
 #model files
 *.hdf5
+*.tf
 
 
 # Byte-compiled / optimized / DLL files

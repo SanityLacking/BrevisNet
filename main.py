@@ -6,9 +6,9 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
 import itertools
 
-from keras.models import load_model
-from keras.utils import CustomObjectScope
-from keras.initializers import glorot_uniform
+# from keras.models import load_model
+# from keras.utils import CustomObjectScope
+# from keras.initializers import glorot_uniform
 
 import math
 import pydot
@@ -41,7 +41,9 @@ def newBranch(prevLayer, outputs):
     print(prevLayer.shape)
     branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(prevLayer)
     branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
-    outputs.append(layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer))
+    branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+    outputs.append(layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
     return outputs
 
 def calcEntropy(y_hat):
@@ -55,22 +57,37 @@ def calcEntropy(y_hat):
         return results
 
 
-def saveModel(model,name,overwrite = True, folder ="models", fileFormat = "hdf5"):
+def saveModel(model,name,overwrite = True, includeDate= True, folder ="models", fileFormat = "tf"):
     from datetime import datetime
     import os
     now = datetime.now() # current date and time
     stringName =""
+    date =""
     if not os.path.exists(folder):
         try:
             os.mkdir(folder)
         except FileExistsError:
             pass
     try:
-        stringName = "{}{}_{}.{}".format(folder+"\\",name,now.strftime("%y-%m-%d_%H%M%S"),fileFormat)
-        model.save(stringName)
+        if includeDate:
+            date =now.strftime("%y-%m-%d_%H%M%S")
+
+        stringName = "{}{}_{}.{}".format(folder+"\\",name,date,fileFormat)
+        model.save(stringName, save_format="fileFormat")
+        print("saved Model:{}".format(stringName))
     except OSError:
         pass
+
     return stringName
+
+def printTestScores(test_scores,num_outputs):
+    print("overall loss: {}".format(test_scores[0]))
+    if num_outputs > 1:
+        for i in range(num_outputs):
+            print("Output {}: Test loss: {}, Test accuracy {}".format(i, test_scores[i+1], test_scores[i+1+num_outputs]))
+    else:
+        print("Test loss:", test_scores[0])
+        print("Test accuracy:", test_scores[1])
 
 
 #https://github.com/keras-team/keras/issues/341
@@ -128,6 +145,7 @@ def reset_branch_weights(model):
             reset_branch_weights(layer) #apply function recursively
             continue
         if "branch" in layer.name:
+            print("reseting weights for {}".format(layer.name))
              #where are the initializers?
             if hasattr(layer, 'cell'):
                 init_container = layer.cell
@@ -184,7 +202,9 @@ class BranchyNet:
         x= layers.Dropout(0.2)(x)
         #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
         output1 = layers.Dense(10, name="output1")(x)
-        outputs.append(output1)
+        softmax = layers.Softmax()(output1)
+
+        outputs.append(softmax)
         print(len(outputs))
         model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_normal")
         model.summary()
@@ -199,7 +219,7 @@ class BranchyNet:
         inputs = keras.Input(shape=(784,))
         x = layers.Flatten(input_shape=(28,28))(inputs)
         x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
+        x= layers.Dropout(0.2)(x)        
         #exit 2
         outputs = newBranch(x,outputs)
         # outputs.append(layers.Dense(10, name="output2")(x))
@@ -223,17 +243,35 @@ class BranchyNet:
         x= layers.Dropout(0.2)(x)
         #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
         output1 = layers.Dense(10, name="output1")(x)
+        softmax = layers.Softmax()(output1)
         # x = layers.Dense(64, activation="relu")(x)
         # output2 = layers.Dense(10, name="output2")(x)
-        outputs.append(output1)
-        print(len(outputs))
+        outputs.append(softmax)
         model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_branched")
         model.summary()
         visualize_model(model,"mnist_branched")
-        print(len(model.outputs))
 
         return model
-  
+    def mnistAddBranches(self,model):
+        """add branches to the mnist model, aka modifying an existing model to include branches."""
+        print(model.inputs)
+        inputs = model.inputs
+        outputs = []
+        print(model.outputs)
+        outputs.append(model.outputs)
+        for i in range(len(model.layers)):
+            print(model.layers[i].name)
+            if "dense" in model.layers[i].name:
+
+                outputs = newBranch(model.layers[i].output,outputs)
+            # for j in range(len(model.layers[i].inbound_nodes)):
+            #     print(dir(model.layers[i].inbound_nodes[j]))
+            #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
+            #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
+        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_branched")
+        return model
+
+
     def fullprint(*args, **kwargs):
         from pprint import pprint
         import numpy
@@ -242,14 +280,14 @@ class BranchyNet:
         pprint(*args, **kwargs)
         numpy.set_printoptions(**opt)
 
-    def loadModel(self,modelName):
-        with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
-            KerasModel = load_model(modelName, {'optimizer':'adam',
-              'loss':'sparse_categorical_crossentropy',
-              'metrics':['accuracy']})
-            KerasModel.summary()
-            config = KerasModel.get_config()   
-            return KerasModel
+    # def loadModel(self,modelName):
+    #     with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+    #         KerasModel = load_model(modelName, {'optimizer':'adam',
+    #           'loss':'sparse_categorical_crossentropy',
+    #           'metrics':['accuracy']})
+    #         KerasModel.summary()
+    #         config = KerasModel.get_config()   
+    #         return KerasModel
 
 
 
@@ -264,7 +302,7 @@ class BranchyNet:
         # print(np.repeat([y_train],1))
         x_train = x_train.reshape(60000, 784).astype("float32") / 255
         x_test = x_test.reshape(10000, 784).astype("float32") / 255
-        model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
 
         for j in range(epocs):
             results = [j]           
@@ -302,6 +340,12 @@ class BranchyNet:
         x_train = x_train.reshape(60000, 784).astype("float32") / 255
         x_test = x_test.reshape(10000, 784).astype("float32") / 255
 
+
+        print("before reset:")
+        model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
+        printTestScores(test_scores,num_outputs)
+
         #Freeze main branch layers
         #how to iterate through layers and find main branch ones?
         #simple fix for now: all branch nodes get branch in name.
@@ -313,16 +357,23 @@ class BranchyNet:
             # print(model.layers[i].initial_weights)
 
             if "branch" in model.layers[i].name:
-                print("branchLayer")
+                print("setting branch layer training to true")
                 model.layers[i].trainable = True
             else: 
+                print("setting main layer training to false")
                 model.layers[i].trainable = False
             # for j in range(len(model.layers[i].inbound_nodes)):
             #     print(dir(model.layers[i].inbound_nodes[j]))
             #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
 
-        model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+
+        print("after reset:")
+        test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
+        printTestScores(test_scores,num_outputs)
+
 
         for j in range(epocs):
             results = [j]           
@@ -413,20 +464,24 @@ if __name__ == "__main__":
     if True:        
         branchy = BranchyNet()
         # x = branchy.mainBranch()
+
+        # x = branchy.mnistBranchy()
+
+
         # x = branchy.mnistNormal()
 
         # x = branchy.mnistBranchy()
-        # x.summary()
-        # x.save("models/mnistbranchy.hdf5")
-
-        # x = keras.models.load_model('models/mnistbranchy.hdf5')
-        
-        # x = branchy.mnistBranchy()
         # x = branchy.trainModel(x, 1,save = False)
-        x = branchy.loadModel("models/mnist2_transfer_20-12-14_181326.hdf5")
-        x = branchy.trainModelTransfer(x, 1,save = False)
+        # saveModel(x,name="mnist2_trained",includeDate=False,fileFormat="tf")
+        x = tf.keras.models.load_model("models/mnist2_trained_.tf")
+
+        x = branchy.mnistAddBranches(x)
+        x = branchy.trainModelTransfer(x, 1,True, save = False)
+
+        # x = branchy.loadModel("models/mnist_trained_20-12-15_112434.hdf5")
+        # x = tf.keras.models.load_model("models/mnist2_transfer_trained_.tf")
 
         # x.save("models/mnistNormal2_trained.hdf5")
-        saveModel(x,"mnist2_transfer_trained")
+        # saveModel(x,"mnist2_transfer_trained_final",includeDate=False)
 
     pass
