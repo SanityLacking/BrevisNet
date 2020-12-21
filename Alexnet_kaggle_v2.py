@@ -71,6 +71,7 @@ def loadData():
     
     return train_generator, validation_generator
 
+
 # from tensorflow.contrib import slim
 def loadDataset():
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
@@ -139,7 +140,7 @@ def runAndTrainModel():
     # model = Sequential()
 
     train_ds, test_ds, validation_ds = loadDataset()
-    visualize(train_ds)
+    # visualize(train_ds)
     loadDataPipeline()
 
 
