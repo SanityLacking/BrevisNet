@@ -130,7 +130,7 @@ def buildandcompileModel():
 if __name__ == '__main__':
     
     model = buildandcompileModel()
-    model.save("models/alexnet.hdf5")
+    model.save("models/alexnet.tf")
     model.fit(train_ds,
           epochs=30,
           validation_data=validation_ds,
