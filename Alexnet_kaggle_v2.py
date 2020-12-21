@@ -72,6 +72,36 @@ def loadData():
     return train_generator, validation_generator
 
 
+def loadData_temp():
+    train_ds, test_ds, validation_ds = loadDataset()
+    train_ds_size = tf.data.experimental.cardinality(train_ds).numpy()
+    test_ds_size = tf.data.experimental.cardinality(test_ds).numpy()
+    validation_ds_size = tf.data.experimental.cardinality(validation_ds).numpy()
+    print("Training data size:", train_ds_size)
+    print("Test data size:", test_ds_size)
+    print("Validation data size:", validation_ds_size)
+
+    train_ds = (train_ds
+                  .map(process_images)
+                  .shuffle(buffer_size=train_ds_size)
+                  .batch(batch_size=32, drop_remainder=True))
+    test_ds = (test_ds
+                  .map(process_images)
+                  .shuffle(buffer_size=train_ds_size)
+                  .batch(batch_size=32, drop_remainder=True))
+    validation_ds = (validation_ds
+                  .map(process_images)
+                  .shuffle(buffer_size=train_ds_size)
+                  .batch(batch_size=32, drop_remainder=True))
+
+    for images, labels in train_ds.take(-1):  # only take first element of dataset
+        train_images = images.numpy()
+        train_labels = labels.numpy()
+    for images, labels in test_ds.take(-1):  # only take first element of dataset
+        test_images = images.numpy()
+        test_labels = labels.numpy()
+    return (train_images, train_labels), (test_images, test_labels)
+
 # from tensorflow.contrib import slim
 def loadDataset():
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
@@ -106,6 +136,8 @@ def loadDataPipeline():
                   .map(process_images)
                   .shuffle(buffer_size=train_ds_size)
                   .batch(batch_size=32, drop_remainder=True))
+    return train_ds, test_ds, validation_ds
+
 
 
 def visualize(train_ds):

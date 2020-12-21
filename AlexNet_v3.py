@@ -80,8 +80,7 @@ def get_run_logdir():
 
 run_logdir = get_run_logdir()
 tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
-checkpoint = keras.callbacks.ModelCheckpoint("models/", monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-
+checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv3.hdf5", monitor='loss',verbose=1,save_best_only=True, mode='auto',period=1)
 
 
 # Keras Class API of AlexNet
@@ -123,22 +122,74 @@ def buildandcompileModel():
     model = CustomAlexNet()
     model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
 
+    
     return model 
 
 
 
 if __name__ == '__main__':
+
+    inputs = keras.Input(shape=(227,227,3))
+    x = keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3))(inputs)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+    x = keras.layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same")(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+    x = keras.layers.Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same")(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(filters=384, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same")(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same")(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dense(4096, activation='relu')(x)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.Dense(4096, activation='relu')(x)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.Dense(10, activation='softmax')(x)
     
-    model = buildandcompileModel()
-    model.save("models/alexnet.tf")
+    model = keras.Model(inputs=inputs, outputs=x, name="alexnet")
+    model.save("alexnet_func.hdf5")
+    
+    # model = keras.models.Sequential([
+    #     keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3)),
+    #     keras.layers.BatchNormalization(),
+    #     keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+    #     keras.layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same"),
+    #     keras.layers.BatchNormalization(),
+    #     keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+    #     keras.layers.Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same"),
+    #     keras.layers.BatchNormalization(),
+    #     keras.layers.Conv2D(filters=384, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
+    #     keras.layers.BatchNormalization(),
+    #     keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
+    #     keras.layers.BatchNormalization(),
+    #     keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+    #     keras.layers.Flatten(),
+    #     keras.layers.Dense(4096, activation='relu'),
+    #     keras.layers.Dropout(0.5),
+    #     keras.layers.Dense(4096, activation='relu'),
+    #     keras.layers.Dropout(0.5),
+    #     keras.layers.Dense(10, activation='softmax')
+    # ])
+
+    checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+    model.summary()
+
+
     model.fit(train_ds,
-          epochs=30,
+          epochs=50,
           validation_data=validation_ds,
           validation_freq=1,
           callbacks=[tensorboard_cb,checkpoint])
-    
+
 
     model.evaluate(test_ds)
+
+
 
 
     # x = tf.keras.models.load_model("models/saved-model-alexnet-03-0.80.hdf5")

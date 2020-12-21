@@ -20,6 +20,20 @@ from utils import *
 
 from Alexnet_kaggle_v2 import * 
 
+root_logdir = os.path.join(os.curdir, "logs\\fit\\")
+def get_run_logdir():
+    run_id = time.strftime("run_%Y_%m_%d-%H_%M_%S")
+    return os.path.join(root_logdir, run_id)
+
+run_logdir = get_run_logdir()
+tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
+
+def augment_images(image, label,label2=""):
+            # Normalize images to have a mean of 0 and standard deviation of 1
+            image = tf.image.per_image_standardization(image)
+            # Resize images from 32x32 to 277x277
+            image = tf.image.resize(image, (227,227))
+            return image, label,label
 
 class BranchyNet:
     def mainBranch(self):
@@ -131,9 +145,23 @@ class BranchyNet:
             Warning! individual layers are defined according to how TF defines them. this means that for layers that would be normally grouped, they will be treated as individual layers (conv2d, pooling, flatten, etc)
             customBranch: optional function that can be passed to provide a custom branch to be inserted. Check "newBranch" function for default shape of branches and how to build custom branching function. Can be provided as a list and each branch will iterate through provided customBranches, repeating last the last branch until function completes
         """
+        
+        # model = keras.Model([model_old.input], [model_old.output], name="{}_branched".format(model_old.name))
+        # model.summary()
+
+        # outputs = [model.outputs]
+        # outputs.append(newBranch(model.layers[6].output))
+        # new_model = keras.Model([model.input], outputs, name="{}_branched".format(model.name))
+        # new_model.summary()
+
+
         outputs = []
         for i in model.outputs:
             outputs.append(i)
+
+        old_output = outputs
+
+
         # outputs.append(i in model.outputs) #get model outputs that already exist 
 
         if type(identifier) != list:
@@ -146,7 +174,7 @@ class BranchyNet:
             customBranch = [newBranch]
         
         branches = 0
-        print(customBranch)
+        # print(customBranch)
         if len(identifier) > 0:
             print(">0")
             if type(identifier[0]) == int:
@@ -154,7 +182,7 @@ class BranchyNet:
                 for i in identifier: 
                     print(model.layers[i].name)
                     try:
-                        outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs)
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -167,7 +195,7 @@ class BranchyNet:
                         print("add Branch")
                         # print(customBranch[min(i, len(customBranch))-1])
                         # print(min(i, len(customBranch))-1)
-                        outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs)
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
@@ -183,9 +211,9 @@ class BranchyNet:
             #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
         print(outputs)
-        print(model.inputs)
+        print(model.input)
         # input_layer = layers.Input(batch_shape=model.layers[0].input_shape)
-        model = models.Model([model.inputs], outputs, name="{}_branched".format(model.name))
+        model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
         return model
 
 
@@ -256,12 +284,38 @@ class BranchyNet:
         Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
         logs = []
-        
-        print(type(dataset))
-
-        (x_train, y_train), (x_test, y_test) = dataset 
-
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+
+
+
+        (train_images, train_labels), (test_images, test_labels) = dataset 
+        CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+        validation_images, validation_labels = train_images[:5000], train_labels[:5000]
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels,train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels,validation_labels))
+
+        train_ds_size = len(list(train_ds))
+        train_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+        train_ds = (train_ds
+                        .map(augment_images)
+                        .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=32, drop_remainder=True))
+
+        test_ds = (test_ds
+                        .map(augment_images)
+                        .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=32, drop_remainder=True))
+
+        validation_ds = (validation_ds
+                        .map(augment_images)
+                        .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=32, drop_remainder=True))
+
+
+
         # print(np.repeat([y_train],1))
         # print("before reset:")
         # model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
@@ -289,19 +343,24 @@ class BranchyNet:
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
 
         # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
-        model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        # model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
 
         print("after reset:")
-        test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
+        test_scores = model.evaluate(test_ds, verbose=2)
         printTestScores(test_scores,num_outputs)
+        checkpoint = keras.callbacks.ModelCheckpoint("models/", monitor='val_acc', verbose=1, save_best_only=True, mode='max')
 
 
         for j in range(epocs):
             print("epoc: {}".format(j))
             results = [j]           
-            history = model.fit(x_train, list(itertools.repeat(y_train,num_outputs)), batch_size=64, epochs=1, validation_split=0.2)
+            # if (ds_check):
+                # history = model.fit(train_ds, batch_size=64, epochs=1, validation_data=validation_ds, validation_freq=1, callbacks=[tensorboard_cb,checkpoint])
+            # else:
+            history = model.fit(train_ds, batch_size=64, epochs=1, callbacks=[tensorboard_cb,checkpoint])
             print(history)
-            test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
+            test_scores = model.evaluate(test_ds, verbose=2)
             print("overall loss: {}".format(test_scores[0]))
             if num_outputs > 1:
                 for i in range(num_outputs):
@@ -313,7 +372,7 @@ class BranchyNet:
             logs.append(results)
         # fullprint(model.predict(x_test[:1]))
         if save:
-            saveModel(model,"mnist_transfer_trained")
+            saveModel(model,"model_transfer_trained")
 
         # results = model.predict(x_test[:1])
         # fullprint(results)
@@ -349,11 +408,11 @@ class BranchyNet:
     
     def Run_alexNet(self, numEpocs = 2):
         
-        x = tf.keras.models.load_model("models/saved-model-alexnet-03-0.80.hdf5")
-        x.summary()
-        train_generator, validation_generator = loadData()
-        print(train_generator.class_indices)
-        print(validation_generator.class_indices)
+        x = tf.keras.models.load_model("models/alexNet_v3.hdf5")
+        # x.summary()
+        # train_ds, test_ds, validation_ds = loadDataPipeline()
+        # print(train_generator.class_indices)
+        # print(validation_generator.class_indices)
         # x.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'] )
         # predict = x.evaluate(validation_generator,steps = 32)
         # print(predict)
@@ -365,15 +424,20 @@ class BranchyNet:
         #     layer._inbound_nodes = []
         #     prev_layer = layer(prev_layer)
         
-        input_layer = layers.Input(batch_shape=x.layers[0].input_shape)
-        prev_layer = input_layer
-        for layer in x.layers:
-            prev_layer = layer(prev_layer)
+        # input_layer = layers.Input(batch_shape=x.layers[0].input_shape)
+        # prev_layer = input_layer
+        # for layer in x.layers:
+            # prev_layer = layer(prev_layer)
+        
+        
 
-        funcModel = models.Model([input_layer], [prev_layer])
-        funcModel = branchy.addBranches(funcModel,["max_pooling2d","dropout_1","dropout_2"],newBranch)
+        # funcModel = models.Model([input_layer], [prev_layer])
+        funcModel = branchy.addBranches(x,["dense1"],newBranch)
+        # funcModel = branchy.addBranches(x,["dense_1"],newBranch)
+
         funcModel.summary()
-        funcModel = branchy.trainModelTransfer(funcModel,validation_generator,epocs = numEpocs, save = False)
+        funcModel = branchy.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False)
+        funcModel.save("models/alexnet_branched.hdf5")
 
 
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))

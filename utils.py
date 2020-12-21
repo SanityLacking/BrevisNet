@@ -209,15 +209,13 @@ def reset_branch_weights(model):
             pass
 
 
-def newBranch(prevLayer, outputs=[]):
+def newBranch(prevLayer):
     """ Add a new branch to a model connecting at the output of prevLayer. 
-        outputs is a list of all outputs for the model, if you don't add this to the model.compile step, its as if the branch wasn't added at all. 
-        returns list of outputs for the model.
         NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
     """ 
     branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(prevLayer)
     branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
     branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-    outputs.append(layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+    output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
-    return outputs
+    return output
