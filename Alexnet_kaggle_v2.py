@@ -3,22 +3,30 @@ import os, shutil, random, glob
 import numpy as np
 import pandas as pd
 
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers, models
+from tensorflow.keras.models import load_model
+import itertools
+import time
 # os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 # CUDA_VISIBLE_DEVICES = 2
 import tensorflow as tf
-import keras
-from keras.models import load_model
-from keras.utils import CustomObjectScope
-from keras.initializers import glorot_uniform
-from keras.layers import Input, Dense
-from keras.models import Model
-from keras.datasets import cifar10
-from keras.optimizers import SGD
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, BatchNormalization
+# import keras
+from tensorflow.keras.models import load_model
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.initializers import glorot_uniform
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, BatchNormalization
 import matplotlib.pyplot as plt
+root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 def AlexLoadModel():
 #load Model
@@ -63,72 +71,201 @@ def loadData():
     
     return train_generator, validation_generator
 
-from tensorflow.contrib import slim
+# from tensorflow.contrib import slim
+def loadDataset():
+    (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
+    
+    CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+    validation_images, validation_labels = train_images[:5000], train_labels[:5000]
+    train_images, train_labels = train_images[5000:], train_labels[5000:]
+
+    train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+    test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+    validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+    return train_ds, test_ds, validation_ds
+def loadDataPipeline():
+    train_ds, test_ds, validation_ds = loadDataset()
+    train_ds_size = tf.data.experimental.cardinality(train_ds).numpy()
+    test_ds_size = tf.data.experimental.cardinality(test_ds).numpy()
+    validation_ds_size = tf.data.experimental.cardinality(validation_ds).numpy()
+    print("Training data size:", train_ds_size)
+    print("Test data size:", test_ds_size)
+    print("Validation data size:", validation_ds_size)
+
+    train_ds = (train_ds
+                  .map(process_images)
+                  .shuffle(buffer_size=train_ds_size)
+                  .batch(batch_size=32, drop_remainder=True))
+    test_ds = (test_ds
+                  .map(process_images)
+                  .shuffle(buffer_size=train_ds_size)
+                  .batch(batch_size=32, drop_remainder=True))
+    validation_ds = (validation_ds
+                  .map(process_images)
+                  .shuffle(buffer_size=train_ds_size)
+                  .batch(batch_size=32, drop_remainder=True))
+
+
+def visualize(train_ds):
+    CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+    plt.figure(figsize=(20,20))
+    for i, (image, label) in enumerate(train_ds.take(5)):
+        ax = plt.subplot(5,5,i+1)
+        plt.imshow(image)
+        plt.title(CLASS_NAMES[label.numpy()[0]])
+        plt.axis('off')
+    return
+def get_run_logdir():
+    run_id = time.strftime("run_%Y_%m_%d-%H_%M_%S")
+    return os.path.join(root_logdir, run_id)
+
+def process_images(image, label):
+    # Normalize images to have a mean of 0 and standard deviation of 1
+    image = tf.image.per_image_standardization(image)
+    # Resize images from 32x32 to 277x277
+    image = tf.image.resize(image, (227,227))
+    return image, label
 
 def runAndTrainModel():
     resize = 224
 
     #define the model
-    train_generator, validation_generator = loadData()
-    print(train_generator.class_indices)
-    print(validation_generator.class_indices)
+    # train_generator, validation_generator = loadData()
+    # print(train_generator.class_indices)
+    # print(validation_generator.class_indices)
     # AlexNet
-    model = Sequential()
-    #第一段
-    model.add(Conv2D(filters=96, kernel_size=(11,11),
-                    strides=(4,4), padding='valid',
-                    input_shape=(resize,resize,3),
-                    activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(3,3),
-                        strides=(2,2),
-                        padding='valid'))
-    #第二段
-    model.add(Conv2D(filters=256, kernel_size=(5,5),
-                    strides=(1,1), padding='same',
-                    activation='relu'))
+    # model = Sequential()
+
+    train_ds, test_ds, validation_ds = loadDataset()
+    visualize(train_ds)
+    loadDataPipeline()
+
+
+    outputs =[]
+    # inputs = keras.Input(shape=(227,227,3))
+    # x = layers.Conv2D(filters=96, kernel_size=(11,11),
+    #                 strides=(4,4), padding='valid',
+    #                 input_shape=(resize,resize,3),
+    #                 activation='relu')(inputs)
+    # x = layers.BatchNormalization()(x)
+    # x = layers.MaxPooling2D(pool_size=(3,3),
+    #                     strides=(2,2),
+    #                     padding='valid')(x)
+    # #
+    # x = layers.Conv2D(filters=256, kernel_size=(5,5),
+    #                 strides=(1,1), padding='same',
+    #                 activation='relu')(x)
+    # x = layers.BatchNormalization()(x)
+    # x = layers.MaxPooling2D(pool_size=(3,3),
+    #                     strides=(2,2),
+    #                     padding='valid')(x)
+    # #
+    # x = layers.Conv2D(filters=384, kernel_size=(3,3),
+    #                 strides=(1,1), padding='same',
+    #                 activation='relu')(x)
+
+    # x = layers.Conv2D(filters=384, kernel_size=(3,3),
+    #                 strides=(1,1), padding='same',
+    # activation='relu')(x)
+
+    # x = layers.Conv2D(filters=256, kernel_size=(3,3),
+    #                 strides=(1,1), padding='same',
+    #                 activation='relu')(x)
+    # x = layers.MaxPool2D(pool_size=(3,3),
+    #                     strides=(2,2), padding='valid')(x)
+    # x = layers.Flatten()(x)
+    # x = layers.Dense(4096, activation="relu")(x)
+    # x = layers.Dropout(0.5)(x)
+    # x = layers.Dense(4096, activation="relu")(x)
+    # x = layers.Dropout(0.5)(x)
+    # x = layers.Dense(1000, activation="relu")(x)
+    # x = layers.Dropout(0.5)(x)
+    # x = layers.Dense(2, name="output")(x)
+    # x = layers.Softmax()(x)
+
+
+    model = keras.models.Sequential([
+        keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3)),
+        keras.layers.BatchNormalization(),
+        keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+        keras.layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same"),
+        keras.layers.BatchNormalization(),
+        keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+        keras.layers.Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same"),
+        keras.layers.BatchNormalization(),
+        keras.layers.Conv2D(filters=384, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
+        keras.layers.BatchNormalization(),
+        keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
+        keras.layers.BatchNormalization(),
+        keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+        keras.layers.Flatten(),
+        keras.layers.Dense(4096, activation='relu'),
+        keras.layers.Dropout(0.5),
+        keras.layers.Dense(4096, activation='relu'),
+        keras.layers.Dropout(0.5),
+        keras.layers.Dense(10, activation='softmax')
+    ])
+
+    # model = keras.Model(inputs=inputs, outputs=x, name="mnist_model_normal")
+    model.summary()
+
+    # #第一段
+    # model.add(Conv2D(filters=96, kernel_size=(11,11),
+    #                 strides=(4,4), padding='valid',
+    #                 input_shape=(resize,resize,3),
+    #                 activation='relu'))
+    # model.add(BatchNormalization())
+    # model.add(MaxPooling2D(pool_size=(3,3),
+    #                     strides=(2,2),
+    #                     padding='valid'))
+    # #第二段
+    # model.add(Conv2D(filters=256, kernel_size=(5,5),
+    #                 strides=(1,1), padding='same',
+    #                 activation='relu'))
     
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(3,3),
-                        strides=(2,2),
-                        padding='valid'))
-    #第三段
-    model.add(Conv2D(filters=384, kernel_size=(3,3),
-                    strides=(1,1), padding='same',
-                    activation='relu'))
+    # model.add(BatchNormalization())
+    # model.add(MaxPooling2D(pool_size=(3,3),
+    #                     strides=(2,2),
+    #                     padding='valid'))
+    # #第三段
+    # model.add(Conv2D(filters=384, kernel_size=(3,3),
+    #                 strides=(1,1), padding='same',
+    #                 activation='relu'))
   
-    model.add(Conv2D(filters=384, kernel_size=(3,3),
-                    strides=(1,1), padding='same',
-    activation='relu'))
-    model.add(Conv2D(filters=256, kernel_size=(3,3),
-                    strides=(1,1), padding='same',
-                    activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3,3),
-                        strides=(2,2), padding='valid'))
-    #第四段
-    model.add(Flatten())
-    model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
+    # model.add(Conv2D(filters=384, kernel_size=(3,3),
+    #                 strides=(1,1), padding='same',
+    # activation='relu'))
+    # model.add(Conv2D(filters=256, kernel_size=(3,3),
+    #                 strides=(1,1), padding='same',
+    #                 activation='relu'))
+    # model.add(MaxPooling2D(pool_size=(3,3),
+    #                     strides=(2,2), padding='valid'))
+    # #第四段
+    # model.add(Flatten())
+    # model.add(Dense(4096, activation='relu'))
+    # model.add(Dropout(0.5))
 
-    model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
+    # model.add(Dense(4096, activation='relu'))
+    # model.add(Dropout(0.5))
 
-    model.add(Dense(1000, activation='relu'))
-    model.add(Dropout(0.5))
+    # model.add(Dense(1000, activation='relu'))
+    # model.add(Dropout(0.5))
 
-    # Output Layer
-    model.add(Dense(2, name='output'))
-    model.add(Activation('softmax'))
-    #set the data for the model to fit on
+    # # Output Layer
+    # model.add(Dense(2, name='output'))
+    # model.add(Activation('softmax'))
+    # #set the data for the model to fit on
 
-    model.input
+    # model.input
 
     # for layer in model.layers:
     #     slim.model_analyzer.analyze_vars([layer.output ], print_info=True)
 
 
-    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-    run_metadata= tf.RunMetadata()
+    # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+    # run_metadata= tf.RunMetadata()
 
     #train the model, save the model every 10 epochs.
     model.compile(loss='categorical_crossentropy',
@@ -144,20 +281,40 @@ def runAndTrainModel():
     #     epochs = 50,
     #     #   validation_split = 0.2,
     #     shuffle = True)
+    # trainData = tf.data.Dataset.from_generator(train_generator,([tf.float32,tf.float32,tf.float32], tf.float32))
 
-    model.fit_generator(
-        train_generator,
-        steps_per_epoch=5000,
-        epochs=10,
-        validation_data=validation_generator,
-        validation_steps=1000,
-        #callbacks=callbacks_list,
-        shuffle=True,
-        max_queue_size = 50,
-        # use_multiprocessing = True,
-        workers = 6
+    checkpoint = ModelCheckpoint("best_model.hdf5", monitor='loss',verbose=1,save_best_only=True, mode='auto',period=1)
+
+
+    run_logdir = get_run_logdir()
+    tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
+    
+    model.fit(train_ds,
+        epochs=50,
+        validation_data = validation_ds,
+        validation_freq = 1,
+        callbacks=[tensorboard_cb],        
         )
-    model.save('models/alexNet113.hdf5')
+
+    test_scores = model.evaluate(test_ds)
+
+
+    print("overall loss: {}".format(test_scores[0]))
+    print("Test loss:", test_scores[0])
+    print("Test accuracy:", test_scores[1])
+    # model.fit_generator(
+    #     train_generator,
+    #     steps_per_epoch=5000,
+    #     epochs=10,
+    #     validation_data=validation_generator,
+    #     validation_steps=1000,
+    #     #callbacks=callbacks_list,
+    #     shuffle=True,
+    #     max_queue_size = 50,
+    #     use_multiprocessing = True,
+    #     workers = 6
+    #     )
+    model.save('models/alexNet_New.hdf5')
     return 0 
     
 def loadAndEvalModel():
@@ -181,7 +338,17 @@ def loadAndEvalModel():
 
 
 if __name__ == '__main__':
+    
+    
+   
+
+    # x = tf.keras.models.load_model("models/saved-model-alexnet-03-0.80.hdf5")
+    # x.summary()
+    # train_generator, validation_generator = loadData()
     runAndTrainModel()
+    
+    # print(np.array(next(train_generator)).shape)
+    
     #loadAndEvalModel()
     print("Task Complete")
 
