@@ -98,7 +98,7 @@ def entropy(pk, qk=None, base=None):
 
 
 
-def saveModel(model,name,overwrite = True, includeDate= True, folder ="models", fileFormat = "tf"):
+def saveModel(model,name,overwrite = True, includeDate= True, folder ="models", fileFormat = "hdf5"):
     from datetime import datetime
     import os
     now = datetime.now() # current date and time

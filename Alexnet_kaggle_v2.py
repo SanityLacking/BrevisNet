@@ -150,8 +150,8 @@ def visualize(train_ds):
         plt.title(CLASS_NAMES[label.numpy()[0]])
         plt.axis('off')
     return
-def get_run_logdir():
-    run_id = time.strftime("run_%Y_%m_%d-%H_%M_%S")
+def get_run_logdir(name=""):
+    run_id = time.strftime("run_{}_%Y_%m_%d-%H_%M_%S".format(name))
     return os.path.join(root_logdir, run_id)
 
 def process_images(image, label):

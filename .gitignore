@@ -2,7 +2,8 @@
 *.hdf5
 *.tf
 data/*
-*/logs/
+logs/*
+tensorflow_2_tutorials-master/logs/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

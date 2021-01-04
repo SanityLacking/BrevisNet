@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import time
 
-
+# tf.debugging.experimental.enable_dump_debug_info(logdir, tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
 (train_images, train_labels), (test_images, test_labels) = keras.datasets.cifar10.load_data()
 
 CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -28,6 +28,12 @@ def augment_images(image, label):
     # Resize images from 32x32 to 277x277
     image = tf.image.resize(image, (227,227))
     return image, label
+def augment_images2(image):
+    # Normalize images to have a mean of 0 and standard deviation of 1
+    image = tf.image.per_image_standardization(image)
+    # Resize images from 32x32 to 277x277
+    image = tf.image.resize(image, (227,227))
+    return image
 
 train_ds_size = len(list(train_ds))
 train_ds_size = len(list(test_ds))
@@ -49,27 +55,27 @@ validation_ds = (validation_ds
                   .batch(batch_size=32, drop_remainder=True))
 
 
-model = keras.models.Sequential([
-    keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3)),
-    keras.layers.BatchNormalization(),
-    keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
-    keras.layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same"),
-    keras.layers.BatchNormalization(),
-    keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
-    keras.layers.Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same"),
-    keras.layers.BatchNormalization(),
-    keras.layers.Conv2D(filters=384, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
-    keras.layers.BatchNormalization(),
-    keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
-    keras.layers.BatchNormalization(),
-    keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
-    keras.layers.Flatten(),
-    keras.layers.Dense(4096, activation='relu'),
-    keras.layers.Dropout(0.5),
-    keras.layers.Dense(4096, activation='relu'),
-    keras.layers.Dropout(0.5),
-    keras.layers.Dense(10, activation='softmax')
-])
+# model = keras.models.Sequential([
+#     keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3)),
+#     keras.layers.BatchNormalization(),
+#     keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+#     keras.layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same"),
+#     keras.layers.BatchNormalization(),
+#     keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+#     keras.layers.Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same"),
+#     keras.layers.BatchNormalization(),
+#     keras.layers.Conv2D(filters=384, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
+#     keras.layers.BatchNormalization(),
+#     keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
+#     keras.layers.BatchNormalization(),
+#     keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2)),
+#     keras.layers.Flatten(),
+#     keras.layers.Dense(4096, activation='relu'),
+#     keras.layers.Dropout(0.5),
+#     keras.layers.Dense(4096, activation='relu'),
+#     keras.layers.Dropout(0.5),
+#     keras.layers.Dense(10, activation='softmax')
+# ])
 
 
 root_logdir = os.path.join(os.curdir, "logs\\fit\\")
@@ -80,7 +86,6 @@ def get_run_logdir():
 
 run_logdir = get_run_logdir()
 tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
-checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv3.hdf5", monitor='loss',verbose=1,save_best_only=True, mode='auto',period=1)
 
 
 # Keras Class API of AlexNet
@@ -175,7 +180,7 @@ if __name__ == '__main__':
     #     keras.layers.Dense(10, activation='softmax')
     # ])
 
-    checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv3_new.hdf5", monitor='loss',verbose=1,save_best_only=True, mode='auto',period=1)
     model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
     model.summary()
 
