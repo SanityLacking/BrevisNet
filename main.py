@@ -19,7 +19,7 @@ from utils import *
 
 from Alexnet_kaggle_v2 import * 
 
-ALEXNET = False
+# ALEXNET = False
 
 root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
@@ -302,17 +302,12 @@ class BranchyNet:
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
 
         (train_images, train_labels), (test_images, test_labels) = dataset
-        print("ALEXNET {}".format(ALEXNET))
-        if ALEXNET:
+        print("ALEXNET {}".format(self.ALEXNET))
+        if self.ALEXNET:
             validation_images, validation_labels = train_images[:5000], train_labels[:5000]
-            
             train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
             test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
             validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
-
-            train_ds_size = len(list(train_ds))
-            train_ds_size = len(list(test_ds))
-            validation_ds_size = len(list(validation_ds))
 
             train_ds_size = len(list(train_ds))
             train_ds_size = len(list(test_ds))
@@ -374,7 +369,7 @@ class BranchyNet:
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
 
         # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
-        if ALEXNET: 
+        if self.ALEXNET: 
             model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
         else:
             model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
@@ -529,6 +524,48 @@ class BranchyNet:
 
 
         return x
+    
+    def eval_branches(self, model, dataset, count = 1):
+        """ evaulate func for checking how well a branched model is performing.
+            function may be moved to eval_model.py in the future.
+        """ 
+        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        print("ALEXNET {}".format(self.ALEXNET))
+        if self.ALEXNET:
+            validation_images, validation_labels = train_images[:5000], train_labels[:5000]
+            validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+            validation_ds_size = len(list(validation_ds))
+            validation_ds = (validation_ds
+                .map(augment_images)
+                .shuffle(buffer_size=validation_ds_size)
+                .batch(batch_size=32, drop_remainder=True))
+        else: 
+            val_size = int(len(train_images) * 0.2)  
+            x_val = train_images[-val_size:]
+            y_val = train_labels[-val_size:]
+            
+            # Prepare the validation dataset
+            validation_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+            validation_ds = validation_ds.batch(64)
+        
+        
+        if self.ALEXNET: 
+            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+        else:
+            model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+
+
+        run_logdir = get_run_logdir(model.name)
+        tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
+        test_scores = model.evaluate(validation_ds, verbose=2)
+        printTestScores(test_scores,num_outputs)
+
+
+
+
+        return 
 
 
 
@@ -545,14 +582,20 @@ def newBranchCustom(prevLayer, outputs=[]):
 
 if __name__ == "__main__":
     branchy = BranchyNet()
-    branchy.ALEXNET = False
+    branchy.ALEXNET = True
     # x = branchy.Run_mnistNormal(1)
     # x = branchy.Run_mnistTransfer(1)
 
 
 
     # x = branchy.Run_train_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
-    x = branchy.Run_train_model("mnist")
+    # x = branchy.Run_train_model("mnist")
+    x = tf.keras.models.load_model("models/alexnet_branched.hdf5")
+    x.summary()
+    branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+
+    # x = tf.keras.models.load_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
+    # branchy.eval_branches(x,branchy.loadTrainingData())
     # x = branchy.Run_alexNet(1)
 
     # x = branchy.mnistBranchy()
