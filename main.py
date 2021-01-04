@@ -39,8 +39,21 @@ def resize(image):
     image = tf.image.resize(image, (227,227))
     return image
 class BranchyNet:
+    def loadTrainingData(self):
+        """ load dataset and configure it. 
+        """
+        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+        x_train = x_train.reshape(60000, 784).astype("float32") / 255
+        x_test = x_test.reshape(10000, 784).astype("float32") / 255
+
+        return (x_train, y_train), (x_test, y_test)
+
 
     ALEXNET = False
+    KNOWN_MODELS = [
+        {"name":"mnist","dataset": loadTrainingData},
+        {"name":"alexnet","dataset":tf.keras.datasets.cifar10.load_data},
+    ]
 
 
     def mainBranch(self):
@@ -242,14 +255,7 @@ class BranchyNet:
     #         return KerasModel
 
 
-    def loadTrainingData(self):
-        """ load dataset and configure it. 
-        """
-        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-        x_train = x_train.reshape(60000, 784).astype("float32") / 255
-        x_test = x_test.reshape(10000, 784).astype("float32") / 255
-
-        return (x_train, y_train), (x_test, y_test)
+   
 
 
     def trainModel(self, model, dataset, epocs = 2,save = False):
@@ -295,15 +301,10 @@ class BranchyNet:
         logs = []
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
 
-        # ALEXNET = True      #### change this to swap from mnist to alexnet, temp flag for dev work
-
-
-
         (train_images, train_labels), (test_images, test_labels) = dataset
         print("ALEXNET {}".format(ALEXNET))
         if ALEXNET:
             validation_images, validation_labels = train_images[:5000], train_labels[:5000]
-
             
             train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
             test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
@@ -347,46 +348,11 @@ class BranchyNet:
             test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
             test_ds = test_ds.batch(64)
 
-            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-            test_ds = test_ds.batch(64)
-
             # Prepare the validation dataset
             validation_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
             validation_ds = validation_ds.batch(64)
 
-            
-        # CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-        # train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
-        # test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-        # validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
-
-        # train_ds_size = len(list(train_ds))
-        # train_ds_size = len(list(test_ds))
-        # validation_ds_size = len(list(validation_ds))
-
-        # train_ds = (train_ds
-        #                 .map(augment_images)
-        #                 .shuffle(buffer_size=train_ds_size)
-        #                 .batch(batch_size=32, drop_remainder=True))
-
-        # test_ds = (test_ds
-        #                 .map(augment_images)
-        #                 .shuffle(buffer_size=train_ds_size)
-        #                 .batch(batch_size=32, drop_remainder=True))
-
-        # validation_ds = (validation_ds
-        #                 .map(augment_images)
-        #                 .shuffle(buffer_size=train_ds_size)
-        #                 .batch(batch_size=32, drop_remainder=True))
-
-
-
-        # print(np.repeat([y_train],1))
-        # print("before reset:")
-        # model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
-        # test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
-        # printTestScores(test_scores,num_outputs)
-
+       
         #Freeze main branch layers
         #how to iterate through layers and find main branch ones?
         #simple fix for now: all branch nodes get branch in name.
@@ -455,6 +421,24 @@ class BranchyNet:
 
         # print(logs)
         return model
+    def checkModelName(self, modelName):
+        """ check to see if the model's name exists in the known models list
+            if so, return the object of the model's details
+            else, return None
+        """
+        print("modelName:{}".format(modelName))
+        result = None
+        try:
+            for model in self.KNOWN_MODELS:
+                print(model)
+                if model["name"] == modelName:
+                    result = model
+        except Exception as e:
+            print(e)
+            raise
+            # print("could not find model name: {} in known models".format(modelName))
+            
+        return result
 
 
     ###### RUN MODEL SHORTCUTS ######
@@ -495,6 +479,58 @@ class BranchyNet:
         return x
 
 
+    def Run_train_model(self, model_name, dataset=None, numEpocs =2):
+        """ generic training function. takes a model or model name and trains the model on the dataset for the specificed epocs.
+        """
+        x=None
+        modelDetails = None
+        if type(model_name) == type(""):
+            #if the model_name is a valid filepath:
+            if os.path.isfile(model_name):
+                try:
+                    x = tf.keras.models.load_model(model_name)
+                except Exception as e:
+                    print(e)
+                    print("model {} could not be loaded".format(model_name))
+            else:
+                modelDetails = self.checkModelName(model_name) 
+                print(modelDetails)
+                #load newest version of model of known type.
+                try:
+                    x = tf.keras.models.load_model(newestModelPath(modelDetails["name"]))
+                except Exception as e:
+                    print(e)
+                    print("could not load the newest model of known type: {}".format(modelDetails["name"]))
+                    raise
+
+
+        elif type(model_name) == type(Model):
+            x = model_name                        
+
+        x.summary()
+
+        #load dataset
+        if dataset ==None:
+            #check name of model, if recognized against known models, use the default dataset.
+            modelDetails = self.checkModelName(model_name)
+            if modelDetails:
+                try:
+                    dataset = modelDetails["dataset"](self)
+                except expression as identifier:
+                    print("dataset was not able to be identified")
+            else: 
+                print("model doesn't match any known models, dataset could not be loaded.")
+                raise
+            #else 
+
+
+        #run training
+        x = branchy.trainModelTransfer(x,dataset,epocs = numEpocs, save = False)
+
+
+        return x
+
+
 
 def newBranchCustom(prevLayer, outputs=[]):
     """ example of a custom branching layer, used as a drop in replacement of "newBranch"
@@ -511,7 +547,12 @@ if __name__ == "__main__":
     branchy = BranchyNet()
     branchy.ALEXNET = False
     # x = branchy.Run_mnistNormal(1)
-    x = branchy.Run_mnistTransfer(1)
+    # x = branchy.Run_mnistTransfer(1)
+
+
+
+    # x = branchy.Run_train_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
+    x = branchy.Run_train_model("mnist")
     # x = branchy.Run_alexNet(1)
 
     # x = branchy.mnistBranchy()

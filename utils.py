@@ -4,7 +4,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
 import itertools
-
+import glob
+import os
 # from keras.models import load_model
 # from keras.utils import CustomObjectScope
 # from keras.initializers import glorot_uniform
@@ -15,7 +16,7 @@ import os
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 
-
+MODEL_DIR = "models/"
 
 #Visualize Model
 def visualize_model(model,name=""):
@@ -219,3 +220,26 @@ def newBranch(prevLayer):
     output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
     return output
+
+
+def newestModelPath(modelNames):
+    """ returns the path of the newest model with modelname in the filename.
+        does not check the actual model name allocated in the file.
+        janky, but works
+    """
+    # if modelNames is not list:
+        # modelNames = [modelNames]
+    full_list = os.scandir(MODEL_DIR)
+    # print(modelNames)
+    # print(full_list)
+    items = []
+    for i in full_list:
+        if modelNames in i.name:
+            # print(i.name)
+            # print(os.path.getmtime(i.path))
+            items.append(i)
+    
+    items.sort(key=lambda x: os.path.getmtime(x.path), reverse=True)
+    result = items[0].path
+
+    return result
