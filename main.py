@@ -335,7 +335,6 @@ class BranchyNet:
             # can still use tf.data.Dataset for mnist and numpy models
             # I found a bug where the model couldn't run on the input unless the dataset is batched. so make sure to batch it.
             val_size = int(len(train_images) * 0.2)  #atm I'm making validation sets that are a fifth of the test set. 
-            print(val_size)
             x_val = train_images[-val_size:]
             y_val = train_labels[-val_size:]
             train_images = train_images[:-val_size]
@@ -417,19 +416,7 @@ class BranchyNet:
         run_logdir = get_run_logdir(model.name)
         tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
         print("after reset:")
-        if ALEXNET:
-            test_scores = model.evaluate(test_ds, verbose=2)
-        else:
-            # test_ds = tf.data.Dataset.from_tensor_slices((test_images,test_labels))
-            # test_ds = test_ds.batch(64)
-            # test_iter = test_ds.__iter__()
-            # one = test_iter.next()
-            # print(one)
-            # print(one[0].shape)
-            # test_scores = model.evaluate(test_images,test_labels, verbose=2)
-            test_scores = model.evaluate(test_ds, verbose=2)
-
-            # test_scores = model.evaluate(test_images[:10], test_labels[:10], verbose=2)
+        test_scores = model.evaluate(test_ds, verbose=2)
         print("finish eval")
         printTestScores(test_scores,num_outputs)
         checkpoint = keras.callbacks.ModelCheckpoint("models/{}_branched.hdf5".format(model.name), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
@@ -444,7 +431,7 @@ class BranchyNet:
             test_iter = train_ds.__iter__()
             one = test_iter.next()
             print(one)
-            history = model.fit(train_ds, batch_size=64, epochs=1, validation_data=validation_ds, validation_steps=10, callbacks=[tensorboard_cb,checkpoint])
+            history = model.fit(train_ds, batch_size=64, epochs=epocs, validation_data=validation_ds, validation_steps=10, callbacks=[tensorboard_cb,checkpoint])
             print(history)
             test_scores = model.evaluate(test_ds, verbose=2)
             print("overall loss: {}".format(test_scores[0]))
@@ -470,10 +457,7 @@ class BranchyNet:
         return model
 
 
-        ###### RUN MODEL SHORTCUTS ######
-
-  
-
+    ###### RUN MODEL SHORTCUTS ######
 
 
     def Run_mnistNormal(self, numEpocs = 2):
@@ -496,25 +480,6 @@ class BranchyNet:
         
         x = tf.keras.models.load_model("models/alexNetv3_new.hdf5")
         x.summary()
-        # train_ds, test_ds, validation_ds = loadDataPipeline()
-        # print(train_generator.class_indices)
-        # print(validation_generator.class_indices)
-        # x.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'] )
-        # predict = x.evaluate(validation_generator,steps = 32)
-        # print(predict)
-        
-
-        # input_layer = layers.Input(batch_shape=x.layers[0].input_shape)
-        # prev_layer = input_layer
-        # for layer in x.layers:
-        #     layer._inbound_nodes = []
-        #     prev_layer = layer(prev_layer)
-        
-        # input_layer = layers.Input(batch_shape=x.layers[0].input_shape)
-        # prev_layer = input_layer
-        # for layer in x.layers:
-            # prev_layer = layer(prev_layer)
-        
         
 
         # funcModel = models.Model([input_layer], [prev_layer])
@@ -527,9 +492,6 @@ class BranchyNet:
 
 
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
-
-
-
         return x
 
 
