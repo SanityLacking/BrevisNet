@@ -20,11 +20,12 @@ from utils import *
 from Alexnet_kaggle_v2 import * 
 
 # ALEXNET = False
-
+config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
+sess = tf.compat.v1.Session(config=config)
 root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 
-tf.debugging.experimental.enable_dump_debug_info("logs/", tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
+# tf.debugging.experimental.enable_dump_debug_info("logs/", tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
 
 def augment_images(image, label,label2=""):
             # Normalize images to have a mean of 0 and standard deviation of 1
@@ -315,17 +316,17 @@ class BranchyNet:
 
             train_ds = (train_ds
                 .map(augment_images)
-                .shuffle(buffer_size=train_ds_size)
+                .shuffle(buffer_size=int(train_ds_size/2))
                 .batch(batch_size=32, drop_remainder=True))
 
             test_ds = (test_ds
                 .map(augment_images)
-                .shuffle(buffer_size=train_ds_size)
+                .shuffle(buffer_size=int(train_ds_size/2))
                 .batch(batch_size=32, drop_remainder=True))
 
             validation_ds = (validation_ds
                 .map(augment_images)
-                .shuffle(buffer_size=train_ds_size)
+                .shuffle(buffer_size=int(train_ds_size/2))
                 .batch(batch_size=32, drop_remainder=True))
         else: 
             # can still use tf.data.Dataset for mnist and numpy models
@@ -467,7 +468,7 @@ class BranchyNet:
 
         funcModel.summary()
         funcModel = branchy.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False)
-        funcModel.save("models/alexnet_branched.hdf5")
+        funcModel.save("models/alexnet_branched_new.hdf5")
 
 
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
@@ -479,6 +480,7 @@ class BranchyNet:
         """
         x=None
         modelDetails = None
+        print(model_name)
         if type(model_name) == type(""):
             #if the model_name is a valid filepath:
             if os.path.isfile(model_name):
@@ -499,8 +501,8 @@ class BranchyNet:
                     raise
 
 
-        elif type(model_name) == type(Model):
-            x = model_name                        
+        # elif type(model_name) == type(Model):
+        x = model_name                        
 
         x.summary()
 
@@ -539,7 +541,7 @@ class BranchyNet:
             validation_ds_size = len(list(validation_ds))
             validation_ds = (validation_ds
                 .map(augment_images)
-                .shuffle(buffer_size=validation_ds_size)
+                .shuffle(buffer_size=int(validation_ds_size/2))
                 .batch(batch_size=32, drop_remainder=True))
         else: 
             val_size = int(len(train_images) * 0.2)  
@@ -590,12 +592,16 @@ if __name__ == "__main__":
 
     # x = branchy.Run_train_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
     # x = branchy.Run_train_model("mnist")
-    x = tf.keras.models.load_model("models/alexnet_branched.hdf5")
-    x.summary()
+    # x = tf.keras.models.load_model("models/alexnet_branched.hdf5")
+    # x.summary()
+    
+    x = tf.keras.models.load_model("models/alexnet_branched_new.hdf5")
     branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+    x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
+    branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+    # x = branchy.Run_train_model(x,tf.keras.datasets.cifar10.load_data(),10)
+    # x.save("models/alexnet_branched_new_trained.hdf5")
 
-    # x = tf.keras.models.load_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
-    # branchy.eval_branches(x,branchy.loadTrainingData())
     # x = branchy.Run_alexNet(1)
 
     # x = branchy.mnistBranchy()
