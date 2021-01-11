@@ -381,7 +381,7 @@ class BranchyNet:
         test_scores = model.evaluate(test_ds, verbose=2)
         print("finish eval")
         printTestScores(test_scores,num_outputs)
-        checkpoint = keras.callbacks.ModelCheckpoint("models/{}_branched.hdf5".format(model.name), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+        checkpoint = keras.callbacks.ModelCheckpoint("models/{}_branched.hdf5".format(model.name), monitor='val_acc', verbose=1, mode='max')
 
 
         for j in range(epocs):
@@ -437,6 +437,18 @@ class BranchyNet:
         return result
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     ###### RUN MODEL SHORTCUTS ######
 
 
@@ -463,12 +475,12 @@ class BranchyNet:
         
 
         # funcModel = models.Model([input_layer], [prev_layer])
-        funcModel = branchy.addBranches(x,["dense_3"],newBranch)
+        funcModel = branchy.addBranches(x,["dense_3","max_pooling2d_3","max_pooling2d_4","max_pooling_2d_5"],newBranch_flatten)
         # funcModel = branchy.addBranches(x,["dense_1"],newBranch)
 
         funcModel.summary()
         funcModel = branchy.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False)
-        funcModel.save("models/alexnet_branched_new.hdf5")
+        funcModel.save("models/alexnet_branch_pooling.hdf5")
 
 
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
@@ -527,30 +539,29 @@ class BranchyNet:
 
         return x
     
-    def eval_branches(self, model, dataset, count = 1):
+    def eval_branches(self, model, dataset, count = 1, options="entr"):
         """ evaulate func for checking how well a branched model is performing.
             function may be moved to eval_model.py in the future.
         """ 
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
 
         (train_images, train_labels), (test_images, test_labels) = dataset
+        
         print("ALEXNET {}".format(self.ALEXNET))
         if self.ALEXNET:
-            validation_images, validation_labels = train_images[:5000], train_labels[:5000]
-            validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
-            validation_ds_size = len(list(validation_ds))
-            validation_ds = (validation_ds
+            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+
+            test_ds_size = len(list(test_ds))
+
+            test_ds = (test_ds
                 .map(augment_images)
-                .shuffle(buffer_size=int(validation_ds_size/2))
+                .shuffle(buffer_size=int(test_ds_size))
                 .batch(batch_size=32, drop_remainder=True))
+
+           
         else: 
-            val_size = int(len(train_images) * 0.2)  
-            x_val = train_images[-val_size:]
-            y_val = train_labels[-val_size:]
-            
-            # Prepare the validation dataset
-            validation_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-            validation_ds = validation_ds.batch(64)
+            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+
         
         
         if self.ALEXNET: 
@@ -561,11 +572,8 @@ class BranchyNet:
 
         run_logdir = get_run_logdir(model.name)
         tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
-        test_scores = model.evaluate(validation_ds, verbose=2)
+        test_scores = model.evaluate(test_ds, verbose=2)
         printTestScores(test_scores,num_outputs)
-
-
-
 
         return 
 
@@ -589,16 +597,24 @@ if __name__ == "__main__":
     # x = branchy.Run_mnistTransfer(1)
 
 
-
     # x = branchy.Run_train_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
     # x = branchy.Run_train_model("mnist")
-    # x = tf.keras.models.load_model("models/alexnet_branched.hdf5")
+    x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
+    x.summary()
+    branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+
+    # x = branchy.Run_alexNet(2)
+
     # x.summary()
-    
+    # branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+    """ 
     x = tf.keras.models.load_model("models/alexnet_branched_new.hdf5")
+    x.summary()
     branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
     x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
+    x.summary()
     branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+    """
     # x = branchy.Run_train_model(x,tf.keras.datasets.cifar10.load_data(),10)
     # x.save("models/alexnet_branched_new_trained.hdf5")
 
