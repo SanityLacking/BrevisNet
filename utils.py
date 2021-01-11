@@ -39,13 +39,13 @@ def fullprint(*args, **kwargs):
 
 def calcEntropy(y_hat):
         #entropy is the sum of y * log(y) for all possible labels.
-        results =[]
-        entropy = 0
+        sum_entropy = 0
         for i in range(len(y_hat)):
-            entropy += y_hat[i] * math.log(y_hat(i))
+            entropy =y_hat[i] * math.log(y_hat[i])
             print(entropy)
+            sum_entropy +=  entropy
 
-        return results
+        return sum_entropy
 
 from scipy.special import (comb, chndtr, entr, rel_entr, xlogy, ive)
 def entropy(pk, qk=None, base=None):

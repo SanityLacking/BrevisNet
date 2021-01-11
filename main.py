@@ -539,7 +539,7 @@ class BranchyNet:
 
         return x
     
-    def eval_branches(self, model, dataset, count = 1, options="entr"):
+    def eval_branches(self, model, dataset, count = 1, options="accuracy"):
         """ evaulate func for checking how well a branched model is performing.
             function may be moved to eval_model.py in the future.
         """ 
@@ -561,6 +561,11 @@ class BranchyNet:
            
         else: 
             test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+            test_ds_size = len(list(test_ds))
+            test_ds =  (test_ds
+                # .map(augment_images)
+                .shuffle(buffer_size=int(test_ds_size))
+                .batch(batch_size=64, drop_remainder=True))
 
         
         
@@ -569,15 +574,128 @@ class BranchyNet:
         else:
             model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
 
-
         run_logdir = get_run_logdir(model.name)
-        tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
-        test_scores = model.evaluate(test_ds, verbose=2)
-        printTestScores(test_scores,num_outputs)
+        tensorboard_cb = keras.callbacks.TensorBoard(run_logdir +"/eval")
+
+        if options == "accuracy":
+            test_scores = model.evaluate(test_ds, verbose=2)
+            printTestScores(test_scores,num_outputs)
+        elif options == "entropy":
+            if self.ALEXNET:
+                test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+                test_ds_size = len(list(test_ds))
+                test_ds = (test_ds
+                    .map(augment_images)
+                    # .shuffle(buffer_size=int(test_ds_size))
+                    .batch(batch_size=1, drop_remainder=True))
+            else: 
+                test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+                test_ds_size = len(list(test_ds))
+                test_ds =  (test_ds
+                    # .map(augment_images)
+                    # .shuffle(buffer_size=int(test_ds_size))
+                    .batch(batch_size=1, drop_remainder=True))
+        
+            iterator = iter(test_ds)
+            item = iterator.get_next()
+
+            
+            results = model.predict(item[0])
+            
+            # print(result[0].shape)
+
+            for output in results:
+                for result in output: 
+                    print(result)
+                    Pclass = np.argmax(result)
+                    print("predicted class:{}, actual class: {}".format(Pclass, item[1]))
+
+                    for softmax in result:
+                        entropy = calcEntropy(softmax)
+                        print("entropy:{}".format(entropy))
+            print("answer: {}".format(item[1]))
+            # results = calcEntropy(y_hat)
+            # print(results)
+            pass
+
 
         return 
 
+    def find_mistakes(self, model, dataset, count = 1):
+        """
+            find rows that the model gets wrong
+        """
+        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        
+        
+        print("ALEXNET {}".format(self.ALEXNET))
+        if self.ALEXNET:
+            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+            test_ds_size = len(list(test_ds))
+            test_ds = (test_ds.map(augment_images).batch(batch_size=32, drop_remainder=True))
+        else: 
+            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+            test_ds_size = len(list(test_ds))
+            test_ds =  (test_ds
+                # .map(augment_images)
+                .batch(batch_size=1, drop_remainder=True))
+        
+        if self.ALEXNET: 
+            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+        else:
+            model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
 
+
+        iterator = iter(test_ds)
+        indices = []
+        # item = iterator.get_next()
+
+        for j in [33,2,3,4]:
+            img = test_images[j].reshape(1,784)
+            prediction = model.predict(img)
+
+            # print(prediction)
+            for i,elem in enumerate(prediction[0][1]):
+                # print(i,end='\r')
+                Pclass = np.argmax(elem)
+                
+                if Pclass != test_labels[j]:
+                    print("test image: {}, pred Class:{}, actual Class:{}".format(j, Pclass,test_labels[j]))
+                    indices.append(i)
+                    entropy = calcEntropy(elem)
+                    print("entropy:{}".format(entropy))
+            print(indices)
+        # prediction = model.predict(test_ds)
+        # print(np.array(prediction).shape)
+        # print(np.argmax(np.round(prediction[0]),1))
+        # print(np.array(test_labels).shape)
+        # wrong_predictions = test_images[prediction[0][0] != test_labels]
+        # print(wrong_predictions)
+        
+        # indices = [i for i,v in enumerate(prediction) if prediction[i]!=test_labels[i]]
+        # subset_of_wrongly_predicted = [test_images[i] for i in indices ]
+        # print(subset_of_wrongly_predicted)
+        # results = model.predict(item[0])
+        
+        # print(result[0].shape)
+
+        # for output in results:
+        #     for result in output: 
+        #         print(result)
+        #         Pclass = np.argmax(result)
+        #         print("predicted class:{}, actual class: {}".format(Pclass, item[1]))
+
+        #         for softmax in result:
+        #             entropy = calcEntropy(softmax)
+        #             print("entropy:{}".format(entropy))
+        # print("answer: {}".format(item[1]))
+        # results = calcEntropy(y_hat)
+        # print(results)
+        pass
+
+
+        return 
 
 def newBranchCustom(prevLayer, outputs=[]):
     """ example of a custom branching layer, used as a drop in replacement of "newBranch"
@@ -593,18 +711,30 @@ def newBranchCustom(prevLayer, outputs=[]):
 if __name__ == "__main__":
     branchy = BranchyNet()
     branchy.ALEXNET = True
+    # branchy.ALEXNET = False
     # x = branchy.Run_mnistNormal(1)
     # x = branchy.Run_mnistTransfer(1)
 
 
-    # x = branchy.Run_train_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
-    # x = branchy.Run_train_model("mnist")
+    # x = tf.keras.models.load_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
+    # x.summary()
+    # branchy.eval_branches(x,branchy.loadTrainingData(),1,"accuracy")
+    # branchy.eval_branches(x,branchy.loadTrainingData(),1,"entropy")
+    # branchy.find_mistakes(x,branchy.loadTrainingData(),1)
+    
     x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
     x.summary()
     branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
 
-    # x = branchy.Run_alexNet(2)
 
+
+
+    # x.summary()
+    # branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
+
+
+
+    # x = branchy.Run_alexNet(2)
     # x.summary()
     # branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data())
     """ 
