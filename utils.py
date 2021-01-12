@@ -41,11 +41,11 @@ def calcEntropy(y_hat):
         #entropy is the sum of y * log(y) for all possible labels.
         sum_entropy = 0
         for i in range(len(y_hat)):
-            entropy =y_hat[i] * math.log(y_hat[i])
+            entropy =y_hat[i] * math.log(y_hat[i],2)
             print(entropy)
             sum_entropy +=  entropy
 
-        return sum_entropy
+        return -sum_entropy
 
 from scipy.special import (comb, chndtr, entr, rel_entr, xlogy, ive)
 def entropy(pk, qk=None, base=None):
@@ -255,3 +255,18 @@ def newestModelPath(modelNames):
     result = items[0].path
 
     return result
+
+
+def augment_images(image, label,label2=""):
+    # Normalize images to have a mean of 0 and standard deviation of 1
+    image = tf.image.per_image_standardization(image)
+    # Resize images from 32x32 to 277x277
+    image = tf.image.resize(image, (227,227))
+    return image, label,label
+    
+def resize(image):
+    # Normalize images to have a mean of 0 and standard deviation of 1
+    image = tf.image.per_image_standardization(image)
+    # Resize images from 32x32 to 277x277
+    image = tf.image.resize(image, (227,227))
+    return image
