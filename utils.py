@@ -18,6 +18,21 @@ import os
 
 MODEL_DIR = "models/"
 
+
+def branchConfusionMatrix(predictions, labels):
+    """ takes an array of predictions with multiple outputs and maps them to their labels. 
+        with this you can see 
+        Similar in concept to a standard confusion matrix of predictions and labels
+    """
+    matrix = np.array()
+    for item in predictions:
+        pass
+    print("")
+
+    return
+
+
+
 #Visualize Model
 def visualize_model(model,name=""):
     # tf.keras.utils.plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
