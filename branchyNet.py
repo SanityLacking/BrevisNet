@@ -281,15 +281,50 @@ class BranchyNet:
         """
         logs = []
         (x_train, y_train), (x_test, y_test) = dataset
+        print("ALEXNET {}".format(self.ALEXNET))
+        if self.ALEXNET:
+           train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset, batch_size=32)
+        else: 
+            # can still use tf.data.Dataset for mnist and numpy models
+            # I found a bug where the model couldn't run on the input unless the dataset is batched. so make sure to batch it.
+            val_size = int(len(train_images) * 0.2)  #atm I'm making validation sets that are a fifth of the test set. 
+            x_val = train_images[-val_size:]
+            y_val = train_labels[-val_size:]
+            train_images = train_images[:-val_size]
+            train_labels = train_labels[:-val_size]
+            
+            train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+            train_ds = train_ds.shuffle(buffer_size=1024).batch(64)
+            # Reserve 10,000 samples for validation
+           
+            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+            test_ds = test_ds.batch(64)
+
+            # Prepare the validation dataset
+            validation_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+            validation_ds = validation_ds.batch(64)
+
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-        model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+
+        if self.ALEXNET: 
+            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+        else:
+            model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+
         run_logdir = get_run_logdir(model.name)
         tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
+        print("after reset:")
+        test_scores = model.evaluate(test_ds, verbose=2)
+        print("finish eval")
+        printTestScores(test_scores,num_outputs)
+        checkpoint = keras.callbacks.ModelCheckpoint("models/{}_new.hdf5".format(model.name), monitor='val_loss', verbose=1, mode='max')
+
         for j in range(epocs):
+            print("epoc: {}".format(j))
             results = [j]           
-            history = model.fit(x_train, y_train, batch_size=64, epochs=1, validation_split=0.2,callbacks=[tensorboard_cb])
+            history = model.fit(train_ds, epochs=epocs, validation_data=validation_ds, callbacks=[tensorboard_cb,checkpoint])
             print(history)
-            test_scores = model.evaluate(x_test, list(itertools.repeat(y_test,num_outputs)), verbose=2)
+            test_scores = model.evaluate(test_ds, verbose=2)
             print("overall loss: {}".format(test_scores[0]))
             if num_outputs > 1:
                 for i in range(num_outputs):
@@ -299,15 +334,9 @@ class BranchyNet:
                 print("Test loss:", test_scores[0])
                 print("Test accuracy:", test_scores[1])
             logs.append(results)
-        # fullprint(model.predict(x_test[:1]))
         if save:
-            saveModel(model,"mnist_trained")
+            saveModel(model,"model_transfer_trained")
 
-        results = model.predict(x_test[:1])
-        fullprint(results)
-        S = entropy(results)
-        print(S)
-        # print(logs)
         return model
   
 

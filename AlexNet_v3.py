@@ -46,12 +46,12 @@ train_ds = (train_ds
 
 test_ds = (test_ds
                   .map(augment_images)
-                  .shuffle(buffer_size=train_ds_size)
+                #   .shuffle(buffer_size=train_ds_size)
                   .batch(batch_size=32, drop_remainder=True))
 
 validation_ds = (validation_ds
                   .map(augment_images)
-                  .shuffle(buffer_size=train_ds_size)
+                #   .shuffle(buffer_size=validation_ds_size)
                   .batch(batch_size=32, drop_remainder=True))
 
 
@@ -123,10 +123,20 @@ class CustomAlexNet(keras.Model):
         x = self.output_layer(x)
         return x
 
-def buildandcompileModel():
-    model = CustomAlexNet()
-    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+def buildandcompileModel(model):
+    checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv4_new.hdf5", monitor='val_loss',verbose=1,save_best_only=True, mode='auto',period=1)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001,momentum=0.9), metrics=['accuracy'])
+    model.summary()
 
+
+    model.fit(train_ds,
+          epochs=45,
+          validation_data=validation_ds,
+          validation_freq=1,
+          callbacks=[tensorboard_cb,checkpoint])
+
+
+    model.evaluate(test_ds)
     
     return model 
 
@@ -180,8 +190,8 @@ if __name__ == '__main__':
     #     keras.layers.Dense(10, activation='softmax')
     # ])
 
-    checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv3_new.hdf5", monitor='loss',verbose=1,save_best_only=True, mode='auto',period=1)
-    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+    checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv4_new.hdf5", monitor='val_loss',verbose=1,save_best_only=True, mode='auto',period=1)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001,momentum=0.9), metrics=['accuracy'])
     model.summary()
 
 
