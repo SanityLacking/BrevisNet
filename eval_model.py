@@ -42,12 +42,18 @@ if __name__ == "__main__":
     branchy = BranchyNet()
     branchy.ALEXNET = True
     #load the dataset
-    x = tf.keras.models.load_model("models/alexNetv4_new.hdf5")
+    x = tf.keras.models.load_model("models/alexnet_branch_pooling.hdf5")
+
+
+    import modelProfiler
+    # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')
+    #modelProfiler.getFlopsFromArchitecture(model,'alexnet')
+    layerFlops = modelProfiler.getLayerFlops('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
 
     #print the model structure summary
-    x.summary()
+    # x.summary()
     #eval the model
-    branchy.eval_branches(x, tf.keras.datasets.cifar10.load_data(),"accuracy")
+    # branchy.eval_branches(x, tf.keras.datasets.cifar10.load_data(),"accuracy")
     #print the results
 
     pass
