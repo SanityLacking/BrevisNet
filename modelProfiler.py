@@ -15,6 +15,7 @@ import types
 import tempfile
 
 from tensorflow.python.keras.callbacks import TensorBoard
+import tensorflow.compat.v1.keras.backend as K
 from time import time
 
 # sess = tf.Session()
@@ -129,41 +130,43 @@ def get_flops(model_h5_path):
 def getWholeFlops(filename="",name = "",saveFile = True, printOutput = True):
     session = tf.compat.v1.Session()
     graph = tf.compat.v1.get_default_graph()
-    with graph.as_default():
-        with session.as_default():
-            flops = {}
-            model = tf.keras.models.load_model(filename)
-            layerFlops = []
-            # for i, layer in enumerate(model.layers):
-            # print(type(model))
-            model = tf.keras.models.load_model(filename)
-            # new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
-            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+    model = tf.keras.models.load_model(filename)
+    for i, layer in enumerate(model.layers):
+        with graph.as_default():
+            with session.as_default():
+                flops = {}
+                model = tf.keras.models.load_model(filename)
+                layerFlops = []
+                # for i, layer in enumerate(model.layers):
+                # print(type(model))
+                model = tf.keras.models.load_model(filename)
+                # new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
+                model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
 
-            model.summary()
-            # new_model.save(tempModelFileName)
-            # tf.keras.backend.clear_session()
-            # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
-            # model = tf.keras.models.load_model(tempModelFileName)
+                model.summary()
+                # new_model.save(tempModelFileName)
+                # tf.keras.backend.clear_session()
+                # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+                # model = tf.keras.models.load_model(tempModelFileName)
 
-            # Print trainable variable parameter statistics to stdout.
-            ProfileOptionBuilder = tf.compat.v1.profiler.ProfileOptionBuilder
-            opt = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
-            flops = tf.compat.v1.profiler.profile(graph, options=opt)
-            total_flops = flops.total_float_ops
+                # Print trainable variable parameter statistics to stdout.
+                ProfileOptionBuilder = tf.compat.v1.profiler.ProfileOptionBuilder
+                opt = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+                flops = tf.compat.v1.profiler.profile(graph, options=opt)
+                total_flops = flops.total_float_ops
 
-            opt = (tf.compat.v1.profiler.ProfileOptionBuilder(
-                            tf.compat.v1.profiler.ProfileOptionBuilder.float_operation())
-                            .with_node_names()
-                            .order_by('depth')
-                            .with_file_output('models/'+'enc_log.txt')
-                            .build()) 
-            flops = tf.compat.v1.profiler.profile(graph, options=opt)
-            enc_flops = flops.total_float_ops
+                opt = (tf.compat.v1.profiler.ProfileOptionBuilder(
+                                tf.compat.v1.profiler.ProfileOptionBuilder.float_operation())
+                                .with_node_names()
+                                .order_by('depth')
+                                .with_file_output('models/'+'enc_log.txt')
+                                .build()) 
+                flops = tf.compat.v1.profiler.profile(graph, options=opt)
+                enc_flops = flops.total_float_ops
 
-            print ("========================================================")
-            print ('Total Flops : {}'.format(total_flops))
-            print ('Enc. Flops : {}'.format(enc_flops))
+                print ("========================================================")
+                print ('Total Flops : {}'.format(total_flops))
+                print ('Enc. Flops : {}'.format(enc_flops))
     # param_stats = tf.compat.v1.profiler.profile(
     #    tf.compat.v1.get_default_graph(),
     #     options=ProfileOptionBuilder.float_operation())
@@ -189,37 +192,83 @@ def getLayerFlops(filename="",name = "",saveFile = True, printOutput = True ):
     tempModelFileName= 'models/tempmodel.hdf5'
     model = tf.keras.models.load_model(filename)
     layerFlops = []
-    for i, layer in enumerate(model.layers):
-        print(type(model))
-        model = tf.keras.models.load_model(filename)
-        session = tf.compat.v1.Session()
-        graph = tf.compat.v1.get_default_graph()
-        with graph.as_default():
-            with session.as_default():
-                new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
-                new_model.summary()
-                # new_model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+    # for i, layer in enumerate(model.layers):
+    print(type(model))
+    model = tf.keras.models.load_model(filename)
+    session = tf.compat.v1.Session()
+    graph = tf.compat.v1.get_default_graph()
+    with graph.as_default():
+        with session.as_default():
+            # new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
+            # new_model.summary()
+            new_model = tf.keras.models.load_model(filename)
+            new_model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
 
-                # new_model.summary()
-                # new_model.save(tempModelFileName)
+            # new_model.summary()
+            # new_model.save(tempModelFileName)
+            # tf.keras.backend.clear_session()
+            # # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+            # model = tf.keras.models.load_model(tempModelFileName)
+            opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+            opts['output'] = 'file:outfile=log.txt'
+            profile = tf.compat.v1.profiler.profile(graph, options = opts)
+            print(profile)
+            # layerFlops.append({'name':layer.name,'flopsCumulative':profile.total_float_ops})
+            # flops['{}_{}'.format(i,type(layer))] = profile.total_float_ops
+            # print("flops {}".format(flops))
+            # if printOutput == True:
+            #     print("flops {}".format(flops))
+            # if saveFile == True:
+            #     f = open("models/{}_flops_old.txt".format(name), "w")
+            #     f.write(json.dumps(flops))
+            #     f.close()
+            #     f = open("models/{}_flops.txt".format(name), "w")
+            #     f.write(json.dumps(layerFlops))
+            #     f.close()
+    return flops
+
+
+def getLayerFlops_old(filename="",name = "",saveFile = True, printOutput = True ):
+    flops = {}
+    tempModelFileName= 'models/tempmodel.hdf5'
+    model = tf.keras.models.load_model(filename)
+    layerFlops = []
+    session = tf.compat.v1.Session()
+    graph = tf.compat.v1.get_default_graph()
+
+    with graph.as_default():
+        with session.as_default():
+            for i, layer in enumerate(model.layers):
+                # if (i>5):
+                    # break
+                # tf.compat.v1.reset_default_graph()
                 # tf.keras.backend.clear_session()
-                # # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
-                # model = tf.keras.models.load_model(tempModelFileName)
-                # opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
-                # opts['output'] = 'file:outfile=log.txt'
-                # profile = tf.compat.v1.profiler.profile(graph, options = opts)
-                # layerFlops.append({'name':layer.name,'flopsCumulative':profile.total_float_ops})
-                # flops['{}_{}'.format(i,type(layer))] = profile.total_float_ops
-                # print("flops {}".format(flops))
-                # if printOutput == True:
-                #     print("flops {}".format(flops))
-                # if saveFile == True:
-                #     f = open("models/{}_flops_old.txt".format(name), "w")
-                #     f.write(json.dumps(flops))
-                #     f.close()
-                #     f = open("models/{}_flops.txt".format(name), "w")
-                #     f.write(json.dumps(layerFlops))
-                #     f.close()
+                print(type(model))
+                model = tf.keras.models.load_model(filename)
+                # model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+                new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
+                new_model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+                new_model.summary()
+                new_model.save(tempModelFileName)
+                # K.clear_session()
+                # tf.keras.backend.clear_session()
+                # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+                # tf.keras.backend.clear_session()
+                model = tf.keras.models.load_model(tempModelFileName)
+                opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+                opts['output'] = 'file:outfile=log.txt'
+                profile = tf.compat.v1.profiler.profile(graph, cmd = 'scope', options = opts)
+                layerFlops.append({'name':layer.name,'flopsCumulative':profile.total_float_ops})
+                flops['{}_{}'.format(i,type(layer))] = profile.total_float_ops
+                if printOutput == True:
+                    print("flops {}".format(flops))
+                if saveFile == True:
+                    f = open("models/{}_flops_old.txt".format(name), "w")
+                    f.write(json.dumps(flops))
+                    f.close()
+                    f = open("models/{}_flops.txt".format(name), "w")
+                    f.write(json.dumps(layerFlops))
+                    f.close()
     return flops
 
 if __name__ == "__main__":

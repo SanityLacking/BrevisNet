@@ -48,7 +48,7 @@ if __name__ == "__main__":
     import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')
     #modelProfiler.getFlopsFromArchitecture(model,'alexnet')
-    layerFlops = modelProfiler.getLayerFlops('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
+    layerFlops = modelProfiler.getLayerFlops_old('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
 
     #print the model structure summary
     # x.summary()
