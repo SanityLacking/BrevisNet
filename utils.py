@@ -10,6 +10,7 @@ import os
 # from keras.utils import CustomObjectScope
 # from keras.initializers import glorot_uniform
 
+import pandas as pd
 import math
 import pydot
 import os
@@ -27,6 +28,109 @@ def visualize_model(model,name=""):
         name = name + ".png"
     #plot_model(model, to_file=name, show_shapes=True, show_layer_names=True)
 
+
+def entropyMatrix(entropy, labels, num_outputs, classes, output_names=[]):
+    """ generate a matrix of entropy values for all classes and outputs
+        entropy: list of all predicted labels
+        labels: list of all actual labels. must match pred in size and shape
+        classes: list of all classes, for example [0,1,2,3]
+        output_names: list of names for each of the outputs. applies names to outputs in the same order as pred and labels.
+
+    """    
+    # print(entropy)
+    # print(labels)
+    resultsDict = {}
+    results = np.array(entropy)
+    labels = np.array(labels)
+    classCount = {}
+    labelClasses=classes
+    
+    ### initialize the dictionary
+    for i, labelClass in enumerate(labelClasses):    
+        resultsDict[labelClass] ={}
+        for j in range(num_outputs):
+            resultsDict[labelClass][j] = []
+#         resultsDict[labelClass] = [0]*num_outputs
+        classCount[labelClass] = 0
+#     print(resultsDict)
+    ###loop through results 
+    for i, item in enumerate(results):
+        for j, branch in enumerate(item):
+#             print("{},{}".format(i, j))
+#             if branch == True: 
+            resultsDict[labels[i][j]][j].append(branch)
+        classCount[labels[i][0]] += 1
+    # print(classCount)
+    
+    resultsDict = pd.DataFrame.from_dict(resultsDict,orient="index")
+    for column in resultsDict:
+        resultsDict[column] = [np.array(x).mean() for x in resultsDict[column].values]
+    renameDict={}
+    for i, name in enumerate(output_names):
+        renameDict[i] = name
+    print("rename:{}".format(renameDict))
+    if len(renameDict) > 0:
+        print("rename!")
+        resultsDict = resultsDict.rename(renameDict,axis ="columns")
+    resultsDict["itemCount"] = pd.Series(classCount)
+    return resultsDict
+
+def throughputMatrix(pred, labels, num_outputs, classes, output_names=[]):
+    """ generate a dictionary of lists comparing the correctly labeled predictions against the outputs for each class.        
+        pred: list of all predicted labels
+        labels: list of all actual labels. must match pred in size and shape
+        classes: list of all classes, for example [0,1,2,3]
+        output_names: list of names for each of the outputs. applies names to outputs in the same order as pred and labels.
+    """    
+    resultsDict = {}
+    results = []
+    #get truth matrix of the predictions/labels
+    pred = np.array(pred)
+    labels = np.array(labels)
+
+    classCount = {}
+    # print((pred))
+    # print((labels))
+    results = np.equal(pred, labels)
+    # print(results)
+    labelClasses=classes
+    
+    # print("----")
+    ### initialize the dictionary
+    for i, labelClass in enumerate(labelClasses):    
+        resultsDict[labelClass] ={}
+        for j in range(num_outputs):
+            resultsDict[labelClass][j] = 0
+#         resultsDict[labelClass] = [0]*num_outputs
+        classCount[labelClass] = 0
+#     print(resultsDict)
+    ###loop through results 
+    for i, item in enumerate(results):
+        for j, branch in enumerate(item):
+#             print("{},{}".format(i, j))
+            if branch == True: 
+                resultsDict[labels[i][j]][j] += 1
+        classCount[labels[i][0]] += 1
+    # print(classCount)
+    resultsDict = pd.DataFrame.from_dict(resultsDict,orient="index")
+    renameDict={}
+    for i, name in enumerate(output_names):
+        renameDict[i] = name
+    print("rename:{}".format(renameDict))
+    if len(renameDict) > 0:
+        print("rename!")
+        resultsDict = resultsDict.rename(renameDict,axis ="columns")
+
+    resultsDict["itemCount"] = pd.Series(classCount)
+
+    # print(resultsDict)
+    return resultsDict
+
+def expandlabels(label,num_outputs):
+    flattened = [val for sublist in label for val in sublist]
+    label = flattened * num_outputs
+    return label
+    
 def fullprint(*args, **kwargs):
         from pprint import pprint
         import numpy
@@ -42,7 +146,7 @@ def calcEntropy(y_hat):
         sum_entropy = 0
         for i in range(len(y_hat)):
             entropy =y_hat[i] * math.log(y_hat[i],2)
-            print(entropy)
+            # print(entropy)
             sum_entropy +=  entropy
 
         return -sum_entropy
@@ -221,6 +325,15 @@ def newBranch_flatten(prevLayer):
 
     return output
 
+def newBranch_oneLayer(prevLayer):
+    """ Add a new branch to a model connecting at the output of prevLayer. 
+        NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+    """ 
+    branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+    branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+    output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+    return output
 
 def newBranch(prevLayer):
     """ Add a new branch to a model connecting at the output of prevLayer. 
