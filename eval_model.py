@@ -22,10 +22,38 @@ from Alexnet_kaggle_v2 import *
 from branchyNet import BranchyNet
 
 
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 =======
 
 >>>>>>> dc183174b963244a9bddc35ca7c3e87bd4d6ef3f
+=======
+def evalBranchMatrix_old(model, input, labels=""):
+    num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+
+    print(type(input))
+    if labels == "":
+        if type(input)=="tensorflow.python.data.ops.dataset_ops.BatchDataset":
+            print("yes")
+            pass
+        else: 
+            print("no")
+    
+    iterator = iter(input)
+    item = iterator.get_next()
+    pred=[]
+    labels=[]
+    for i in range(100):
+        pred.append(model.predict(item[0]))
+        labels.append(item[1])
+    
+    results = throughputMatrix(pred, labels, num_outputs)
+    print(results)
+    print(pd.DataFrame(results).T)
+
+    return
+>>>>>>> Stashed changes
 
 if __name__ == "__main__":
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
@@ -40,27 +68,34 @@ if __name__ == "__main__":
     #which dataset to eval on?
     #check the model name for one of the valid model types and use the default dataset for that.
     
+    print("evalModel")
 
     #load the model
     branchy = BranchyNet()
     branchy.ALEXNET = True
     #load the dataset
+    # x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
     x = tf.keras.models.load_model("models/alexnet_branch_pooling.hdf5")
+    x.summary()
+    print(x.outputs)
 
+<<<<<<< Updated upstream
 <<<<<<< HEAD
     y = branchy.BranchEntropyConfusionMatrix(x, tf.keras.datasets.cifar10.load_data())
 =======
 >>>>>>> dc183174b963244a9bddc35ca7c3e87bd4d6ef3f
+=======
+    # y = branchy.BranchEntropyMatrix(x, tf.keras.datasets.cifar10.load_data())
+>>>>>>> Stashed changes
 
-    import modelProfiler
-    # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')
-    #modelProfiler.getFlopsFromArchitecture(model,'alexnet')
-    layerFlops = modelProfiler.getLayerFlops_old('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
 
     #print the model structure summary
     # x.summary()
     #eval the model
-    # branchy.eval_branches(x, tf.keras.datasets.cifar10.load_data(),"accuracy")
+    # branchy.eval_branches(x, tf.keras.datasets.cifar10.load_data(),"throughput")
+    # output_names = [i.name for i in x.outputs]
+    # print(output_names)
+    # y = branchy.evalBranchMatrix(x, tf.keras.datasets.cifar10.load_data())
     #print the results
 
     pass

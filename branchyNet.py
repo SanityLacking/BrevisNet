@@ -487,8 +487,8 @@ class BranchyNet:
     def Run_mnistNormal(self, numEpocs = 2):
         """ load a mnist model, add branches to it and train using transfer learning function
         """
-        x = branchy.mnistNormal()
-        x = branchy.trainModel(x,self.loadTrainingData(), epocs = numEpocs,save = True)
+        x = self.mnistNormal()
+        x = self.trainModel(x,self.loadTrainingData(), epocs = numEpocs,save = True)
         return x
 
 
@@ -496,13 +496,16 @@ class BranchyNet:
         """ load a mnist model, add branches to it and train using transfer learning function
         """
         x = tf.keras.models.load_model("models/mnist_trained_.hdf5")
-        x = branchy.addBranches(x,["dropout_1","dropout_2","dropout_3","dropout_4",],newBranch)
-        x = branchy.trainModelTransfer(x,self.loadTrainingData(),epocs = numEpocs, save = True)
+        x = self.addBranches(x,["dropout_1","dropout_2","dropout_3","dropout_4",],newBranch)
+        x = self.trainModelTransfer(x,self.loadTrainingData(),epocs = numEpocs, save = True)
         return x
     
-    def Run_alexNet(self, numEpocs = 2,saveName ="",transfer = True):
-        
-        x = tf.keras.models.load_model("models/alexNetv3_new.hdf5")
+    def Run_alexNet(self, numEpocs = 2, modelName="", saveName ="",transfer = True):
+        if modelName =="":
+            x = tf.keras.models.load_model("models/alexNetv3_new.hdf5")
+        else:
+            x = tf.keras.models.load_model("models/{}".format(modelName))
+
         x.summary()
         if saveName =="":
             pass
@@ -510,11 +513,11 @@ class BranchyNet:
             x._name = saveName
 
         # funcModel = models.Model([input_layer], [prev_layer])
-        funcModel = branchy.addBranches(x,["dense_3","max_pooling2d_3","max_pooling2d_4","max_pooling_2d_5"],newBranch_flatten)
+        funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch_oneLayer)
         # funcModel = branchy.addBranches(x,["dense_1"],newBranch)
 
         funcModel.summary()
-        funcModel = branchy.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False, transfer = transfer)
+        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False, transfer = transfer)
         if saveName == "":
             funcModel.save("models/alexnet_branch_pooling.hdf5")
         else: 
@@ -571,7 +574,7 @@ class BranchyNet:
 
 
         #run training
-        x = branchy.trainModelTransfer(x,dataset,epocs = numEpocs, save = False)
+        x = self.anchy.trainModelTransfer(x,dataset,epocs = numEpocs, save = False)
 
 
         return x
@@ -632,6 +635,102 @@ class BranchyNet:
             # results = calcEntropy(y_hat)
             # print(results)
             pass
+        elif options == "throughput":
+            if self.ALEXNET:
+                train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)                       
+            else: 
+                test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+                test_ds_size = len(list(test_ds))
+                test_ds =  (test_ds
+                    # .map(augment_images)
+                    # .shuffle(buffer_size=int(test_ds_size))
+                    .batch(batch_size=1, drop_remainder=True))
+        
+            iterator = iter(test_ds)
+            item = iterator.get_next()
+            pred=[]
+            labels=[]
+            for i in range(len(test_ds)):
+                pred.append(model.predict(item[0]))
+                labels.append(item[1])
+            
+            results = throughputMatrix(pred, labels, numOutput)
+            print(results)
+            print(pd.DataFrame(results).T)
+            pass
+
+
+        return 
+
+    def old_entropyMatrix(self, model, dataset):
+        """
+            calculate the entropy of the branches for the test set.
+        """
+        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        
+        
+        print("ALEXNET {}".format(self.ALEXNET))
+        if self.ALEXNET:
+            train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
+        else: 
+            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+            test_ds_size = len(list(test_ds))
+            test_ds =  (test_ds
+                .batch(batch_size=1, drop_remainder=True))
+        
+        predictions = []
+        labels = []
+        if self.ALEXNET: 
+            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+            iterator = iter(test_ds)
+            indices = []
+            for j in range(5):
+                item = iterator.get_next()
+                # for j in [33,2,3,4]:
+                # img = test_images[j].reshape(1,784)
+                prediction = model.predict(item[0])
+                # print(prediction)
+                predictions.append(prediction)
+                labels.append(item[1].numpy().tolist())
+                # print(item[1])
+            predClasses =[]
+            predEntropy =[]
+            labelClasses = []
+            for i,output in enumerate(predictions):
+                print(output)
+                for k, pred in enumerate(output):
+                    pred_classes=[]
+                    pred_entropy = []
+                    label_classes = []
+                    # print(i,end='\r')
+                    for l, branch in enumerate(pred):
+                        print(l)
+                        Pclass = np.argmax(branch[0])
+                        pred_classes.append(Pclass)     
+                        pred_entropy.append(calcEntropy(branch[0]))                   
+                        print("{}, class {}".format(branch[0], Pclass))
+                    predClasses.append(pred_classes)
+                    predEntropy.append(pred_entropy)
+                    # Pprob = exit[0][Pclass]
+                    # print("image:{}, exit:{}, pred Class:{}, probability: {} actual Class:{}".format(j,i, Pclass,Pprob, item[1]))
+                    # if Pclass != item[1]:
+                        # indices.append(j)
+                    # entropy = calcEntropy(elem)
+                    # print("entropy:{}".format(entropy))                
+            # labels = [item for sublist in labels for item in sublist]
+           
+            labels = list(map(expandlabels,labels))
+
+            print(predClasses)
+            print(labels)
+            print(predEntropy)
+            # matrix = []cmd
+            # for i, prediction in enumerate(predClasses):
+            #     for j, branch in enumerate(prediction):
+            #         if branch == labels[i]:
+
+            #             matrix.append()
 
 
         return 
