@@ -44,6 +44,43 @@ def visualize_model(model,name=""):
     #plot_model(model, to_file=name, show_shapes=True, show_layer_names=True)
 
 
+def entropyConfusionMatrix(pred, labels, entropy, num_outputs, classes, output_names=[]):
+    """ generate a matrix of entropy values for all classes and outputs
+        pred: list of all predicted labels
+        labels: list of all actual labels. must match pred in size and shape
+        classes: list of all classes, for example [0,1,2,3]
+        output_names: list of names for each of the outputs. applies names to outputs in the same order as pred and labels.
+
+    """    
+#     print(pred)
+#     print(labels)
+    resultsDict = {}
+    results = []
+    pred = np.array(pred)
+    labels = np.array(labels)
+    entropy = np.array(entropy)
+    classCount = {}
+    results = pred
+    labelClasses=classes
+    from sklearn.metrics import confusion_matrix
+    ### initialize the dictionary
+    for i, labelClass in enumerate(labelClasses):    
+        resultsDict[labelClass] ={}
+        for j in range(num_outputs):
+            resultsDict[labelClass][j] = []
+#         resultsDict[labelClass] = [0]*num_outputs
+        classCount[labelClass] = 0
+#     print(resultsDict)
+    ###loop through results 
+    transpose_preds = np.transpose(results) #per exit rather then per input
+    transpose_labels = np.transpose(labels)
+    for i, item in enumerate(transpose_preds):
+        print("exit:{}".format(i))
+        df_confusion = pd.crosstab(item, transpose_labels[i], rownames=['Actual'], colnames=['Predicted'], margins=True)
+        print(df_confusion)
+#         print(confusion_matrix(item,transpose_labels[i]))
+    return
+
 def entropyMatrix(entropy, labels, num_outputs, classes, output_names=[]):
     """ generate a matrix of entropy values for all classes and outputs
         entropy: list of all predicted labels
@@ -102,31 +139,22 @@ def throughputMatrix(pred, labels, num_outputs, classes, output_names=[]):
     #get truth matrix of the predictions/labels
     pred = np.array(pred)
     labels = np.array(labels)
-
     classCount = {}
-    # print((pred))
-    # print((labels))
     results = np.equal(pred, labels)
-    # print(results)
     labelClasses=classes
-    
     # print("----")
     ### initialize the dictionary
     for i, labelClass in enumerate(labelClasses):    
         resultsDict[labelClass] ={}
         for j in range(num_outputs):
             resultsDict[labelClass][j] = 0
-#         resultsDict[labelClass] = [0]*num_outputs
         classCount[labelClass] = 0
-#     print(resultsDict)
     ###loop through results 
     for i, item in enumerate(results):
         for j, branch in enumerate(item):
-#             print("{},{}".format(i, j))
             if branch == True: 
                 resultsDict[labels[i][j]][j] += 1
         classCount[labels[i][0]] += 1
-    # print(classCount)
     resultsDict = pd.DataFrame.from_dict(resultsDict,orient="index")
     renameDict={}
     for i, name in enumerate(output_names):
@@ -135,10 +163,7 @@ def throughputMatrix(pred, labels, num_outputs, classes, output_names=[]):
     if len(renameDict) > 0:
         print("rename!")
         resultsDict = resultsDict.rename(renameDict,axis ="columns")
-
     resultsDict["itemCount"] = pd.Series(classCount)
-
-    # print(resultsDict)
     return resultsDict
 
 def expandlabels(label,num_outputs):

@@ -22,31 +22,6 @@ from Alexnet_kaggle_v2 import *
 from branchyNet import BranchyNet
 
 
-def evalBranchMatrix_old(model, input, labels=""):
-    num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
-
-    print(type(input))
-    if labels == "":
-        if type(input)=="tensorflow.python.data.ops.dataset_ops.BatchDataset":
-            print("yes")
-            pass
-        else: 
-            print("no")
-    
-    iterator = iter(input)
-    item = iterator.get_next()
-    pred=[]
-    labels=[]
-    for i in range(100):
-        pred.append(model.predict(item[0]))
-        labels.append(item[1])
-    
-    results = throughputMatrix(pred, labels, num_outputs)
-    print(results)
-    print(pd.DataFrame(results).T)
-
-    return
 
 if __name__ == "__main__":
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
@@ -72,7 +47,7 @@ if __name__ == "__main__":
     x.summary()
     print(x.outputs)
 
-    # y = branchy.BranchEntropyMatrix(x, tf.keras.datasets.cifar10.load_data())
+    y = branchy.BranchEntropyConfusionMatrix(x, tf.keras.datasets.cifar10.load_data())
 
 
     #print the model structure summary
