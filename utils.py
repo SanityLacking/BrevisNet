@@ -11,6 +11,7 @@ import pandas as pd
 # from keras.utils import CustomObjectScope
 # from keras.initializers import glorot_uniform
 
+import pandas as pd
 import math
 import pydot
 import os
@@ -448,6 +449,15 @@ def newBranch_flatten(prevLayer):
 
     return output
 
+def newBranch_oneLayer(prevLayer):
+    """ Add a new branch to a model connecting at the output of prevLayer. 
+        NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+    """ 
+    branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+    branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+    output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+    return output
 
 def newBranch(prevLayer):
     """ Add a new branch to a model connecting at the output of prevLayer. 

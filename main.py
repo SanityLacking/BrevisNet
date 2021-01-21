@@ -45,6 +45,10 @@ if __name__ == "__main__":
     # x = branchy.Run_mnistNormal(1)
     # x = branchy.Run_mnistTransfer(1)
 
+    #### build alexnet model
+    # x = branchy.Run_alexNet( 12, modelName="alexNetv4_new.hdf5", saveName = "alexNetv4_branched.hdf5")
+    
+
 
     # x = tf.keras.models.load_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
     # x.summary()
@@ -52,8 +56,9 @@ if __name__ == "__main__":
     # branchy.eval_branches(x,branchy.loadTrainingData(),1,"entropy")
     # branchy.find_mistakes(x,branchy.loadTrainingData(),1)
     
-    # x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
-    # x.summary()
+    x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
+    x.summary()
+    branchy.entropyMatrix(x,tf.keras.datasets.cifar10.load_data())
     # branchy.eval_branches(x,tf.keras.datasets.cifar10.load_data(),1,"entropy")
     # branchy.find_mistakes(x,tf.keras.datasets.cifar10.load_data(),1)
 
@@ -68,7 +73,7 @@ if __name__ == "__main__":
     # x = branchy.Run_alexNet(50, saveName = "alexnext_branched_fullModel_trained",transfer = False)
     # x.summary()
 
-    branchy.datasetStats(tf.keras.datasets.cifar10.load_data())
+    # branchy.datasetStats(tf.keras.datasets.cifar10.load_data())
 
     # x = tf.keras.models.load_model("models/alexnext_branched_fullModel_trained_branched_branched.hdf5")
     # x.summary()
