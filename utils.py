@@ -6,6 +6,7 @@ from tensorflow.keras.models import load_model
 import itertools
 import glob
 import os
+import pandas as pd
 # from keras.models import load_model
 # from keras.utils import CustomObjectScope
 # from keras.initializers import glorot_uniform
@@ -42,6 +43,89 @@ def visualize_model(model,name=""):
         name = name + ".png"
     #plot_model(model, to_file=name, show_shapes=True, show_layer_names=True)
 
+def KneeGraph(pred, labels, entropy, num_outputs, classes, output_names=[]):
+    """ generate a matrix of entropy values for all classes and outputs
+        pred: list of all predicted labels
+        labels: list of all actual labels. must match pred in size and shape
+        classes: list of all classes, for example [0,1,2,3]
+        output_names: list of names for each of the outputs. applies names to outputs in the same order as pred and labels.
+
+    """    
+    #graph the accuracy rate vs the entropy threshold.
+    #get series of entropy values, series of 
+    resultsDict = {}
+    results = np.equal(pred, labels)
+    pred = np.array(pred)
+    labels = np.array(labels)
+    entropy = np.array(entropy)
+    classCount = {}
+#     results = pred
+    labelClasses=classes
+    transpose_results = np.transpose(results)
+    transpose_preds = np.transpose(pred) #per exit rather then per input
+    transpose_entropy = np.transpose(entropy) #per exit rather then per input
+    transpose_labels = np.transpose(labels)
+#     print(transpose_results)
+#     print(transpose_preds)
+#     print(transpose_entropy)
+#     print(transpose_labels)
+    
+    
+    # %matplotlib inline
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-whitegrid')
+    fig = plt.figure()
+    # ax = plt.axes()
+    
+
+    series=[]
+    fig, axs = plt.subplots(2, 2)
+    fig.tight_layout()
+    df =  pd.DataFrame() 
+#     plt.subplots(2, 2, sharex='all', sharey='all')
+    for i, branch in enumerate(transpose_entropy):
+        series_branch=[]
+        
+        for j, ent in enumerate(branch):
+            series_entropy = {}
+            series_entropy["entropy"] = ent
+#             print("entropy: {}".format(ent))
+#             print(np.where(branch <= ent))
+            series_entropy["pred"] = transpose_preds[i][np.where(branch <= ent)]
+#             print(series_entropy["pred"] )
+            series_entropy["labels"] = transpose_labels[i][np.where(branch <= ent)]
+#             print(series_entropy["labels"] )
+            series_entropy["truth"] = transpose_results[i][np.where(branch <= ent)]
+#             print(series_entropy["truth"] )
+            print("accuracy:{},score {}, len: {}".format(transpose_results[i][np.where(branch <= ent)].sum()/len(transpose_results[i]),transpose_results[i][np.where(branch <= ent)].sum(), len(transpose_results[i])))
+            series_entropy["accuracy"] = transpose_results[i][np.where(branch <= ent)].sum()/len(transpose_results[i])
+#             print(series_entropy["accuracy"])
+            series_branch.append(series_entropy)
+        df = pd.DataFrame(series_branch)
+        df = df.sort_values(by=["entropy"])
+        
+#         plot()
+        
+        axs[round(int(i/2)), round(i%2)].plot(df["entropy"],df["accuracy"])
+#         axs[round(int(i/2)), round(i%2)].set_xlim([0,2])
+        axs[round(int(i/2)), round(i%2)].set_ylim([0,1])
+#         plt.xscale("logit")
+
+#         plt.plot(df["entropy"],df["accuracy"])
+#         plt.xlabel("entropy")
+#         plt.ylabel("accuracy")
+        if len(output_names) >= i:
+            axs[round(int(i/2)), round(i%2)].title.set_text("branch: {}".format(output_names[i]))
+        else:
+            axs[round(int(i/2)), round(i%2)].title.set_text("branch: {}".format(i))
+        series.append(series_branch)
+
+    # print(df)
+    plt.show()
+
+    
+
+    return series
 
 def entropyConfusionMatrix(pred, labels, entropy, num_outputs, classes, output_names=[]):
     """ generate a matrix of entropy values for all classes and outputs
@@ -185,7 +269,7 @@ def calcEntropy(y_hat):
         sum_entropy = 0
         for i in range(len(y_hat)):
             entropy =y_hat[i] * math.log(y_hat[i],2)
-            print(entropy)
+            # print(entropy)
             sum_entropy +=  entropy
 
         return -sum_entropy

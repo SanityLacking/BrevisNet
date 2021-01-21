@@ -22,10 +22,6 @@ from Alexnet_kaggle_v2 import *
 from branchyNet import BranchyNet
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> dc183174b963244a9bddc35ca7c3e87bd4d6ef3f
 
 if __name__ == "__main__":
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
@@ -47,15 +43,12 @@ if __name__ == "__main__":
     #load the dataset
     x = tf.keras.models.load_model("models/alexnet_branch_pooling.hdf5")
 
-<<<<<<< HEAD
-    y = branchy.BranchEntropyConfusionMatrix(x, tf.keras.datasets.cifar10.load_data())
-=======
->>>>>>> dc183174b963244a9bddc35ca7c3e87bd4d6ef3f
+    y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
 
     import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')
     #modelProfiler.getFlopsFromArchitecture(model,'alexnet')
-    layerFlops = modelProfiler.getLayerFlops_old('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
+    # layerFlops = modelProfiler.getLayerFlops_old('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
 
     #print the model structure summary
     # x.summary()

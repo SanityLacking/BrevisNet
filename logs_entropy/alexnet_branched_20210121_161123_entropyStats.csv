@@ -1,0 +1,646 @@
+0.25 3.3539256425613504e-08 [9] [9] "[ True]"
+0.5 6.164529984788539e-07 "[8 9]" "[8 9]" "[ True  True]"
+0.75 1.1194817724512962e-06 "[9 8 9]" "[9 8 9]" "[ True  True  True]"
+1.0 2.2433404444258614e-06 "[9 9 8 9]" "[9 9 8 9]" "[ True  True  True  True]"
+1.25 5.520827682994516e-06 "[9 9 8 2 9]" "[9 9 8 2 9]" "[ True  True  True  True  True]"
+1.5 5.922289714218014e-06 "[9 9 6 8 2 9]" "[9 9 6 8 2 9]" "[ True  True  True  True  True  True]"
+1.75 9.74854383080418e-06 "[6 9 9 6 8 2 9]" "[6 9 9 6 8 2 9]" "[ True  True  True  True  True  True  True]"
+2.0 1.0729160891979796e-05 "[9 6 9 9 6 8 2 9]" "[9 6 9 9 6 8 2 9]" "[ True  True  True  True  True  True  True  True]"
+2.25 1.6160626048411308e-05 "[9 6 9 9 5 6 8 2 9]" "[9 6 9 9 5 6 8 2 9]" "[ True  True  True  True  True  True  True  True  True]"
+2.5 3.5971290070389805e-05 "[9 6 9 9 5 6 8 2 9 6]" "[9 6 9 9 5 6 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True]"
+2.75 4.671806451101945e-05 "[9 7 6 9 9 5 6 8 2 9 6]" "[9 7 6 9 9 5 6 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True]"
+3.0 5.229019477341963e-05 "[9 7 6 9 9 5 6 9 8 2 9 6]" "[9 7 6 9 9 5 6 9 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True]"
+3.25 5.936290633574345e-05 "[9 7 6 9 9 5 6 9 8 8 2 9 6]" "[9 7 6 9 9 5 6 9 8 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True]"
+3.5 6.588161477283465e-05 "[9 7 6 9 9 5 6 9 7 8 8 2 9 6]" "[9 7 6 9 9 5 6 9 7 8 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True]"
+3.5 0.00014788946091848042 "[9 7 6 9 9 5 6 9 7 8 3 8 2 9 6]" "[9 7 6 9 9 5 6 9 7 8 5 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True False  True
+  True  True  True]"
+3.75 0.00015843591861503512 "[9 7 9 6 9 9 5 6 9 7 8 3 8 2 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 5 8 2 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True False
+  True  True  True  True]"
+4.0 0.0001730106052742471 "[9 7 9 6 9 9 5 6 9 7 8 3 8 2 8 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 5 8 2 8 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True False
+  True  True  True  True  True]"
+4.25 0.00033266915032055706 "[9 7 9 6 9 9 5 6 9 7 8 7 3 8 2 8 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 7 5 8 2 8 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+ False  True  True  True  True  True]"
+4.5 0.0008427896826284449 "[9 7 9 6 9 9 5 6 9 7 8 8 7 3 8 2 8 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 8 7 5 8 2 8 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True False  True  True  True  True  True]"
+4.75 0.0012337351020171318 "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 3 8 2 8 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 5 8 2 8 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True  True  True  True  True]"
+5.0 0.0015016239160231572 "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 7 3 8 2 8 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 7 5 8 2 8 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True False  True  True  True  True  True]"
+5.25 0.001574120395165911 "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 6]" "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True False  True  True  True  True  True  True]"
+5.5 0.0015812220269153807 "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 6 6]" "[9 7 9 6 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True False  True  True  True  True  True  True  True]"
+5.75 0.0025334011277583285 "[9 7 9 6 9 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 6 6]" "[9 7 9 6 9 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True False  True  True  True  True  True  True  True]"
+6.0 0.0026253116886195763 "[9 7 9 8 6 9 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 6 6]" "[9 7 9 8 6 9 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True False  True  True  True  True  True  True
+  True]"
+6.25 0.0027332820602128252 "[9 5 7 9 8 6 9 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 6 6]" "[9 5 7 9 8 6 9 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True False  True  True  True  True  True
+  True  True]"
+6.5 0.002993547962858936 "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 6 6]" "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True False  True  True  True  True
+  True  True  True]"
+6.5 0.0032978893338943363 "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 8 8 7 7 3 8 8 2 8 9 4 6 6]" "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 8 8 7 7 5 8 8 2 8 9 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True False  True  True  True  True
+  True False  True  True]"
+6.75 0.003757889546899114 "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 9 4 6 6]" "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 9 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True False  True  True  True
+  True  True False  True  True]"
+7.0 0.0038916076227824767 "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 1 9 4 6 6]" "[9 5 7 9 8 6 9 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 1 9 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True False  True  True  True
+  True  True  True False  True  True]"
+7.25 0.004313593476657737 "[9 5 7 9 8 6 9 5 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 1 9 4 6 6]" "[9 5 7 9 8 6 9 5 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 1 9 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True False  True  True
+  True  True  True  True False  True  True]"
+7.5 0.005941515188904631 "[9 5 7 9 8 6 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 1 9 4 6 6]" "[9 5 7 9 8 6 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 1 9 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True False  True
+  True  True  True  True  True False  True  True]"
+7.75 0.006363888731717343 "[9 5 7 9 8 6 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 1 9 6 4 6 6]" "[9 5 7 9 8 6 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True False  True
+  True  True  True  True  True  True False  True  True]"
+8.0 0.010300220967992246 "[6 9 5 7 9 8 6 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 1 9 6 4 6 6]" "[6 9 5 7 9 8 6 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True False
+  True  True  True  True  True  True  True False  True  True]"
+8.25 0.012612569141810416 "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 3 8 8 2 8 1 9 6 4 6 6]" "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 5 8 8 2 8 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+ False  True  True  True  True  True  True  True False  True  True]"
+8.5 0.013396079391613223 "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 3 6 8 8 2 8 1 9 6 4 6 6]" "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 6 9 7 8 3 8 8 7 7 5 6 8 8 2 8 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+ False  True  True  True  True  True  True  True  True False  True  True]"
+8.75 0.01402347411677457 "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 9 7 8 3 8 8 7 7 3 6 8 8 2 8 1 9 6 4 6 6]" "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 9 7 8 3 8 8 7 7 5 6 8 8 2 8 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True False  True  True  True  True  True  True  True  True False  True
+  True]"
+9.0 0.01831785179155505 "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 8 3 8 8 7 7 3 6 8 8 2 8 1 9 6 4 6
+ 6]" "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 8 3 8 8 7 7 5 6 8 8 2 8 1 9 6 7 6
+ 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True  True  True  True  True  True  True  True False
+  True  True]"
+9.25 0.019551517421544394 "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 8 8 2 8 1 9 6 4
+ 6 6]" "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 8 8 2 8 1 9 6 7
+ 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True False  True  True  True  True  True  True  True  True
+ False  True  True]"
+9.5 0.019780411264836165 "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 8 8 2 8 1 1 9 6
+ 4 6 6]" "[6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 8 8 2 8 1 1 9 6
+ 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True False  True  True  True  True  True  True  True  True
+  True False  True  True]"
+9.75 0.02574753698232482 "[8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 8 8 2 8 1 1 9
+ 6 4 6 6]" "[8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 8 8 2 8 1 1 9
+ 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True False  True  True  True  True  True  True  True
+  True  True False  True  True]"
+10.0 0.02620288171149425 "[8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 8 8 2 8 1 1
+ 9 6 4 6 6]" "[8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 8 8 2 8 1 1
+ 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True False  True  True  True  True  True  True  True
+  True  True  True False  True  True]"
+10.0 0.02730921568331556 "[8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 8 8 2 8 1
+ 1 9 6 4 6 6]" "[8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 8 8 2 8 1
+ 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True  True]"
+10.25 0.02854453329516289 "[3 8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 8 8 2 8
+ 1 1 9 6 4 6 6]" "[3 8 6 9 5 7 9 8 6 9 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 8 8 2 8
+ 1 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True False  True  True False  True  True  True
+  True  True  True  True  True False  True  True]"
+10.25 0.030125391186265314 "[3 8 6 9 5 7 9 8 6 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 8 8 2
+ 8 1 1 9 6 4 6 6]" "[3 8 6 9 5 7 9 8 6 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 8 8 2
+ 8 1 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True False  True  True False  True  True
+  True  True  True  True  True  True False  True  True]"
+10.5 0.032120541547539246 "[3 8 6 9 5 7 9 5 8 6 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 8 8
+ 2 8 1 1 9 6 4 6 6]" "[3 8 6 9 5 7 9 5 8 6 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 8 8
+ 2 8 1 1 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True False  True  True False  True
+  True  True  True  True  True  True  True False  True  True]"
+10.5 0.04058552637372008 "[3 8 6 9 5 7 9 5 8 6 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 8 8
+ 2 8 1 1 5 9 6 4 6 6]" "[3 8 6 9 5 7 9 5 8 6 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 8 8
+ 2 8 1 1 7 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True False  True  True False  True
+  True  True  True  True  True False  True  True False  True  True]"
+10.75 0.050495130055713745 "[3 8 6 9 5 7 9 5 8 6 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 2 8
+ 8 2 8 1 1 5 9 6 4 6 6]" "[3 8 6 9 5 7 9 5 8 6 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 2 8
+ 8 2 8 1 1 7 9 6 7 6 6]" "[ True  True  True  True  True  True  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True False  True  True False  True
+  True  True  True  True  True  True False  True  True False  True  True]"
+10.75 0.07517446590080547 "[3 8 6 1 9 5 7 9 5 8 6 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7 2
+ 8 8 2 8 1 1 5 9 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9 2
+ 8 8 2 8 1 1 7 9 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True  True
+ False  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True False  True  True False
+  True  True  True  True  True  True  True False  True  True False  True
+  True]"
+10.75 0.09422728751879829 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7
+ 2 8 8 2 8 1 1 5 9 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9
+ 2 8 8 2 8 1 1 7 9 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True False  True  True
+ False  True  True  True  True  True  True  True False  True  True False
+  True  True]"
+11.0 0.14016955286883598 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7
+ 2 8 8 2 8 1 1 5 9 8 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9
+ 2 8 8 2 8 1 1 7 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True False  True  True
+ False  True  True  True  True  True  True  True False  True  True  True
+ False  True  True]"
+11.25 0.153486107634946 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2 7
+ 2 8 8 2 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 9 6 5 4 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2 9
+ 2 8 8 2 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True False  True  True
+ False  True  True  True  True  True  True  True False  True  True  True
+  True False  True  True]"
+11.25 0.1637951806498798 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 9 6 5 4 9 1 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6 2
+ 7 2 8 8 2 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 9 6 5 4 9 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6 2
+ 9 2 8 8 2 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True  True  True  True  True False  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True False  True
+  True False  True  True  True  True  True  True  True False  True  True
+  True  True False  True  True]"
+11.5 0.1933365237385357 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 4 9 6 5 4 9 1 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3 6
+ 2 7 2 8 8 2 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 4 9 6 5 4 9 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5 6
+ 2 9 2 8 8 2 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True  True  True  True  True  True False  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True False
+  True  True False  True  True  True  True  True  True  True False  True
+  True  True  True False  True  True]"
+11.5 0.21496619419871935 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 7 9 8 3 8 8 7 7 3
+ 6 2 7 2 8 8 2 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 7 9 8 3 8 8 7 7 5
+ 6 2 9 2 8 8 2 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True False  True  True  True  True  True False  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+ False  True  True False  True  True  True  True  True  True  True False
+  True  True  True  True False  True  True]"
+11.75 0.23350930295755712 "[3 8 6 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8 7 7
+ 3 6 2 7 2 8 8 2 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8 7 7
+ 5 6 2 9 2 8 8 2 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True False
+  True False  True False  True  True  True  True  True False  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True False  True  True False  True  True  True  True  True  True  True
+ False  True  True  True  True False  True  True]"
+12.0 0.2609080073875133 "[3 8 6 1 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 3 6 2 7 2 8 8 2 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 1 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 5 6 2 9 2 8 8 2 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True  True
+ False  True False  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True  True False  True  True  True  True  True  True
+  True False  True  True  True  True False  True  True]"
+12.25 0.2719780995248099 "[3 8 6 1 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 3 6 2 7 2 8 8 2 3 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 1 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 5 6 2 9 2 8 8 2 3 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True  True
+ False  True False  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True  True False  True  True  True  True  True  True
+  True  True False  True  True  True  True False  True  True]"
+12.5 0.3134259774513851 "[3 8 6 1 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 3 6 2 7 2 8 8 2 3 8 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 1 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 5 6 2 9 2 8 8 2 3 8 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True  True
+ False  True False  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True  True False  True  True  True  True  True  True
+  True  True  True False  True  True  True  True False  True  True]"
+12.5 0.3231501080327922 "[3 8 6 1 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 7 3 6 2 7 2 8 8 2 3 8 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 1 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 5 7 5 6 2 9 2 8 8 2 3 8 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True  True
+ False  True False  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True False  True False  True  True False  True  True  True  True  True
+  True  True  True  True False  True  True  True  True False  True  True]"
+12.75 0.33222890890422957 "[3 8 6 1 1 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 7 7 3 6 1 2 7 2 8 8 2 3 8 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 1 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8 7
+ 5 7 5 6 1 2 9 2 8 8 2 3 8 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True  True  True  True  True  True  True  True
+ False  True False  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True False  True False  True  True  True False  True  True  True  True
+  True  True  True  True  True False  True  True  True  True False  True
+  True]"
+12.75 0.33394912716766384 "[3 8 6 1 1 0 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8
+ 7 7 7 3 6 1 2 7 2 8 8 2 3 8 8 1 1 5 8 9 8 6 4 6 6]" "[3 8 6 3 1 3 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8
+ 7 5 7 5 6 1 2 9 2 8 8 2 3 8 8 1 1 7 8 9 8 6 7 6 6]" "[ True  True  True False  True False  True  True  True  True  True  True
+  True False  True False  True False  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True False  True  True  True False  True  True  True
+  True  True  True  True  True  True False  True  True  True  True False
+  True  True]"
+13.0 0.3449128263355952 "[3 8 6 1 1 0 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8 8
+ 7 7 7 3 6 1 2 7 2 8 8 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 3 1 3 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8 8
+ 7 5 7 5 6 1 2 9 2 8 8 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True False  True False  True  True  True  True  True  True
+  True False  True False  True False  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True False  True False  True  True  True False  True  True  True
+  True  True  True  True  True  True False  True  True  True  True  True
+ False  True  True]"
+13.25 0.38388943428258904 "[3 8 6 1 3 1 0 9 5 7 9 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3 8
+ 8 7 7 7 3 6 1 2 7 2 8 8 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 3 3 1 3 9 5 7 9 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3 8
+ 8 7 5 7 5 6 1 2 9 2 8 8 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True False  True  True False  True  True  True  True  True
+  True  True False  True False  True False  True  True  True  True  True
+ False  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True False  True False  True  True  True False  True  True
+  True  True  True  True  True  True  True False  True  True  True  True
+  True False  True  True]"
+13.5 0.4294946632349647 "[3 8 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 9 3 7 9 8 3
+ 8 8 7 7 7 3 6 1 2 7 2 8 8 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 9 3 7 9 8 3
+ 8 8 7 5 7 5 6 1 2 9 2 8 8 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True False  True  True False  True  True  True  True  True
+  True  True  True False  True False  True False  True  True  True  True
+  True False  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True False  True False  True  True  True False  True
+  True  True  True  True  True  True  True  True False  True  True  True
+  True  True False  True  True]"
+13.5 0.4500746185891639 "[3 8 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 0 9 3 7 9 8
+ 3 8 8 7 7 7 3 6 1 2 7 2 8 8 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 8 9 3 7 9 8
+ 3 8 8 7 5 7 5 6 1 2 9 2 8 8 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True False  True  True False  True  True  True  True  True
+  True  True  True False  True False  True False  True  True  True  True
+  True False  True  True  True  True  True False  True  True  True  True
+  True  True  True  True  True False  True False  True  True  True False
+  True  True  True  True  True  True  True  True  True False  True  True
+  True  True  True False  True  True]"
+13.5 0.5723492280378739 "[3 8 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 0 9 3 7 9 8
+ 3 8 8 7 7 7 3 6 1 2 7 2 8 8 0 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 8 9 3 7 9 8
+ 3 8 8 7 5 7 5 6 1 2 9 2 8 8 9 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True False  True  True False  True  True  True  True  True
+  True  True  True False  True False  True False  True  True  True  True
+  True False  True  True  True  True  True False  True  True  True  True
+  True  True  True  True  True False  True False  True  True  True False
+  True  True  True False  True  True  True  True  True  True False  True
+  True  True  True  True False  True  True]"
+13.75 0.5765416356968489 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 5 4 9 1 9 5 4 6 6 0 9 3 7 9
+ 8 3 8 8 7 7 7 3 6 1 2 7 2 8 8 0 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 5 4 9 9 9 5 4 6 6 8 9 3 7 9
+ 8 3 8 8 7 5 7 5 6 1 2 9 2 8 8 9 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True False  True  True  True  True  True False  True  True  True
+  True  True  True  True  True  True False  True False  True  True  True
+ False  True  True  True False  True  True  True  True  True  True False
+  True  True  True  True  True False  True  True]"
+14.0 0.5769561768232945 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 1 9 5 4 6 6 0 9 3 7
+ 9 8 3 8 8 7 7 7 3 6 1 2 7 2 8 8 0 2 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 9 9 5 4 6 6 8 9 3 7
+ 9 8 3 8 8 7 5 7 5 6 1 2 9 2 8 8 9 2 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True False  True  True  True  True  True False  True  True
+  True  True  True  True  True  True  True False  True False  True  True
+  True False  True  True  True False  True  True  True  True  True  True
+ False  True  True  True  True  True False  True  True]"
+14.25 0.6289958678006253 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 1 9 5 4 6 6 0 9 3 7
+ 9 8 3 8 8 7 7 7 3 6 1 2 7 2 8 8 0 2 9 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 9 9 5 4 6 6 8 9 3 7
+ 9 8 3 8 8 7 5 7 5 6 1 2 9 2 8 8 9 2 9 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True False  True  True  True  True  True False  True  True
+  True  True  True  True  True  True  True False  True False  True  True
+  True False  True  True  True False  True  True  True  True  True  True
+  True False  True  True  True  True  True False  True  True]"
+14.5 0.649025954073588 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 1 9 5 4 6 6 0 9 3 7
+ 9 8 3 8 8 7 7 7 3 6 2 1 2 7 2 8 8 0 2 9 3 8 8 1 1 5 2 8 9 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 9 9 5 4 6 6 8 9 3 7
+ 9 8 3 8 8 7 5 7 5 6 2 1 2 9 2 8 8 9 2 9 3 8 8 1 1 7 2 8 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True False  True  True  True  True  True False  True  True
+  True  True  True  True  True  True  True False  True False  True  True
+  True  True False  True  True  True False  True  True  True  True  True
+  True  True False  True  True  True  True  True False  True  True]"
+14.5 0.6624053958525771 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 1 9 5 4 6 6 0 9 3 7
+ 9 8 3 8 8 7 7 7 3 6 2 1 2 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 9 9 5 4 6 6 8 9 3 7
+ 9 8 3 8 8 7 5 7 5 6 2 1 2 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True False  True  True  True  True  True False  True  True
+  True  True  True  True  True  True  True False  True False  True  True
+  True  True False  True  True  True False  True  True  True  True  True
+  True  True False False  True  True  True  True  True False  True  True]"
+14.75 0.7211661347518311 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9 3
+ 7 9 8 3 8 8 7 7 7 3 6 2 1 2 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9 3
+ 7 9 8 3 8 8 7 5 7 5 6 2 1 2 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True False  True False  True
+  True  True  True False  True  True  True False  True  True  True  True
+  True  True  True False False  True  True  True  True  True False  True
+  True]"
+14.75 0.7254057124682565 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9 3
+ 7 9 8 3 8 8 7 7 7 3 6 2 1 2 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8 6 4 6 6]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9 3
+ 7 9 8 3 8 8 7 5 7 5 6 2 1 2 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8 6 7 6 6]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True False  True False  True
+  True  True  True False  True  True  True False  True  True  True  True
+  True  True  True False False  True  True  True False  True  True False
+  True  True]"
+15.0 0.7671526347982423 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9 3
+ 7 9 8 3 8 8 7 7 7 3 6 2 1 2 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8 6 4 6 6
+ 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9 3
+ 7 9 8 3 8 8 7 5 7 5 6 2 1 2 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8 6 7 6 6
+ 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True False  True False  True
+  True  True  True False  True  True  True False  True  True  True  True
+  True  True  True False False  True  True  True False  True  True False
+  True  True  True]"
+15.25 0.7694373545629739 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9 3
+ 7 9 8 3 8 8 7 7 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8 6 4 6
+ 6 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9 3
+ 7 9 8 3 8 8 7 5 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8 6 7 6
+ 6 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True False  True False  True
+  True  True  True  True False  True  True  True False  True  True  True
+  True  True  True  True False False  True  True  True False  True  True
+ False  True  True  True]"
+15.25 0.7745220554896096 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9 3
+ 7 9 8 3 8 8 7 7 4 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8 6 4
+ 6 6 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9 3
+ 7 9 8 3 8 8 7 5 5 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8 6 7
+ 6 6 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True  True  True False  True False  True False  True  True  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True  True  True  True  True  True False False  True False
+  True  True  True  True  True False  True  True  True False  True  True
+  True  True  True  True  True False False  True  True  True False  True
+  True False  True  True  True]"
+15.25 0.7895758290752619 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9
+ 3 7 9 8 3 8 8 7 7 4 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8 6
+ 4 6 6 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9
+ 3 7 9 8 3 8 8 7 5 5 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8 6
+ 7 6 6 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True False  True False  True False  True  True
+  True  True  True  True  True False  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True False False  True
+ False  True  True  True  True  True False  True  True  True False  True
+  True  True  True  True  True  True False False  True  True  True False
+  True  True False  True  True  True]"
+15.25 0.9770765548852666 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 0 9 5 4 0 9 6 6 5 4 9 4 1 9 5 4 6 6 0 9
+ 3 7 9 8 3 8 8 7 7 4 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8 6
+ 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 2 9 4 4 4 9 6 6 5 4 9 4 9 9 5 4 6 6 8 9
+ 3 7 9 8 3 8 8 7 5 5 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8 6
+ 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True False  True False  True False  True  True
+  True  True  True  True  True False  True  True  True  True  True False
+  True  True  True  True  True  True  True  True  True False False  True
+ False  True  True  True  True  True False  True  True  True False  True
+  True  True  True  True  True  True False False  True  True  True False
+  True  True False  True  True False  True]"
+15.25 1.0252289162488002 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 0 9 5 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6 6 0
+ 9 3 7 9 8 3 8 8 7 7 4 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 8
+ 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 2 9 4 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6 6 8
+ 9 3 7 9 8 3 8 8 7 5 5 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 8
+ 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True False  True False  True False  True  True
+  True  True  True  True False  True False  True  True  True  True  True
+ False  True  True  True  True  True  True  True  True  True False False
+  True False  True  True  True  True  True False  True  True  True False
+  True  True  True  True  True  True  True False False  True  True  True
+ False  True  True False  True  True False  True]"
+15.5 1.0678609758270845 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 0 9 5 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6 6 0
+ 9 3 7 9 8 3 8 8 7 7 4 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0 3
+ 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 2 9 4 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6 6 8
+ 9 3 7 9 8 3 8 8 7 5 5 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9 3
+ 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True False  True False  True False  True  True
+  True  True  True  True False  True False  True  True  True  True  True
+ False  True  True  True  True  True  True  True  True  True False False
+  True False  True  True  True  True  True False  True  True  True False
+  True  True  True  True  True  True  True False False  True  True  True
+ False  True  True  True False  True  True False  True]"
+15.5 1.078741214042331 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 0 9 5 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6 6 0
+ 9 3 7 9 8 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9 0
+ 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 2 9 4 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6 6 8
+ 9 3 7 9 8 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9 9
+ 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True False  True False  True False  True  True
+  True  True  True  True False  True False  True  True  True  True  True
+ False  True  True  True  True  True  True  True  True  True False False
+ False  True False  True  True  True  True  True False  True  True  True
+ False  True  True  True  True  True  True  True False False  True  True
+  True False  True  True  True False  True  True False  True]"
+15.75 1.106195663987012 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 0 9 5 2 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6 6
+ 0 9 3 7 9 8 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8 9
+ 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 2 9 4 2 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6 6
+ 8 9 3 7 9 8 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8 9
+ 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True False  True False  True  True False  True
+  True  True  True  True  True False  True False  True  True  True  True
+  True False  True  True  True  True  True  True  True  True  True False
+ False False  True False  True  True  True  True  True False  True  True
+  True False  True  True  True  True  True  True  True False False  True
+  True  True False  True  True  True False  True  True False  True]"
+16.0 1.1085775254427785 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6
+ 6 0 9 3 7 9 8 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 2 5 2 8
+ 9 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6
+ 6 8 9 3 7 9 8 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 5 7 2 8
+ 9 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True  True False  True False  True  True False
+  True  True  True  True  True  True False  True False  True  True  True
+  True  True False  True  True  True  True  True  True  True  True  True
+ False False False  True False  True  True  True  True  True False  True
+  True  True False  True  True  True  True  True  True  True False False
+  True  True  True False  True  True  True False  True  True False  True]"
+16.25 1.1088695267213389 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6
+ 6 0 9 3 7 9 8 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 8 8 0 2 9 3 8 8 1 1 7 2 5 2
+ 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6
+ 6 8 9 3 7 9 8 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 8 8 9 2 9 3 8 8 1 1 7 5 7 2
+ 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True  True False  True False  True  True False
+  True  True  True  True  True  True False  True False  True  True  True
+  True  True False  True  True  True  True  True  True  True  True  True
+ False False False  True False  True  True  True  True  True False  True
+  True  True False  True  True  True  True  True  True  True  True False
+ False  True  True  True False  True  True  True False  True  True False
+  True]"
+16.25 1.1098781956611319 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 9 2 4 1 9 5 4 6
+ 6 0 9 3 7 9 8 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 6 8 8 0 2 9 3 8 8 1 1 7 2 5
+ 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 9 3 4 9 9 5 4 6
+ 6 8 9 3 7 9 8 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 3 8 8 9 2 9 3 8 8 1 1 7 5 7
+ 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True  True False  True False  True  True False
+  True  True  True  True  True  True False  True False  True  True  True
+  True  True False  True  True  True  True  True  True  True  True  True
+ False False False  True False  True  True  True  True  True False  True
+ False  True  True False  True  True  True  True  True  True  True  True
+ False False  True  True  True False  True  True  True False  True  True
+ False  True]"
+16.25 1.1150762169818835 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9 5 4
+ 6 6 0 9 3 7 9 8 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 6 8 8 0 2 9 3 8 8 1 1 7 2
+ 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9 5 4
+ 6 6 8 9 3 7 9 8 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 3 8 8 9 2 9 3 8 8 1 1 7 5
+ 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True  True False  True False  True  True False
+  True  True  True  True  True False  True False  True False  True  True
+  True  True  True False  True  True  True  True  True  True  True  True
+  True False False False  True False  True  True  True  True  True False
+  True False  True  True False  True  True  True  True  True  True  True
+  True False False  True  True  True False  True  True  True False  True
+  True False  True]"
+16.25 1.1308303449150436 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9 5 4
+ 6 6 0 9 3 7 9 8 0 3 8 8 7 7 4 6 7 3 6 2 1 2 3 7 2 6 8 8 0 2 9 3 8 8 1 1 7
+ 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9 5 4
+ 6 6 8 9 3 7 9 8 7 3 8 8 7 5 5 3 7 5 6 2 1 2 3 9 2 3 8 8 9 2 9 3 8 8 1 1 7
+ 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True  True False  True False  True  True False
+  True  True  True  True  True False  True False  True False  True  True
+  True  True  True False  True  True  True  True  True False  True  True
+  True  True False False False  True False  True  True  True  True  True
+ False  True False  True  True False  True  True  True  True  True  True
+  True  True False False  True  True  True False  True  True  True False
+  True  True False  True]"
+16.5 1.140680380100425 "[3 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9 5 4
+ 6 6 0 9 3 7 9 8 0 3 8 8 7 7 4 6 7 3 6 6 2 1 2 3 7 2 6 8 8 0 2 9 3 8 8 1 1
+ 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9 5 4
+ 6 6 8 9 3 7 9 8 7 3 8 8 7 5 5 3 7 5 6 6 2 1 2 3 9 2 3 8 8 9 2 9 3 8 8 1 1
+ 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True  True  True False  True  True False  True  True  True  True
+  True  True False  True  True  True False  True False  True  True False
+  True  True  True  True  True False  True False  True False  True  True
+  True  True  True False  True  True  True  True  True False  True  True
+  True  True False False False  True False  True  True  True  True  True
+  True False  True False  True  True False  True  True  True  True  True
+  True  True  True False False  True  True  True False  True  True  True
+ False  True  True False  True]"
+16.5 1.1666995927769988 "[3 8 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9 5
+ 4 6 6 0 9 3 7 9 8 0 3 8 8 7 7 4 6 7 3 6 6 2 1 2 3 7 2 6 8 8 0 2 9 3 8 8 1
+ 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 1 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9 5
+ 4 6 6 8 9 3 7 9 8 7 3 8 8 7 5 5 3 7 5 6 6 2 1 2 3 9 2 3 8 8 9 2 9 3 8 8 1
+ 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True False  True  True False  True  True False  True  True  True
+  True  True  True False  True  True  True False  True False  True  True
+ False  True  True  True  True  True False  True False  True False  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True False False False  True False  True  True  True  True
+  True  True False  True False  True  True False  True  True  True  True
+  True  True  True  True False False  True  True  True False  True  True
+  True False  True  True False  True]"
+16.75 1.1909695707401002 "[3 8 8 6 6 1 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9 5
+ 4 6 6 0 9 3 7 9 8 0 3 8 8 7 7 4 6 7 3 6 6 2 1 2 3 7 2 6 8 8 0 2 9 3 3 8 8
+ 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 1 6 6 3 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9 5
+ 4 6 6 8 9 3 7 9 8 7 3 8 8 7 5 5 3 7 5 6 6 2 1 2 3 9 2 3 8 8 9 2 9 3 3 8 8
+ 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True False  True  True False  True  True False  True  True  True
+  True  True  True False  True  True  True False  True False  True  True
+ False  True  True  True  True  True False  True False  True False  True
+  True  True  True  True False  True  True  True  True  True False  True
+  True  True  True False False False  True False  True  True  True  True
+  True  True False  True False  True  True False  True  True  True  True
+  True  True  True  True  True False False  True  True  True False  True
+  True  True False  True  True False  True]"
+17.0 1.2284852219331874 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9
+ 5 4 6 6 0 9 3 7 9 8 0 3 8 8 7 7 4 6 7 3 6 6 2 1 2 3 7 2 6 8 8 0 2 9 3 3 8
+ 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9
+ 5 4 6 6 8 9 3 7 9 8 7 3 8 8 7 5 5 3 7 5 6 6 2 1 2 3 9 2 3 8 8 9 2 9 3 3 8
+ 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True False  True
+  True False  True  True  True  True  True False  True False  True False
+  True  True  True  True  True False  True  True  True  True  True False
+  True  True  True  True False False False  True False  True  True  True
+  True  True  True False  True False  True  True False  True  True  True
+  True  True  True  True  True  True False False  True  True  True False
+  True  True  True False  True  True False  True]"
+17.0 1.2540472201412267 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9
+ 5 4 6 6 0 9 3 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 6 2 1 2 3 7 2 6 8 8 0 2 9 3 3
+ 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9
+ 5 4 6 6 8 9 3 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 6 2 1 2 3 9 2 3 8 8 9 2 9 3 3
+ 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True False  True
+  True False  True  True  True  True  True False  True False  True False
+  True  True  True  True  True False  True  True  True False  True  True
+ False  True  True  True  True False False False  True False  True  True
+  True  True  True  True False  True False  True  True False  True  True
+  True  True  True  True  True  True  True False False  True  True  True
+ False  True  True  True False  True  True False  True]"
+17.25 1.2542944617181662 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9
+ 5 4 6 6 0 9 3 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8 0 2 9 3
+ 3 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9
+ 5 4 6 6 8 9 3 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8 9 2 9 3
+ 3 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True False  True
+  True False  True  True  True  True  True False  True False  True False
+  True  True  True  True  True False  True  True  True False  True  True
+ False  True  True  True  True False False False  True False  True  True
+  True  True  True  True  True False  True False  True  True False  True
+  True  True  True  True  True  True  True  True False False  True  True
+  True False  True  True  True False  True  True False  True]"
+17.5 1.3465596095998393 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9
+ 5 4 6 6 0 9 3 9 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8 0 2 9
+ 3 3 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9
+ 5 4 6 6 8 9 3 9 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8 9 2 9
+ 3 3 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True False  True
+  True False  True  True  True  True  True False  True False  True False
+  True  True  True  True  True False  True  True  True  True False  True
+  True False  True  True  True  True False False False  True False  True
+  True  True  True  True  True  True False  True False  True  True False
+  True  True  True  True  True  True  True  True  True False False  True
+  True  True False  True  True  True False  True  True False  True]"
+17.5 1.5309416676672212 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1 9
+ 5 4 6 6 0 9 3 9 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8 0 2 9
+ 3 3 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9 9
+ 5 4 6 6 8 9 3 9 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8 9 2 9
+ 3 3 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True False  True
+  True False  True  True  True  True  True False  True False  True False
+  True  True  True  True  True False  True  True  True  True False  True
+  True False  True  True  True  True False False False  True False  True
+  True  True  True  True  True  True False  True False  True  True False
+  True  True  True  True  True  True  True  True  True False False  True
+  True  True False  True  True  True False  True  True False False  True]"
+17.75 1.6123905115382557 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 4 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1
+ 9 5 4 6 6 0 9 3 9 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8 0 2
+ 9 3 3 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 4 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9
+ 9 5 4 6 6 8 9 3 9 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8 9 2
+ 9 3 3 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True  True False
+  True  True False  True  True  True  True  True False  True False  True
+ False  True  True  True  True  True False  True  True  True  True False
+  True  True False  True  True  True  True False False False  True False
+  True  True  True  True  True  True  True False  True False  True  True
+ False  True  True  True  True  True  True  True  True  True False False
+  True  True  True False  True  True  True False  True  True False False
+  True]"
+18.0 1.612548642799482 "[3 8 8 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 4 9 5 2 4 0 9 6 6 5 4 5 9 2 4 1
+ 9 5 4 6 5 6 0 9 3 9 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8 0
+ 2 9 3 3 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 0 7]" "[3 8 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 4 9 4 2 4 4 9 6 6 5 4 3 9 3 4 9
+ 9 5 4 6 5 6 8 9 3 9 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8 9
+ 2 9 3 3 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 2 7]" "[ True  True False  True  True False  True  True  True False  True  True
+  True  True  True  True False  True  True  True False  True  True False
+  True  True False  True  True  True  True  True False  True False  True
+ False  True  True  True  True  True  True False  True  True  True  True
+ False  True  True False  True  True  True  True False False False  True
+ False  True  True  True  True  True  True  True False  True False  True
+  True False  True  True  True  True  True  True  True  True  True False
+ False  True  True  True False  True  True  True False  True  True False
+ False  True]"
+18.0 1.6566820996289247 "[3 8 8 0 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 4 9 5 2 4 0 9 6 6 5 4 5 9 2 4
+ 1 9 5 4 6 5 6 0 9 3 9 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8
+ 0 2 9 3 3 8 8 1 1 7 2 5 2 8 9 0 3 8 6 4 6 6 0 0 7]" "[3 8 1 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 4 9 4 2 4 4 9 6 6 5 4 3 9 3 4
+ 9 9 5 4 6 5 6 8 9 3 9 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8
+ 9 2 9 3 3 8 8 1 1 7 5 7 2 8 9 9 3 8 6 7 6 6 2 2 7]" "[ True  True False False  True  True False  True  True  True False  True
+  True  True  True  True  True False  True  True  True False  True  True
+ False  True  True False  True  True  True  True  True False  True False
+  True False  True  True  True  True  True  True False  True  True  True
+  True False  True  True False  True  True  True  True False False False
+  True False  True  True  True  True  True  True  True False  True False
+  True  True False  True  True  True  True  True  True  True  True  True
+ False False  True  True  True False  True  True  True False  True  True
+ False False  True]"
+18.0 1.7472396435316555 "[3 8 8 0 6 6 1 6 3 1 0 9 5 7 9 8 5 7 8 6 7 0 4 9 5 2 4 0 9 6 6 5 4 5 9 2 4
+ 1 9 5 4 6 5 6 0 9 3 9 7 6 9 8 0 3 8 8 7 7 4 6 7 3 6 3 6 2 1 2 3 7 2 6 8 8
+ 0 2 9 3 3 8 8 1 1 7 2 5 2 7 8 9 0 3 8 6 4 6 6 0 0 7]" "[3 8 1 1 6 6 3 6 3 1 3 9 5 7 9 8 5 9 8 6 7 2 4 9 4 2 4 4 9 6 6 5 4 3 9 3 4
+ 9 9 5 4 6 5 6 8 9 3 9 7 2 9 8 7 3 8 8 7 5 5 3 7 5 6 3 6 2 1 2 3 9 2 3 8 8
+ 9 2 9 3 3 8 8 1 1 7 5 7 2 9 8 9 9 3 8 6 7 6 6 2 2 7]" "[ True  True False False  True  True False  True  True  True False  True
+  True  True  True  True  True False  True  True  True False  True  True
+ False  True  True False  True  True  True  True  True False  True False
+  True False  True  True  True  True  True  True False  True  True  True
+  True False  True  True False  True  True  True  True False False False
+  True False  True  True  True  True  True  True  True False  True False
+  True  True False  True  True  True  True  True  True  True  True  True
+ False False  True False  True  True False  True  True  True False  True
+  True False False  True]"
