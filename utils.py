@@ -191,6 +191,88 @@ def KneeGraphClasses(pred, labels, entropy, num_outputs, classes, output_names=[
     returnData = pd.DataFrame(returnData)
     return returnData
 
+def KneeGraphPredictedClasses(pred, labels, entropy, num_outputs, classes, output_names=[]):
+    """ generate a matrix of entropy values for all classes and outputs
+        pred: list of all predicted labels
+        labels: list of all actual labels. must match pred in size and shape
+        classes: list of all classes, for example [0,1,2,3]
+        output_names: list of names for each of the outputs. applies names to outputs in the same order as pred and labels.
+
+    """    
+    #graph the accuracy rate vs the entropy threshold.
+    #get series of entropy values, series of 
+    resultsDict = {}
+    results = np.equal(pred, labels)
+    pred = np.array(pred)
+    labels = np.array(labels)
+    entropy = np.array(entropy)
+    classCount = {}
+#     results = pred
+    labelClasses=classes
+    transpose_results = np.transpose(results) #truths
+    transpose_preds = np.transpose(pred) #per exit rather then per input
+    transpose_entropy = np.transpose(entropy) #per exit rather then per input
+    transpose_labels = np.transpose(labels)
+#     print(transpose_results)
+#     print(transpose_preds)
+#     print(transpose_entropy)
+#     print(transpose_labels)
+    # %matplotlib inline
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-whitegrid')
+    fig = plt.figure()
+    series=[]
+    fig, axs = plt.subplots(2, 2)
+    fig.tight_layout()
+    df =  pd.DataFrame() 
+#     print(transpose_entropy)
+#     for branch in branches:
+#          for class in classes:
+#                 for entropy in entropies:
+#                     classAccuracy = sum of truth labels /count of truth labels where entropies <= entropy 
+    returnData = []
+    for i, branchEntropy in enumerate(transpose_entropy):
+        print("branch {}: {}".format(i,branchEntropy))
+        classEntropy = {}
+        for j, labelClass in enumerate(labelClasses):
+            classEntropy[labelClass] = []
+            print("class {}".format(labelClass))
+            for k, entropy in enumerate(branchEntropy):
+                # if there are no entries for a label class, this would produce an accuracy of NaN, so instead skip. 
+#                 print("sum is: {} len is: {}, combined is: {}".format(transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum(), len(transpose_labels[i][np.where((transpose_labels[i] == labelClass))]),transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(transpose_labels[i][np.where((transpose_labels[i] == labelClass))])))
+                if len(transpose_preds[i][np.where((transpose_preds[i] == labelClass))])==0 :
+#                     print("skip!")
+                    continue
+                seriesEntropy = {}
+                seriesEntropy["entropy"] = entropy
+                seriesEntropy["pred"] = transpose_preds[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))] # select all where labelClass is PREDICTED
+                seriesEntropy["labels"] = transpose_labels[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))] # select all where labelClass is PREDICTED
+                seriesEntropy["accuracy"] = transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(seriesEntropy["pred"])
+                classEntropy[labelClass].append(seriesEntropy)
+            df = pd.DataFrame(classEntropy[labelClass],columns=["entropy","pred","labels","accuracy"])
+            df = df.sort_values(by=["entropy"])
+            print(df)
+            axs[round(int(i/2)), round(i%2)].plot(df["entropy"],df["accuracy"], label="Class: {}".format(labelClass),alpha=0.8)        
+        if len(output_names) >= i:
+            axs[round(int(i/2)), round(i%2)].title.set_text("branch: {}".format(output_names[i]))
+        else:
+            axs[round(int(i/2)), round(i%2)].title.set_text("branch: {}".format(i))
+            
+        returnData.append(classEntropy)
+    lines = []
+    labels = []
+    for ax in fig.axes:
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+        axLine, axLabel = ax.get_legend_handles_labels()
+        lines=(axLine)
+        labels=(axLabel)
+        
+    fig.legend(lines, labels,bbox_to_anchor=(1., 1), loc=2,borderaxespad=0.,frameon=True)
+
+    plt.show()
+
+    return returnData
+
 def entropyConfusionMatrix(pred, labels, entropy, num_outputs, classes, output_names=[]):
     """ generate a matrix of entropy values for all classes and outputs
         pred: list of all predicted labels
