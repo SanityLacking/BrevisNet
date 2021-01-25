@@ -73,14 +73,15 @@ if __name__ == "__main__":
     print(x.outputs)
 
 
-    y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
+    # y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
+    y = branchy.BranchKneeGraphClasses(x, tf.keras.datasets.cifar10.load_data())
 
     import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')
     #modelProfiler.getFlopsFromArchitecture(model,'alexnet')
     # layerFlops = modelProfiler.getLayerFlops_old('models/alexnet_branch_pooling.hdf5','alexnet_branch_pooling')
 
-    y = branchy.BranchEntropyConfusionMatrix(x, tf.keras.datasets.cifar10.load_data())
+    # y = branchy.BranchEntropyConfusionMatrix(x, tf.keras.datasets.cifar10.load_data())
 
     # y = branchy.BranchEntropyMatrix(x, tf.keras.datasets.cifar10.load_data())
 

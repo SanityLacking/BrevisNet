@@ -4,6 +4,7 @@
 data/*
 logs/*
 */logs/*
+*/logs_entropy/*
 tensorflow_2_tutorials-master/logs/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
