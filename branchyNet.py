@@ -785,9 +785,9 @@ class BranchyNet:
         labels = pd.DataFrame(labels)
         predEntropy = pd.DataFrame(predEntropy)
 
-        predClasses.to_csv("results/predClasses.csv", sep=',', mode='a')
-        labels.to_csv("results/labels.csv", sep=',', mode='a')
-        predEntropy.to_csv("results/predEntropy.csv", sep=',', mode='a')
+        predClasses.to_csv("results/predClasses.csv", sep=',', mode='w',index=False)
+        labels.to_csv("results/labels.csv", sep=',', mode='w',index=False)
+        predEntropy.to_csv("results/predEntropy.csv", sep=',', mode='w',index=False)
 
 
         # results = KneeGraph(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
