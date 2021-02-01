@@ -15,7 +15,10 @@ import pandas as pd
 import math
 import pydot
 import os
+import math
 from matplotlib.ticker import FormatStrFormatter
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 
@@ -165,8 +168,8 @@ def KneeGraphClasses(pred, labels, entropy, num_outputs, classes, output_names=[
                     continue
                 seriesEntropy = {}
                 seriesEntropy["entropy"] = entropy
-                seriesEntropy["pred"] = transpose_labels[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))]
-                seriesEntropy["accuracy"] = transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(seriesEntropy["pred"])
+                seriesEntropy["pred"] = transpose_preds[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))]
+                seriesEntropy["accuracy"] = transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(transpose_labels[i][np.where(transpose_labels[i] == labelClass)])
                 classEntropy[labelClass].append(seriesEntropy)
             df = pd.DataFrame(classEntropy[labelClass],columns=["entropy","pred","accuracy"])
             df = df.sort_values(by=["entropy"])
@@ -185,7 +188,15 @@ def KneeGraphClasses(pred, labels, entropy, num_outputs, classes, output_names=[
         axLine, axLabel = ax.get_legend_handles_labels()
         lines=(axLine)
         labels=(axLabel)
-        
+    
+        # add a big axes, hide frame
+    fig.add_subplot(111, frameon=False)
+    # hide tick and tick label of the big axes
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    plt.grid(False)
+    plt.xlabel("Entropy")
+    plt.ylabel("Accuracy")
+
     fig.legend(lines, labels,bbox_to_anchor=(1., 1), loc=2,borderaxespad=0.,frameon=True)
     plt.show()
     returnData = pd.DataFrame(returnData)
@@ -266,11 +277,36 @@ def KneeGraphPredictedClasses(pred, labels, entropy, num_outputs, classes, outpu
         axLine, axLabel = ax.get_legend_handles_labels()
         lines=(axLine)
         labels=(axLabel)
-        
+    
+        # add a big axes, hide frame
+    fig.add_subplot(111, frameon=False)
+    # hide tick and tick label of the big axes
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    plt.grid(False)
+    plt.xlabel("Entropy")
+    plt.ylabel("Accuracy")
+
     fig.legend(lines, labels,bbox_to_anchor=(1., 1), loc=2,borderaxespad=0.,frameon=True)
-
-    plt.show()
-
+#     plt.show()
+    #######
+    df = pd.DataFrame(columns=["entropy"])
+    for i, branch in enumerate(returnData):
+        branchOutput = []
+        for j, classList in branch.items():
+            entropy =np.empty([0,len(classList)])
+            eList = []
+            aList = []
+            for k in classList:
+                eList.append(k["entropy"])
+                aList.append(k["accuracy"])
+            e = pd.DataFrame({"entropy":eList,"branch{}_class{}_accuracy".format(i,j):aList})
+            # print(e)
+            # df.join(e.set_index('entropy'), on='entropy')
+            df = pd.merge(df,e,on="entropy",how="outer")
+            # df = pd.concat([df,e])
+    print("-------")
+    print(df)
+    df.to_csv("graph_output_outer.csv")
     return returnData
 
 def entropyConfusionMatrix(pred, labels, entropy, num_outputs, classes, output_names=[]):

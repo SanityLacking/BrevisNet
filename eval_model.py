@@ -74,7 +74,8 @@ if __name__ == "__main__":
 
 
     # y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
-    y = branchy.BranchKneeGraphClasses(x, tf.keras.datasets.cifar10.load_data())
+    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data())
+    
 
     import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')

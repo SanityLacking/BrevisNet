@@ -737,6 +737,62 @@ class BranchyNet:
 
         return 
     
+    def GetResultsCSV(self,model,dataset):
+        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+        
+        output_names = [i.name for i in model.outputs]
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
+        
+        predictions = []
+        labels = []
+        model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+        iterator = iter(test_ds)
+        indices = []
+        # for j in range(len(test_ds)):
+        for j in range(1000):
+
+            print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
+
+            item = iterator.get_next()
+            prediction = model.predict(item[0])
+            predictions.append(prediction)
+            # print(prediction)
+            labels.append(item[1].numpy().tolist())
+        labels = [expandlabels(x,num_outputs)for x in labels]
+        predEntropy =[]
+        predClasses =[]
+        print("predictions complete, analyizing")
+        for i,output in enumerate(predictions):
+            # print(output)
+            for k, pred in enumerate(output):
+                pred_classes=[]
+                pred_entropy = []
+                print("image: {} of {}".format(i,len(predictions)),end='\r')
+                for l, branch in enumerate(pred):
+                    Pclass = np.argmax(branch[0])
+                    pred_classes.append(Pclass) 
+                    pred_entropy.append(calcEntropy(branch[0]))                       
+                predClasses.append(pred_classes)
+                predEntropy.append(pred_entropy)
+                
+        # print(predClasses)
+        # print(predEntropy)
+        # print(labels)
+        # labels = list(map(expandlabels,labels,num_outputs))
+        labelClasses = [0,1,2,3,4,5,6,7,8,9]
+        predClasses = pd.DataFrame(predClasses)
+        labels = pd.DataFrame(labels)
+        predEntropy = pd.DataFrame(predEntropy)
+
+        predClasses.to_csv("results/predClasses.csv", sep=',', mode='a')
+        labels.to_csv("results/labels.csv", sep=',', mode='a')
+        predEntropy.to_csv("results/predEntropy.csv", sep=',', mode='a')
+
+
+        # results = KneeGraph(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        # results.to_csv("logs_entropy/{}_{}_entropyStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
+        return
 
     def BranchKneeGraph(self,model,dataset):
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
@@ -804,7 +860,7 @@ class BranchyNet:
         iterator = iter(test_ds)
         indices = []
         # for j in range(len(test_ds)):
-        for j in range(100):
+        for j in range(10):
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
             item = iterator.get_next()
             prediction = model.predict(item[0])
@@ -833,7 +889,7 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = KneeGraphPredictedClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        results = KneeGraphClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         # f = open("logs_entropy/{}_{}_entropyStats.txt".format(model.name,time.strftime("%Y%m%d_%H%M%S")), "w")
         # f.write(json.dumps(results))
         results.to_csv("logs_entropy/{}_{}_PredictedClassesStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
@@ -884,10 +940,10 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = KneeGraphClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        results = KneeGraphPredictedClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         # f = open("logs_entropy/{}_{}_entropyStats.txt".format(model.name,time.strftime("%Y%m%d_%H%M%S")), "w")
         # f.write(json.dumps(results))
-        results.to_csv("logs_entropy/{}_{}_entropyClassesStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
+        # results.to_csv("logs_entropy/{}_{}_entropyClassesStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
         # f.close()
         # print(results)
         # print(pd.DataFrame(results).T)
