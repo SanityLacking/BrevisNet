@@ -6,11 +6,6 @@ from tensorflow.keras import layers, models
 from tensorflow.keras.models import load_model
 import itertools
 import sys
-
-# from keras.models import load_model
-# from keras.utils import CustomObjectScope
-# from keras.initializers import glorot_uniform
-
 import math
 import pydot
 import os
@@ -21,11 +16,9 @@ from utils import *
 from Alexnet_kaggle_v2 import * 
 from branchyNet import BranchyNet
 
-
 def evalBranchMatrix_old(model, input, labels=""):
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
     model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
-
     print(type(input))
     if labels == "":
         if type(input)=="tensorflow.python.data.ops.dataset_ops.BatchDataset":
@@ -33,7 +26,6 @@ def evalBranchMatrix_old(model, input, labels=""):
             pass
         else: 
             print("no")
-    
     iterator = iter(input)
     item = iterator.get_next()
     pred=[]

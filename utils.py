@@ -289,3 +289,12 @@ def fullprint(*args, **kwargs):
     numpy.set_printoptions(threshold=numpy.inf)
     pprint(*args, **kwargs)
     numpy.set_printoptions(**opt)
+
+def exitAccuracy(results, labels, classes=[]):
+    """ find the accuracy scores of the main network exit for each class
+            if classes is empty, return the average accuracy for all labels
+    """
+    classAcc = {}
+    for i, labelClass in enumerate(classes):
+        classAcc[labelClass] = results[np.where(labels==labelClass)].sum()/len(labels[np.where(labels == labelClass)])
+    return classAcc

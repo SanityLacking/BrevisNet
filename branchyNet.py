@@ -516,6 +516,64 @@ class BranchyNet:
 
         return 
 
+    def predict(self, model, dataset, thresholds=[]):
+        """ run the model using the provided confidence thresholds            
+        """ 
+        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+
+        train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,32)                       
+        model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+
+        run_logdir = get_run_logdir(model.name)
+        tensorboard_cb = keras.callbacks.TensorBoard(run_logdir +"/eval")
+        predictions = []
+        labels = []
+        labelClasses = [0,1,2,3,4,5,6,7,8,9]
+
+
+
+        """ For the first version testing purpose of this function, the whole model is run for each 
+            input item. in future versions the model will be run sequentially from branch to branch, exiting run when 
+            an accepted confidence score per item is achieved.
+
+        """
+
+        iterator = iter(test_ds)
+        for j in range(len(test_ds)):
+        # for j in range(10):
+            # print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
+            item = iterator.get_next()
+            prediction = model.predict(item[0])
+            predictions.append(prediction)
+            # print(prediction)
+            labels.append(item[1].numpy().tolist()) #put a copy of the label (second element in the item tuple) in the labels list.
+        labels = [expandlabels(x,num_outputs)for x in labels]
+        predEntropy =[]
+        predClasses =[]
+        print("predictions complete, analyizing")
+
+
+        for i,output in enumerate(predictions):
+            for k, pred in enumerate(output):
+                pred_classes=[]
+                pred_entropy = []
+                print("image: {} of {}".format(i,len(predictions)),end='\r')
+                for l, branch in enumerate(pred):
+                    Pclass = np.argmax(branch[0])
+                    pred_classes.append(Pclass) 
+                    pred_entropy.append(calcEntropy(branch[0]))                       
+                predClasses.append(pred_classes)
+                predEntropy.append(pred_entropy)
+        
+        results = np.equal(predictions, labels)
+        labels = np.array(labels)
+        transpose_results = np.transpose(results) #truths
+        transpose_labels = np.transpose(labels)
+
+        mAcc = exitAccuracy(transpose_results[0],transpose_labels[0], labelClasses)
+        # results = eval.KneeGraphClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        return
+
     def old_entropyMatrix(self, model, dataset):
         """
             calculate the entropy of the branches for the test set.
@@ -650,7 +708,6 @@ class BranchyNet:
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         
         output_names = [i.name for i in model.outputs]
-        (train_images, train_labels), (test_images, test_labels) = dataset
         train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
         
         predictions = []
@@ -703,7 +760,6 @@ class BranchyNet:
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         
         output_names = [i.name for i in model.outputs]
-        (train_images, train_labels), (test_images, test_labels) = dataset
         train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
         
         predictions = []
@@ -711,8 +767,8 @@ class BranchyNet:
         model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
         iterator = iter(test_ds)
         indices = []
-        # for j in range(len(test_ds)):
-        for j in range(10):
+        for j in range(len(test_ds)):
+        # for j in range(10):
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
             item = iterator.get_next()
             prediction = model.predict(item[0])
@@ -805,7 +861,6 @@ class BranchyNet:
     def BranchEntropyConfusionMatrix(self, model, dataset):
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         
-        output_names = [i.name for i in model.outputs]
         (train_images, train_labels), (test_images, test_labels) = dataset
         train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
         
@@ -816,9 +871,7 @@ class BranchyNet:
         indices = []
         for j in range(len(test_ds)):
         # for j in range(5):
-
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
-
             item = iterator.get_next()
             prediction = model.predict(item[0])
             predictions.append(prediction)
@@ -913,9 +966,7 @@ class BranchyNet:
         indices = []
         # for j in range(len(test_ds)):
         for j in range(len(test_ds)):
-
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
-
             item = iterator.get_next()
             prediction = model.predict(item[0])
             predictions.append(prediction)
@@ -927,9 +978,7 @@ class BranchyNet:
         for i,output in enumerate(predictions):
             # print(output)
             for k, pred in enumerate(output):
-                pred_classes=[]
-                pred_entropy = []
-                label_classes = []
+                pred_classes=[]               
                 print("image: {} of {}".format(i,len(predictions)),end='\r')
                 for l, branch in enumerate(pred):
                     # print(l)
@@ -1006,7 +1055,6 @@ class BranchyNet:
                 for i,elem in enumerate(prediction[0][1]):
                     # print(i,end='\r')
                     Pclass = np.argmax(elem)
-                    
                     if Pclass != test_labels[j]:
                         print("test image: {}, pred Class:{}, actual Class:{}".format(j, Pclass,test_labels[j]))
                         indices.append(i)

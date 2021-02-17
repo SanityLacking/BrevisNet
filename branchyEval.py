@@ -466,8 +466,6 @@ class branchyEval:
         else:
             print("input is not a Dataframe, {}".format(type(df)))
             return None
-    
-    
         
     
     def findMainExitAccuracies(pred, labels, num_outputs, classes=[], output_names=[],graph=True):
@@ -477,24 +475,20 @@ class branchyEval:
         results = np.equal(pred, labels)
         pred = np.array(pred)
         labels = np.array(labels)
-        classCount = {}
         labelClasses=classes
         transpose_results = np.transpose(results) #truths
-        transpose_preds = np.transpose(pred) #per exit rather then per input
+        # transpose_preds = np.transpose(pred) #per exit rather then per input
         transpose_labels = np.transpose(labels)
         # %matplotlib inline
         if graph==True:
             plt.style.use('seaborn-whitegrid')
             fig = plt.figure()
-            series=[]
             fig.tight_layout()
         df =  pd.DataFrame() 
-        returnData = []
-        classAcc= {}
-        for i, labelClass in enumerate(labelClasses):
-            classAcc[labelClass] = transpose_results[0][np.where(transpose_labels[0]==labelClass)].sum()/len(transpose_labels[0][np.where(transpose_labels[0] == labelClass)])
-            if graph==True:
-                plt.bar(labelClass, classAcc[labelClass], label="Class: {}".format(labelClass),alpha=0.8)        
+        classAcc= exitAccuracy(transpose_results[0],transpose_labels[0],labelClasses)
+        if graph==True:
+            for i in classAcc:
+                plt.bar(labelClasses[i], classAcc[labelClasses[i]], label="Class: {}".format(labelClasses[i]),alpha=0.8)        
         print(classAcc)
     #     print(sum(classAcc.values())/len(classAcc.values()))
         if graph==True:
@@ -505,87 +499,88 @@ class branchyEval:
         return classAcc
     
 
-    def findThreshold(pred, labels, entropy, num_outputs, classes, output_names=[],mainBranchNum=0,graph=False):
-        """    Find and Mark the threshold points for each class.
-            mainbranchNum: the position in the pred array of the main exit, defaults to the first exit.
-        """    
-        resultsDict = {}
-        results = np.equal(pred, labels)
-        pred = np.array(pred)
-        labels = np.array(labels)
-        entropy = np.array(entropy)
-        classCount = {}
-    #     results = pred
-        labelClasses=classes
-        transpose_results = np.transpose(results) #truths
-        transpose_preds = np.transpose(pred) #per exit rather then per input
-        transpose_entropy = np.transpose(entropy) #per exit rather then per input
-        transpose_labels = np.transpose(labels)
-        # %matplotlib inline
-        
+    
+def findThreshold(pred, labels, entropy, num_outputs, classes, output_names=[],mainBranchNum=0,graph=False):
+    """    Find and Mark the threshold points for each class.
+        mainbranchNum: the position in the pred array of the main exit, defaults to the first exit.
+    """    
+    resultsDict = {}
+    results = np.equal(pred, labels)
+    pred = np.array(pred)
+    labels = np.array(labels)
+    entropy = np.array(entropy)
+    classCount = {}
+    labelClasses=classes
+    transpose_results = np.transpose(results) #truths
+    transpose_preds = np.transpose(pred) #per exit rather then per input
+    transpose_entropy = np.transpose(entropy) #per exit rather then per input
+    transpose_labels = np.transpose(labels)
+    if graph:
         plt.style.use('seaborn-whitegrid')
         fig = plt.figure()
         series=[]
         fig, axs = plt.subplots(2, 2)
         fig.tight_layout()
-        df =  pd.DataFrame() 
-        returnData = []
-        
-        ##find the main exit accuracy levels to compare the branches to.
-        ##assume the first branch is the main branch to match too
-        
-        mainAcc = branchyEval.findMainExitAccuracies(pred, labels, num_outputs, classes, output_names, graph=False)
-        thresholdPoints={}
-        colors = cm.rainbow(np.linspace(0, 1, len(labelClasses)))
-        for i, branchEntropy in enumerate(transpose_entropy):
-            print("branch {}".format(i))
-            classEntropy = {}
-            thresholdPoints[output_names[i]] = {}
-            for j, labelClass in enumerate(labelClasses):
-                classEntropy[labelClass] = []
-                for k, entropy in enumerate(branchEntropy):
-    #                 print("sum is: {} len is: {}, combined is: {}".format(transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum(), len(transpose_labels[i][np.where((transpose_labels[i] == labelClass))]),transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(transpose_labels[i][np.where((transpose_labels[i] == labelClass))])))
-                    if len(transpose_preds[i][np.where((transpose_preds[i] == labelClass))])==0 :
-    #                     print("skip!")
-                        continue
-                    seriesEntropy = {}
-                    seriesEntropy["entropy"] = entropy
-                    seriesEntropy["pred"] = transpose_preds[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))] # select all where labelClass is PREDICTED
-                    seriesEntropy["labels"] = transpose_labels[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))] # select all where labelClass is PREDICTED
-                    seriesEntropy["accuracy"] = transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(transpose_labels[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))])
-                    seriesEntropy["count"] = len(transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))])
-                    classEntropy[labelClass].append(seriesEntropy)
-                df = pd.DataFrame(classEntropy[labelClass],columns=["entropy","pred","labels","accuracy","count"])
-                threshold_idx = find_neighbours(df[["accuracy","count"]],mainAcc[labelClass],"accuracy")
-                thresholdPoints[output_names[i]][labelClass] = df.iloc[threshold_idx][["accuracy","count","entropy"]].to_dict()
-                maxRowidx = df["count"].idxmax()
-    #             print("nearest value to {} is {} at {} with {} counts ".format(mainAcc[labelClass],df["accuracy"][threshold_idx],threshold_idx, df["count"][threshold_idx]))
-    #             print("The max count value is {} with {} counts".format(float(df.iloc[maxRowidx]["accuracy"]), int(df.iloc[maxRowidx]["count"])))
+    df =  pd.DataFrame() 
+    returnData = []
+    
+    ##find the main exit accuracy levels to compare the branches to.
+    ##assume the first branch is the main branch to match too
+    
+    mainAcc = findMainExitAccuracies(pred, labels, num_outputs, classes, output_names, graph=False)
+    thresholdPoints={}
+    colors = cm.rainbow(np.linspace(0, 1, len(labelClasses)))
+    for i, branchEntropy in enumerate(transpose_entropy):
+        print("branch {}".format(i))
+        classEntropy = {}
+        thresholdPoints[output_names[i]] = {}
+        for j, labelClass in enumerate(labelClasses):
+            classEntropy[labelClass] = []
+            for k, entropy in enumerate(branchEntropy):
+#                 print("sum is: {} len is: {}, combined is: {}".format(transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum(), len(transpose_labels[i][np.where((transpose_labels[i] == labelClass))]),transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(transpose_labels[i][np.where((transpose_labels[i] == labelClass))])))
+                if len(transpose_preds[i][np.where((transpose_preds[i] == labelClass))])==0 :
+#                     print("skip!")
+                    continue
+                seriesEntropy = {}
+                seriesEntropy["entropy"] = entropy
+                seriesEntropy["pred"] = transpose_preds[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))] # select all where labelClass is PREDICTED
+                seriesEntropy["labels"] = transpose_labels[i][np.where((branchEntropy <= entropy) & (transpose_preds[i] == labelClass))] # select all where labelClass is PREDICTED
+                seriesEntropy["accuracy"] = transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))].sum()/len(transpose_labels[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))])
+                seriesEntropy["count"] = len(transpose_results[i][np.where((branchEntropy <= entropy) & (transpose_labels[i] == labelClass))])
+                classEntropy[labelClass].append(seriesEntropy)
+            df = pd.DataFrame(classEntropy[labelClass],columns=["entropy","pred","labels","accuracy","count"])
+            threshold_idx = find_neighbours(df[["accuracy","count"]],mainAcc[labelClass],"accuracy")
+            thresholdPoints[output_names[i]][labelClass] = df.iloc[threshold_idx][["accuracy","count","entropy"]].to_dict()
+            maxRowidx = df["count"].idxmax()
+#             print("nearest value to {} is {} at {} with {} counts ".format(mainAcc[labelClass],df["accuracy"][threshold_idx],threshold_idx, df["count"][threshold_idx]))
+#             print("The max count value is {} with {} counts".format(float(df.iloc[maxRowidx]["accuracy"]), int(df.iloc[maxRowidx]["count"])))
+            if graph:
                 axs[round(int(i/2)), round(i%2)].plot(df.iloc[threshold_idx]["count"],df.iloc[threshold_idx]["accuracy"],marker='v', markersize=5, color=colors[j])
                 df = df.sort_values(by=["count"])
                 axs[round(int(i/2)), round(i%2)].plot(df["count"],df["accuracy"], label="Class: {}".format(labelClass), color=colors[j], alpha=0.8)        
-                
-                axs[round(int(i/2)), round(i%2)].plot()
-                
-                axs[round(int(i/2)), round(i%2)].set_ylim([0, 1])
 
+                axs[round(int(i/2)), round(i%2)].plot()
+
+                axs[round(int(i/2)), round(i%2)].set_ylim([0, 1])
+        if graph:
             if len(output_names) >= i:
                 axs[round(int(i/2)), round(i%2)].title.set_text("branch: {}".format(output_names[i]))
             else:
                 axs[round(int(i/2)), round(i%2)].title.set_text("branch: {}".format(i))
-                
-            returnData.append(classEntropy)
-        lines = []
-        labels = []
+            
+        returnData.append(classEntropy)
+    lines = []
+    labels = []
+    if graph:
         for ax in fig.axes:
             ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
             axLine, axLabel = ax.get_legend_handles_labels()
             lines=(axLine)
             labels=(axLabel)
-        
+
         # Set common labels
         fig.text(0.5, 0.01, 'Items Exit at Branch', ha='center', va='center')
         fig.text(0.01, 0.5, 'Accuracy %', ha='center', va='center', rotation='vertical')
         fig.legend(lines, labels,bbox_to_anchor=(1., 1), loc=2,borderaxespad=0.,frameon=True)
-    #     df.to_csv("graph_output.csv")
-        return thresholdPoints
+#     df.to_csv("graph_output.csv")
+    return thresholdPoints
