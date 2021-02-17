@@ -18,7 +18,7 @@ import os
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 from utils import *
-
+from branchyEval import branchyEval as eval
 from Alexnet_kaggle_v2 import * 
 
 # ALEXNET = False
@@ -44,19 +44,7 @@ class BranchyNet:
         {"name":"mnist","dataset": loadTrainingData},
         {"name":"alexnet","dataset":tf.keras.datasets.cifar10.load_data},
     ]
-
-
-    def mainBranch(self):
-        model = tf.keras.models.Sequential([
-            tf.keras.layers.Flatten(input_shape=(784,)),
-            tf.keras.layers.Dense(512, activation=tf.nn.relu),
-            
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(10, activation=tf.nn.softmax)
-        ])
-        return model
-
-        
+          
     def prepareAlexNetDataset(self, dataset, batch_size =32):
         (train_images, train_labels), (test_images, test_labels) = dataset
 
@@ -68,12 +56,10 @@ class BranchyNet:
         train_ds_size = len(list(train_ds))
         train_ds_size = len(list(test_ds))
         validation_ds_size = len(list(validation_ds))
-
         train_ds = (train_ds
             .map(augment_images)
             .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
             .batch(batch_size=1, drop_remainder=True))
-
         test_ds = (test_ds
             .map(augment_images)
             # .shuffle(buffer_size=int(train_ds_size)) ##why would you shuffle the test set?
@@ -83,99 +69,8 @@ class BranchyNet:
             .map(augment_images)
             # .shuffle(buffer_size=int(train_ds_size))
             .batch(batch_size=1, drop_remainder=True))
-
         return train_ds, test_ds, validation_ds
-
     
-
-    def mnistNormal(self):
-        outputs =[]
-        inputs = keras.Input(shape=(784,))
-        x = layers.Flatten(input_shape=(28,28))(inputs)
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 2
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 3
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 4
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 5
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
-        output1 = layers.Dense(10, name="output1")(x)
-        softmax = layers.Softmax()(output1)
-
-        outputs.append(softmax)
-        print(len(outputs))
-        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_normal")
-        model.summary()
-        #visualize_model(model,"mnist_normal")
-        print(len(model.outputs))
-
-        return model
-
-    def mnistBranchy(self):
-
-        outputs =[]
-        inputs = keras.Input(shape=(784,))
-        x = layers.Flatten(input_shape=(28,28))(inputs)
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)        
-        #exit 2
-        outputs = newBranch(x,outputs)
-        # outputs.append(layers.Dense(10, name="output2")(x))
-
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 3
-        # outputs.append(layers.Dense(10, name="output3")(x))
-        outputs = newBranch(x,outputs)
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 4
-        # outputs.append(layers.Dense(10, name="output4")(x))
-        outputs = newBranch(x,outputs)
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 5
-        # outputs.append(layers.Dense(10, name="output5")(x))
-        outputs = newBranch(x,outputs)
-        x = layers.Dense(512, activation="relu")(x)
-        x= layers.Dropout(0.2)(x)
-        #exit 1 The main branch exit is refered to as "exit 1" or "main exit" to avoid confusion when adding addtional exits
-        output1 = layers.Dense(10, name="output1")(x)
-        softmax = layers.Softmax()(output1)
-        # x = layers.Dense(64, activation="relu")(x)
-        # output2 = layers.Dense(10, name="output2")(x)
-        outputs.append(softmax)
-        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_branched")
-        model.summary()
-        visualize_model(model,"mnist_branched")
-
-        return model
-    def mnistAddBranches(self,model):
-        """add branches to the mnist model, aka modifying an existing model to include branches."""
-        print(model.inputs)
-        inputs = model.inputs
-        outputs = []
-        print(model.outputs)
-        outputs.append(model.outputs)
-        for i in range(len(model.layers)):
-            print(model.layers[i].name)
-            if "dense" in model.layers[i].name:
-
-                outputs = newBranch(model.layers[i].output,outputs)
-            # for j in range(len(model.layers[i].inbound_nodes)):
-            #     print(dir(model.layers[i].inbound_nodes[j]))
-            #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
-            #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
-        model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model_branched")
-        return model
 
     def addBranches(self,model, identifier =[""], customBranch = []):
         """ add branches to the provided model, aka modifying an existing model to include branches.
@@ -192,26 +87,20 @@ class BranchyNet:
         # outputs.append(newBranch(model.layers[6].output))
         # new_model = keras.Model([model.input], outputs, name="{}_branched".format(model.name))
         # new_model.summary()
-
-
         outputs = []
         for i in model.outputs:
             outputs.append(i)
 
         old_output = outputs
-
-
         # outputs.append(i in model.outputs) #get model outputs that already exist 
 
         if type(identifier) != list:
             identifier = [identifier]
-        
 
         if type(customBranch) != list:
             customBranch = [customBranch]
         if len(customBranch) == 0:
             customBranch = [newBranch]
-        
         branches = 0
         # print(customBranch)
         if len(identifier) > 0:
@@ -256,30 +145,10 @@ class BranchyNet:
         return model
 
 
-    def fullprint(*args, **kwargs):
-        from pprint import pprint
-        import numpy
-        opt = numpy.get_printoptions()
-        numpy.set_printoptions(threshold=numpy.inf)
-        pprint(*args, **kwargs)
-        numpy.set_printoptions(**opt)
-
-    # def loadModel(self,modelName):
-    #     with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
-    #         KerasModel = load_model(modelName, {'optimizer':'adam',
-    #           'loss':'sparse_categorical_crossentropy',
-    #           'metrics':['accuracy']})
-    #         KerasModel.summary()
-    #         config = KerasModel.get_config()   
-    #         return KerasModel
-
-
-   
 
 
     def trainModel(self, model, dataset, epocs = 2,save = False):
-        """
-        Train the model that is passed through. This function works for both single and multiple branch models.
+        """ Train the model that is passed through. This function works for both single and multiple branch models.
         """
         logs = []
         (x_train, y_train), (x_test, y_test) = dataset
@@ -343,8 +212,7 @@ class BranchyNet:
   
 
     def trainModelTransfer(self, model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True):
-        """
-        Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
+        """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
         logs = []
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
@@ -485,23 +353,7 @@ class BranchyNet:
 
     ###### RUN MODEL SHORTCUTS ######
 
-
-    def Run_mnistNormal(self, numEpocs = 2):
-        """ load a mnist model, add branches to it and train using transfer learning function
-        """
-        x = self.mnistNormal()
-        x = self.trainModel(x,self.loadTrainingData(), epocs = numEpocs,save = True)
-        return x
-
-
-    def Run_mnistTransfer(self, numEpocs = 2):
-        """ load a mnist model, add branches to it and train using transfer learning function
-        """
-        x = tf.keras.models.load_model("models/mnist_trained_.hdf5")
-        x = self.addBranches(x,["dropout_1","dropout_2","dropout_3","dropout_4",],newBranch)
-        x = self.trainModelTransfer(x,self.loadTrainingData(),epocs = numEpocs, save = True)
-        return x
-    
+        
     def Run_alexNet(self, numEpocs = 2, modelName="", saveName ="",transfer = True):
         if modelName =="":
             x = tf.keras.models.load_model("models/alexNetv3_new.hdf5")
@@ -838,7 +690,7 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = KneeGraph(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        results = eval.KneeGraph(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         # f = open("logs_entropy/{}_{}_entropyStats.txt".format(model.name,time.strftime("%Y%m%d_%H%M%S")), "w")
         # f.write(json.dumps(results))
         results.to_csv("logs_entropy/{}_{}_entropyStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
@@ -889,7 +741,7 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = KneeGraphClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        results = eval.KneeGraphClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         # f = open("logs_entropy/{}_{}_entropyStats.txt".format(model.name,time.strftime("%Y%m%d_%H%M%S")), "w")
         # f.write(json.dumps(results))
         results.to_csv("logs_entropy/{}_{}_PredictedClassesStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
@@ -940,7 +792,7 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = KneeGraphPredictedClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        results = eval.KneeGraphPredictedClasses(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         # f = open("logs_entropy/{}_{}_entropyStats.txt".format(model.name,time.strftime("%Y%m%d_%H%M%S")), "w")
         # f.write(json.dumps(results))
         # results.to_csv("logs_entropy/{}_{}_entropyClassesStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
@@ -994,7 +846,7 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = entropyConfusionMatrix(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
+        results = eval.entropyConfusionMatrix(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         print(results)
         # print(pd.DataFrame(results).T)
         return
@@ -1043,7 +895,7 @@ class BranchyNet:
         # print(labels)
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = entropyMatrix(predEntropy, labels, num_outputs,labelClasses,output_names)
+        results = eval.entropyMatrix(predEntropy, labels, num_outputs,labelClasses,output_names)
         print(results)
         # print(pd.DataFrame(results).T)
         return
@@ -1052,7 +904,6 @@ class BranchyNet:
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         
         output_names = [i.name for i in model.outputs]
-        (train_images, train_labels), (test_images, test_labels) = dataset
         train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
         
         predictions = []
@@ -1090,7 +941,7 @@ class BranchyNet:
 
         # labels = list(map(expandlabels,labels,num_outputs))
         labelClasses = [0,1,2,3,4,5,6,7,8,9]
-        results = throughputMatrix(predClasses, labels, num_outputs,labelClasses,output_names)
+        results = eval.throughputMatrix(predClasses, labels, num_outputs,labelClasses,output_names)
         print(results)
         print(pd.DataFrame(results).T)
         return

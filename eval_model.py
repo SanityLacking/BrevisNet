@@ -73,8 +73,8 @@ if __name__ == "__main__":
     print(x.outputs)
 
 
-    # y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
-    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data())
+    y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
+    # y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data())
     
 
     import modelProfiler
