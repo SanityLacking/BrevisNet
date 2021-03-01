@@ -660,7 +660,7 @@ class BranchyNet:
         iterator = iter(test_ds)
         indices = []
         # for j in range(len(test_ds)):
-        for j in range(1000):
+        for j in range(10):
 
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
 

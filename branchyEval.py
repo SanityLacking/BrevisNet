@@ -468,16 +468,36 @@ class branchyEval:
             return None
         
     
-    def findMainExitAccuracies(pred, labels, num_outputs, classes=[], output_names=[],graph=True):
+    def exitAccuracy(results, labels, classes=[]):
+    """ find the accuracy scores of the main network exit for each class
+            if classes is empty, return the average accuracy for all labels
+    """    
+    print(len(classes))
+    classAcc = {}
+    correct =[]
+    count = []
+    percentage = []
+    if len(classes) > 0:
+        for i, labelClass in enumerate(classes):            
+            correct.append(results[np.where(labels==labelClass)].sum())
+            count.append(len(labels[np.where(labels == labelClass)]))
+            percentage.append(results[np.where(labels==labelClass)].sum()/len(labels[np.where(labels == labelClass)]))
+            classAcc[labelClass] = results[np.where(labels==labelClass)].sum()/len(labels[np.where(labels == labelClass)])
+    else: 
+        classAcc["all"] = results.sum()/len(labels)
+    return classAcc
+
+def findMainExitAccuracies(pred, labels, num_outputs, labelClasses=[], output_names=[],graph=True):
         """ find the accuracy scores of the main network exit for each class
             if classes is empty, return the average accuracy for all labels
         """
         results = np.equal(pred, labels)
         pred = np.array(pred)
+        print(pred.dtype)
         labels = np.array(labels)
-        labelClasses=classes
+        
         transpose_results = np.transpose(results) #truths
-        # transpose_preds = np.transpose(pred) #per exit rather then per input
+        transpose_preds = np.transpose(pred) #per exit rather then per input
         transpose_labels = np.transpose(labels)
         # %matplotlib inline
         if graph==True:
@@ -486,13 +506,27 @@ class branchyEval:
             fig.tight_layout()
         df =  pd.DataFrame() 
         classAcc= exitAccuracy(transpose_results[0],transpose_labels[0],labelClasses)
-        if graph==True:
-            for i in classAcc:
-                plt.bar(labelClasses[i], classAcc[labelClasses[i]], label="Class: {}".format(labelClasses[i]),alpha=0.8)        
         print(classAcc)
+        fig, ax = plt.subplots()
+        ticks = []
+        if graph==True:
+            for i, x in enumerate(classAcc):
+                ticks.append(x)
+                print(x)                
+                plt.bar(x, classAcc[x], label="Class: {}".format(x),alpha=0.8) 
+                if type(x) != str:
+                    plt.text(x-.3, classAcc[x]-0.025, "{}".format(round(classAcc[x],2)), color='black', va='center', fontweight='bold')
+                else: 
+                    plt.text(x, classAcc[x]-0.025, "{}".format(round(classAcc[x],2)), color='black', va='center', fontweight='bold')
+#                 plt.bar(x, .74, label="Avg Accuracy",alpha=0.8,bottom=classAcc[x]) 
+            if len(labelClasses) > 0:
+                plt.hlines(.74,-.5,len(classAcc.keys())-.5,label ="Accuracy", linestyles="dashed", alpha=0.5)
+                plt.text(len(classAcc.keys())-.5, .74, ' Average Accuracy', ha='left', va='center')
+            
     #     print(sum(classAcc.values())/len(classAcc.values()))
         if graph==True:
-            plt.title("Label Class Accuracy")
+            plt.xticks(ticks)
+            plt.title("Class Label Accuracy")
             plt.ylabel("Accuracy %")
             plt.xlabel("Label Class #")
             plt.show()
@@ -527,7 +561,7 @@ def findThreshold(pred, labels, entropy, num_outputs, classes, output_names=[],m
     ##find the main exit accuracy levels to compare the branches to.
     ##assume the first branch is the main branch to match too
     
-    mainAcc = findMainExitAccuracies(pred, labels, num_outputs, classes, output_names, graph=False)
+    mainAcc = branchyEval.findMainExitAccuracies(pred, labels, num_outputs, classes, output_names, graph=False)
     thresholdPoints={}
     colors = cm.rainbow(np.linspace(0, 1, len(labelClasses)))
     for i, branchEntropy in enumerate(transpose_entropy):
