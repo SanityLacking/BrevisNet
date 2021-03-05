@@ -24,13 +24,13 @@ for i, (image, label) in enumerate(train_ds.take(5)):
 
 def augment_images(image, label):
     # Normalize images to have a mean of 0 and standard deviation of 1
-    image = tf.image.per_image_standardization(image)
+    # image = tf.image.per_image_standardization(image)
     # Resize images from 32x32 to 277x277
     image = tf.image.resize(image, (227,227))
     return image, label
 def augment_images2(image):
     # Normalize images to have a mean of 0 and standard deviation of 1
-    image = tf.image.per_image_standardization(image)
+    # image = tf.image.per_image_standardization(image)
     # Resize images from 32x32 to 277x277
     image = tf.image.resize(image, (227,227))
     return image
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     x = keras.layers.Dense(10, activation='softmax')(x)
     
     model = keras.Model(inputs=inputs, outputs=x, name="alexnet")
-    model.save("alexnet_func.hdf5")
+    model.save("alexnet_func_noStand.hdf5")
     
     # model = keras.models.Sequential([
     #     keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3)),
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     #     keras.layers.Dense(10, activation='softmax')
     # ])
 
-    checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv4_new.hdf5", monitor='val_loss',verbose=1,save_best_only=True, mode='auto',period=1)
+    checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv5.hdf5", monitor='val_loss',verbose=1,save_best_only=True, mode='auto',period=1)
     model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001,momentum=0.9), metrics=['accuracy'])
     model.summary()
 

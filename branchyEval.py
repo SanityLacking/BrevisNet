@@ -468,9 +468,9 @@ class branchyEval:
             return None
         
     
-    def exitAccuracy(results, labels, classes=[]):
+def exitAccuracy(results, labels, classes=[]):
     """ find the accuracy scores of the main network exit for each class
-            if classes is empty, return the average accuracy for all labels
+        if classes is empty, return the average accuracy for all labels
     """    
     print(len(classes))
     classAcc = {}

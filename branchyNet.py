@@ -72,7 +72,7 @@ class BranchyNet:
         return train_ds, test_ds, validation_ds
     
 
-    def addBranches(self,model, identifier =[""], customBranch = []):
+    def addBranches(self,model, identifier =[""], customBranch = [],exact = True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
             identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
             If identifier is not blank, a branch will be added to each layer with identifier in its name. (identifier = "dense", all dense layers will be branched.)
@@ -119,13 +119,22 @@ class BranchyNet:
                 print("abc")
                 for i in range(len(model.layers)):
                     print(model.layers[i].name)
-                    if any(id in model.layers[i].name for id in identifier):
-                        print("add Branch")
-                        # print(customBranch[min(i, len(customBranch))-1])
-                        # print(min(i, len(customBranch))-1)
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
-                        branches=branches+1
-                        # outputs = newBranch(model.layers[i].output,outputs)
+                    if exact == True:
+                        if model.layers[i].name in identifier:
+                            print("add Branch")
+                            # print(customBranch[min(i, len(customBranch))-1])
+                            # print(min(i, len(customBranch))-1)
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                            branches=branches+1
+                            # outputs = newBranch(model.layers[i].output,outputs)
+                    else:
+                        if any(id in model.layers[i].name for id in identifier):
+                            print("add Branch")
+                            # print(customBranch[min(i, len(customBranch))-1])
+                            # print(min(i, len(customBranch))-1)
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                            branches=branches+1
+                            # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
             print("nothing")
             for i in range(1-len(model.layers)-1):
@@ -269,10 +278,12 @@ class BranchyNet:
         run_logdir = get_run_logdir(model.name)
         tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
         print("after reset:")
+
         test_scores = model.evaluate(test_ds, verbose=2)
         print("finish eval")
         printTestScores(test_scores,num_outputs)
-        checkpoint = keras.callbacks.ModelCheckpoint("models/{}_branched.hdf5".format(model.name), monitor='val_loss', verbose=1, mode='max')
+        newModelName = "{}_branched.hdf5".format(model.name )
+        checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_loss', verbose=1, mode='max')
 
         for j in range(epocs):
             print("epoc: {}".format(j))
@@ -367,15 +378,19 @@ class BranchyNet:
             x._name = saveName
 
         # funcModel = models.Model([input_layer], [prev_layer])
-        funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch_oneLayer)
-        # funcModel = branchy.addBranches(x,["dense_1"],newBranch)
-
+        # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
+        funcModel = self.addBranches(x,["max_pooling2d","max_pooling2d_1","dense"],newBranch_flatten,exact=True)
         funcModel.summary()
+        if saveName == "":
+            funcModel.save("models/alexnetv5_branch_pooling.hdf5")
+        else: 
+            funcModel.save("models/{}".format(saveName))
+
         funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False, transfer = transfer)
         if saveName == "":
-            funcModel.save("models/alexnet_branch_pooling.hdf5")
+            funcModel.save("models/alexnetv5_branch_pooling.hdf5")
         else: 
-            funcModel.save("models/{}.hdf5".format(saveName))
+            funcModel.save("models/{}".format(saveName))
 
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
@@ -647,7 +662,7 @@ class BranchyNet:
 
         return 
     
-    def GetResultsCSV(self,model,dataset):
+    def GetResultsCSV(self,model,dataset,suffix=""):
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         
         output_names = [i.name for i in model.outputs]
@@ -660,7 +675,7 @@ class BranchyNet:
         iterator = iter(test_ds)
         indices = []
         # for j in range(len(test_ds)):
-        for j in range(10):
+        for j in range(1000):
 
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
 
@@ -669,20 +684,26 @@ class BranchyNet:
             predictions.append(prediction)
             # print(prediction)
             labels.append(item[1].numpy().tolist())
+            # print(labels)
         labels = [expandlabels(x,num_outputs)for x in labels]
         predEntropy =[]
         predClasses =[]
-        print("predictions complete, analyizing")
+        predRaw=[]
+        print("predictions complete, analyizing") 
         for i,output in enumerate(predictions):
-            # print(output)
+            print(output)
             for k, pred in enumerate(output):
                 pred_classes=[]
                 pred_entropy = []
+                pred_Raw=[]
                 print("image: {} of {}".format(i,len(predictions)),end='\r')
                 for l, branch in enumerate(pred):
+                    print(branch)
+                    pred_Raw.append(branch)
                     Pclass = np.argmax(branch[0])
                     pred_classes.append(Pclass) 
-                    pred_entropy.append(calcEntropy(branch[0]))                       
+                    # pred_entropy.append(calcEntropy(branch[0]))                       
+                predRaw.append(pred_Raw)
                 predClasses.append(pred_classes)
                 predEntropy.append(pred_entropy)
                 
@@ -694,10 +715,13 @@ class BranchyNet:
         predClasses = pd.DataFrame(predClasses)
         labels = pd.DataFrame(labels)
         predEntropy = pd.DataFrame(predEntropy)
+        
+        PredRaw = pd.DataFrame(predRaw)
+        PredRaw.to_csv("results/predRaw_temp.csv", sep=',', mode='w',index=False)
 
-        predClasses.to_csv("results/predClasses.csv", sep=',', mode='w',index=False)
-        labels.to_csv("results/labels.csv", sep=',', mode='w',index=False)
-        predEntropy.to_csv("results/predEntropy.csv", sep=',', mode='w',index=False)
+        predClasses.to_csv("results/predClasses{}.csv".format(suffix), sep=',', mode='w',index=False)
+        labels.to_csv("results/labels{}.csv".format(suffix), sep=',', mode='w',index=False)
+        predEntropy.to_csv("results/predEntropy{}.csv".format(suffix), sep=',', mode='w',index=False)
 
 
         # results = KneeGraph(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
