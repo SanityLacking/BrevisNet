@@ -44,7 +44,71 @@ class BranchyNet:
         {"name":"mnist","dataset": loadTrainingData},
         {"name":"alexnet","dataset":tf.keras.datasets.cifar10.load_data},
     ]
-          
+    def prepareMnistDataset(self,dataset,batch_size=32):
+        import csv
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        train_images = train_images.reshape(60000, 784).astype("float32") / 255
+        test_images = test_images.reshape(10000, 784).astype("float32") / 255
+
+        validation_images, validation_labels = train_images[:12000], train_labels[:12000]
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+        train_ds = (train_ds
+            # .map(augment_images)
+            .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
+            .batch(batch_size=batch_size, drop_remainder=True))
+        test_ds = (test_ds
+            # .map(augment_images)
+            .shuffle(buffer_size=int(test_ds_size)) ##why would you shuffle the test set?
+            .batch(batch_size=batch_size, drop_remainder=True))
+
+        validation_ds = (validation_ds
+            # .map(augment_images)
+            .shuffle(buffer_size=int(validation_ds_size))
+            .batch(batch_size=batch_size, drop_remainder=True))
+        return train_ds, test_ds, validation_ds
+
+    def prepareAlexNetDataset_alt(self,dataset,batch_size=32):
+        import csv
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        with open('results/altTrain_labels2.csv', newline='') as f:
+            reader = csv.reader(f,quoting=csv.QUOTE_NONNUMERIC)
+            alt_trainLabels = list(reader)
+        with open('results/altTest_labels2.csv', newline='') as f:
+            reader = csv.reader(f,quoting=csv.QUOTE_NONNUMERIC)
+            alt_testLabels = list(reader)
+
+        altTraining = tf.data.Dataset.from_tensor_slices((train_images,alt_trainLabels))
+
+        validation_images, validation_labels = train_images[:5000], alt_trainLabels[:5000]
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, alt_trainLabels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, alt_testLabels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+        train_ds = (train_ds
+            .map(augment_images)
+            .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
+            .batch(batch_size=batch_size, drop_remainder=True))
+        test_ds = (test_ds
+            .map(augment_images)
+            .shuffle(buffer_size=int(test_ds_size)) ##why would you shuffle the test set?
+            .batch(batch_size=batch_size, drop_remainder=True))
+
+        validation_ds = (validation_ds
+            .map(augment_images)
+            .shuffle(buffer_size=int(validation_ds_size))
+            .batch(batch_size=batch_size, drop_remainder=True))
+        return train_ds, test_ds, validation_ds
+
+
     def prepareAlexNetDataset(self, dataset, batch_size =32):
         (train_images, train_labels), (test_images, test_labels) = dataset
 
@@ -54,23 +118,82 @@ class BranchyNet:
         validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
 
         train_ds_size = len(list(train_ds))
-        train_ds_size = len(list(test_ds))
+        test_ds_size = len(list(test_ds))
         validation_ds_size = len(list(validation_ds))
+
+
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
+
         train_ds = (train_ds
             .map(augment_images)
-            .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
-            .batch(batch_size=1, drop_remainder=True))
+            .shuffle(buffer_size=int(train_ds_size))
+            # .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
+            .batch(batch_size=batch_size, drop_remainder=True))
         test_ds = (test_ds
             .map(augment_images)
             # .shuffle(buffer_size=int(train_ds_size)) ##why would you shuffle the test set?
-            .batch(batch_size=1, drop_remainder=True))
+            .batch(batch_size=batch_size, drop_remainder=True))
 
         validation_ds = (validation_ds
             .map(augment_images)
             # .shuffle(buffer_size=int(train_ds_size))
-            .batch(batch_size=1, drop_remainder=True))
+            .batch(batch_size=batch_size, drop_remainder=True))
         return train_ds, test_ds, validation_ds
     
+    def prepareAlexNetDataset_old(self, batchsize=32):
+        # tf.debugging.experimental.enable_dump_debug_info(logdir, tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
+        (train_images, train_labels), (test_images, test_labels) = keras.datasets.cifar10.load_data()
+
+        CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+        # validation_images, validation_labels = train_images[:5000], alt_trainLabels[:5000]
+        # train_ds = tf.data.Dataset.from_tensor_slices((train_images, alt_trainLabels))
+        # test_ds = tf.data.Dataset.from_tensor_slices((test_images, alt_testLabels))
+
+        ###normal method
+        validation_images, validation_labels = train_images[:5000], train_labels[:5000]
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+        def augment_images(image, label):
+            # Normalize images to have a mean of 0 and standard deviation of 1
+            # image = tf.image.per_image_standardization(image)
+            # Resize images from 32x32 to 277x277
+            image = tf.image.resize(image, (227,227))
+            return image, label
+        def augment_images2(image):
+            # Normalize images to have a mean of 0 and standard deviation of 1
+            # image = tf.image.per_image_standardization(image)
+            # Resize images from 32x32 to 277x277
+            image = tf.image.resize(image, (227,227))
+            return image
+
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
+
+        train_ds = (train_ds
+                        .map(augment_images)
+                        .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=batchsize, drop_remainder=True))
+
+        test_ds = (test_ds
+                        .map(augment_images)
+                        #   .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=batchsize, drop_remainder=True))
+
+        validation_ds = (validation_ds
+                        .map(augment_images)
+                        #   .shuffle(buffer_size=validation_ds_size)
+                        .batch(batch_size=batchsize, drop_remainder=True))
+
+        print("testSize2 {}".format(len(list(test_ds))))
+        return train_ds, test_ds, validation_ds
 
     def addBranches(self,model, identifier =[""], customBranch = [],exact = True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
@@ -220,35 +343,16 @@ class BranchyNet:
         return model
   
 
-    def trainModelTransfer(self, model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True):
+    def trainModelTransfer(self, model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True, saveName =""):
         """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
         logs = []
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-
-        (train_images, train_labels), (test_images, test_labels) = dataset
         print("ALEXNET {}".format(self.ALEXNET))
         if self.ALEXNET:
-           train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset, batch_size=32)
+           train_ds, test_ds, validation_ds = self.prepareAlexNetDataset_old()
         else: 
-            # can still use tf.data.Dataset for mnist and numpy models
-            # I found a bug where the model couldn't run on the input unless the dataset is batched. so make sure to batch it.
-            val_size = int(len(train_images) * 0.2)  #atm I'm making validation sets that are a fifth of the test set. 
-            x_val = train_images[-val_size:]
-            y_val = train_labels[-val_size:]
-            train_images = train_images[:-val_size]
-            train_labels = train_labels[:-val_size]
-            
-            train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
-            train_ds = train_ds.shuffle(buffer_size=1024).batch(64)
-            # Reserve 10,000 samples for validation
-           
-            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-            test_ds = test_ds.batch(64)
-
-            # Prepare the validation dataset
-            validation_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-            validation_ds = validation_ds.batch(64)
+            train_ds, test_ds, validation_ds = self.prepareMnistDataset(dataset, batch_size=32)
 
        
         #Freeze main branch layers
@@ -282,13 +386,26 @@ class BranchyNet:
         test_scores = model.evaluate(test_ds, verbose=2)
         print("finish eval")
         printTestScores(test_scores,num_outputs)
-        newModelName = "{}_branched.hdf5".format(model.name )
-        checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_loss', verbose=1, mode='max')
+        if saveName =="":
+            newModelName = "{}_branched.hdf5".format(model.name )
+        else:
+            newModelName = saveName
+        checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_acc', verbose=1, mode='max')
 
         for j in range(epocs):
             print("epoc: {}".format(j))
             results = [j]           
-            history = model.fit(train_ds, batch_size=64, epochs=epocs, validation_data=validation_ds, validation_steps=10, callbacks=[tensorboard_cb,checkpoint])
+            history =model.fit(train_ds,
+                    epochs=50,
+                    validation_data=validation_ds,
+                    validation_freq=1,
+                    callbacks=[tensorboard_cb,checkpoint])
+
+                                
+                                # batch_size=32,
+                                # validation_data=validation_ds,
+                                # validation_steps=10,
+                                # callbacks=[tensorboard_cb,checkpoint])
             print(history)
             test_scores = model.evaluate(test_ds, verbose=2)
             print("overall loss: {}".format(test_scores[0]))
@@ -300,9 +417,6 @@ class BranchyNet:
                 print("Test loss:", test_scores[0])
                 print("Test accuracy:", test_scores[1])
             logs.append(results)
-        if save:
-            saveModel(model,"model_transfer_trained")
-
         return model
 
     def datasetStats(self, dataset):
@@ -366,36 +480,46 @@ class BranchyNet:
 
         
     def Run_alexNet(self, numEpocs = 2, modelName="", saveName ="",transfer = True):
-        if modelName =="":
-            x = tf.keras.models.load_model("models/alexNetv3_new.hdf5")
-        else:
-            x = tf.keras.models.load_model("models/{}".format(modelName))
+        x = tf.keras.models.load_model("models/{}".format(modelName))
 
         x.summary()
         if saveName =="":
-            pass
-        else:
-            x._name = saveName
+            saveName = modelName
 
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         funcModel = self.addBranches(x,["max_pooling2d","max_pooling2d_1","dense"],newBranch_flatten,exact=True)
+        # funcModel = self.addBranches(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
+        funcModel.summary()
+        funcModel.save("models/{}".format(saveName))
+
+        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
+        # funcModel.save("models/{}".format(saveName))
+        # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
+        return x
+
+    def Run_mnistNet(self, numEpocs = 5, modelName="", saveName ="",transfer = True):
+        x = tf.keras.models.load_model("models/{}".format(modelName))
+        x.summary()
+        if saveName =="":
+            saveName = modelName
+        # funcModel = models.Model([input_layer], [prev_layer])
+        # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
+        funcModel = self.addBranches(x,["dense","dense_2","dense_3"],newBranch,exact=True)
         funcModel.summary()
         if saveName == "":
-            funcModel.save("models/alexnetv5_branch_pooling.hdf5")
+            funcModel.save("models/{}_branched.hdf5".format(modelName))
         else: 
             funcModel.save("models/{}".format(saveName))
 
-        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(),epocs = numEpocs, save = False, transfer = transfer)
+        funcModel = self.trainModelTransfer(funcModel,keras.datasets.mnist.load_data(),epocs = numEpocs, transfer = transfer, saveName = saveName)
         if saveName == "":
-            funcModel.save("models/alexnetv5_branch_pooling.hdf5")
+            funcModel.save("models/{}_branched.hdf5".format(modelName))
         else: 
             funcModel.save("models/{}".format(saveName))
 
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
-
-
     def Run_train_model(self, model_name, dataset=None, numEpocs =2):
         """ generic training function. takes a model or model name and trains the model on the dataset for the specificed epocs.
         """
@@ -443,7 +567,7 @@ class BranchyNet:
 
 
         #run training
-        x = self.anchy.trainModelTransfer(x,dataset,epocs = numEpocs, save = False)
+        x = self.branchy.trainModelTransfer(x,dataset,epocs = numEpocs, save = False)
 
 
         return x
@@ -664,44 +788,58 @@ class BranchyNet:
     
     def GetResultsCSV(self,model,dataset,suffix=""):
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-        
-        output_names = [i.name for i in model.outputs]
-        (train_images, train_labels), (test_images, test_labels) = dataset
-        train_ds, test_ds, validation_ds = self.prepareAlexNetDataset(dataset,1)
+        if self.ALEXNET:
+            train_ds, test_ds, validation_ds = self.prepareAlexNetDataset_old(1)
+        else:
+            train_ds, test_ds, validation_ds = self.prepareMnistDataset(dataset,1)
         
         predictions = []
         labels = []
         model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+
+        test_scores = model.evaluate(test_ds, verbose=2)
+        print(test_scores)
+
         iterator = iter(test_ds)
-        indices = []
-        # for j in range(len(test_ds)):
-        for j in range(1000):
+        print(len(test_ds))
+        for j in range(len(test_ds)):
+        # for j in range(1000):
 
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
 
             item = iterator.get_next()
             prediction = model.predict(item[0])
+            # print("predictions {}".format(prediction))
             predictions.append(prediction)
             # print(prediction)
             labels.append(item[1].numpy().tolist())
-            # print(labels)
-        labels = [expandlabels(x,num_outputs)for x in labels]
+        # print("labels")
+        # print(labels)
+        if self.ALEXNET:
+            labels = [expandlabels(x,num_outputs)for x in labels]
+        else:
+            for i, val in enumerate(labels):
+                print(i)
+                labels[i]= [val]* num_outputs
+
         predEntropy =[]
         predClasses =[]
         predRaw=[]
         print("predictions complete, analyizing") 
         for i,output in enumerate(predictions):
-            print(output)
             for k, pred in enumerate(output):
                 pred_classes=[]
                 pred_entropy = []
                 pred_Raw=[]
                 print("image: {} of {}".format(i,len(predictions)),end='\r')
                 for l, branch in enumerate(pred):
-                    print(branch)
                     pred_Raw.append(branch)
                     Pclass = np.argmax(branch[0])
                     pred_classes.append(Pclass) 
+                    # if labels[i][0] == 0:
+                        # print("class {}".format(Pclass))
+                        # print("label {}".format(labels[i]))
+                        # print(branch)
                     # pred_entropy.append(calcEntropy(branch[0]))                       
                 predRaw.append(pred_Raw)
                 predClasses.append(pred_classes)

@@ -64,13 +64,13 @@ if __name__ == "__main__":
     # x = tf.keras.models.load_model("models/alexnet_branch_pooling.hdf5")
 
     # test model
-    x = tf.keras.models.load_model("models/alexNetv5_branched_ntransfer.hdf5")
+    x = tf.keras.models.load_model("models/alexNetv5_alt8_branched.hdf5")
     x.summary()
     print(x.outputs)
 
 
-    # y = branchy.BranchKneeGraph(x, tf.keras.datasets.cifar10.load_data())
-    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(), "_noTransfer")
+    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_alt8")
+    # y = branchy.GetResultsCSV(x,keras.datasets.mnist.load_data(), "_mnist")
     
 
     # import modelProfiler

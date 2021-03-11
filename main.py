@@ -48,9 +48,17 @@ if __name__ == "__main__":
     #### build alexnet model
     # x = branchy.Run_alexNet( 5, modelName="alexNetv4_new.hdf5", saveName = "alexNetv4_branched_new")
 
-    x = branchy.Run_alexNet( 5, modelName="alexNetv4_new.hdf5", saveName = "alexNetv4_branched_redo",transfer = True)
+    x = branchy.Run_alexNet( 1, modelName="alexNetv5.hdf5", saveName = "alexNetv5_alt8_branched",transfer = False)
+
+    # x = branchy.Run_mnistNet( 5, modelName="mnistNormal.hdf5", saveName = "mnistNormal_branched",transfer = True)
     
-    
+    """
+    Various model versions:
+        alexNetv5 : up to date version of testing, trained using the augmented, not self standardized images. base for most other versions that I tried out
+        
+        models with alt in the name are models I made trying to track down what is going on with the missing 0 class from branches
+        alexNetv5_alt6: model with branches on dense layers, this model actually lost a second class completely as well, class 1. 
+    """
 
     # x = tf.keras.models.load_model("models/mnist_transfer_trained_21-01-04_125846.hdf5")
     # x.summary()
