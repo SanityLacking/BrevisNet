@@ -231,49 +231,81 @@ def getLayerFlops(filename="",name = "",saveFile = True, printOutput = True ):
 def getLayerFlops_old(filename="",name = "",saveFile = True, printOutput = True ):
     flops = {}
     tempModelFileName= 'models/tempmodel.hdf5'
+    tf.compat.v1.reset_default_graph()
+
     model = tf.keras.models.load_model(filename)
     layerFlops = []
-    session = tf.compat.v1.Session()
-    graph = tf.compat.v1.get_default_graph()
+    model.summary()
+   
+    for i, layer in enumerate(model.layers):
+        # if any(s in layer.name for s in ('softmax', 'dense_2','branch_flatten')):
+        # if any(s in layer.name for s in ("input_1","conv2d_1","batch_normalization_1","activation_1","conv2d_2","batch_normalization_2","activation_2","conv2d_3","batch_normalization_3","activation_3","max_pooling2d_1","conv2d_4","batch_normalization_4","activation_4","conv2d_5","batch_normalization_5","activation_5","max_pooling2d_2","mixed0","mixed1","mixed2","mixed3","mixed4","mixed5","mixed6","mixed7","mixed8","mixed9","mixed10","dense_1","dense_2","global_average_pooling2d_1")):
+        if any(s in layer.name for s in ("input_1","conv2d_1","batch_normalization_1","activation_1")):
+            graph = tf.compat.v1.get_default_graph()
+            session = tf.compat.v1.Session()
+            with graph.as_default():
+                with session.as_default():
+                    # if (i>5):
+                        # break
+                    # tf.compat.v1.reset_default_graph()
+                    # tf.keras.backend.clear_session()
+                    print(type(model))
+                    model = tf.keras.models.load_model(filename)
+                    # model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+                    new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
+                    new_model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+                    new_model.summary()
+                    new_model.save(tempModelFileName)
+                    # tf.compat.v1.reset_default_graph() #model is profiling including the original model size, this is a bug TODO fix this
 
-    with graph.as_default():
-        with session.as_default():
-            for i, layer in enumerate(model.layers):
-                # if (i>5):
-                    # break
-                # tf.compat.v1.reset_default_graph()
-                # tf.keras.backend.clear_session()
-                print(type(model))
-                model = tf.keras.models.load_model(filename)
-                # model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
-                new_model = tf.keras.models.Model(inputs=model.inputs, outputs=model.layers[i].get_output_at(0))
-                new_model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
-                new_model.summary()
-                new_model.save(tempModelFileName)
-                # K.clear_session()
-                # tf.keras.backend.clear_session()
-                # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
-                # tf.keras.backend.clear_session()
-                model = tf.keras.models.load_model(tempModelFileName)
-                opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
-                opts['output'] = 'file:outfile=log.txt'
-                profile = tf.compat.v1.profiler.profile(graph, cmd = 'scope', options = opts)
-                layerFlops.append({'name':layer.name,'flopsCumulative':profile.total_float_ops})
-                flops['{}_{}'.format(i,type(layer))] = profile.total_float_ops
-                if printOutput == True:
-                    print("flops {}".format(flops))
-                if saveFile == True:
-                    f = open("models/{}_flops_old.txt".format(name), "w")
-                    f.write(json.dumps(flops))
-                    f.close()
-                    f = open("models/{}_flops.txt".format(name), "w")
-                    f.write(json.dumps(layerFlops))
-                    f.close()
+                    # K.clear_session()
+                    # tf.keras.backend.clear_session()
+                    # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+                    # tf.keras.backend.clear_session()
+                    model = tf.keras.models.load_model(tempModelFileName)
+                    opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+                    opts['output'] = 'file:outfile=log.txt'
+                    profile = tf.compat.v1.profiler.profile(graph, cmd = 'scope', options = opts)
+                    layerFlops.append({'name':layer.name,'flopsCumulative':profile.total_float_ops})
+                    flops['{}_{}'.format(i,type(layer))] = profile.total_float_ops
+                    if printOutput == True:
+                        print("flops {}".format(flops))
+                    if saveFile == True:
+                        f = open("models/{}_flops_old.txt".format(name), "w")
+                        f.write(json.dumps(flops))
+                        f.close()
+                        f = open("models/{}_flops.txt".format(name), "w")
+                        f.write(json.dumps(layerFlops))
+                        f.close()
+            tf.compat.v1.reset_default_graph()
+            # K.clear_session()
+            # tf.keras.backend.clear_session()
+            # with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+            # tf.keras.backend.clear_session()
+           
     return flops
 
+
+    
+def getLayerFlops_new(filename="",name = "",saveFile = True, printOutput = True ):
+    flops = {}
+    tempModelFileName= 'models/tempmodel.hdf5'
+    model = tf.keras.models.load_model(filename)
+    layerFlops = []
+    # import tensorflow as tf
+    from keras_flops import get_flops
+    flops = get_flops(model, batch_size=1)
+    print(f"FLOPS: {flops / 10 ** 9:.03} G")
+    return flops.total_float_ops
+    # return flops
+
 if __name__ == "__main__":
-    flops = getLayerFlops('models/saved-model-alexnet-03-0.80.hdf5')
-    print(flops)
+    # model = tf.keras.models.load_model('models/InceptionV3.h5')
+    # model.summary()
+    # model.save("models/InceptionV3.h5")
+    # tf.keras.utils.plot_model(model, to_file='Inception_plot.png', show_shapes=True, show_layer_names=True)
+    flops = getLayerFlops_old('models/InceptionV3.h5',printOutput=True,name="inception")
+    # print(flops)
 
 # from tensorflow.python.framework.ops import get_stats_for_node_def
 # graph_def = sess.graph.as_graph_def()

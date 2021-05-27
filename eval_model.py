@@ -69,7 +69,7 @@ if __name__ == "__main__":
     print(x.outputs)
 
 
-    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_alt8")
+    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_alt8_1")
     # y = branchy.GetResultsCSV(x,keras.datasets.mnist.load_data(), "_mnist")
     
 

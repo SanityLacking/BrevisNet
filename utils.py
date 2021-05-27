@@ -42,10 +42,12 @@ def fullprint(*args, **kwargs):
 def calcEntropy(y_hat):
         #entropy is the sum of y * log(y) for all possible labels.
         sum_entropy = 0
+        print("y_hat {}".format(y_hat))
+
         for i in range(len(y_hat)):
-            entropy =y_hat[i] * math.log(y_hat[i],2)
-            # print(entropy)
-            sum_entropy +=  entropy
+            if y_hat[i] != 0: # log of zero is undefined, see MacKay's book "Information Theory, Inference, and Learning Algorithms"  for more info on this workaround reasoning.
+                entropy =y_hat[i] * math.log(y_hat[i],2)
+                sum_entropy +=  entropy
 
         return -sum_entropy
 

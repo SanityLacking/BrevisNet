@@ -797,13 +797,13 @@ class BranchyNet:
         labels = []
         model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
 
-        test_scores = model.evaluate(test_ds, verbose=2)
-        print(test_scores)
+        # test_scores = model.evaluate(test_ds, verbose=2)
+        # print(test_scores)
 
         iterator = iter(test_ds)
         print(len(test_ds))
         for j in range(len(test_ds)):
-        # for j in range(1000):
+        # for j in range(12):
 
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
 
@@ -833,14 +833,15 @@ class BranchyNet:
                 pred_Raw=[]
                 print("image: {} of {}".format(i,len(predictions)),end='\r')
                 for l, branch in enumerate(pred):
-                    pred_Raw.append(branch)
+                    pred_Raw.append(branch[0])
                     Pclass = np.argmax(branch[0])
                     pred_classes.append(Pclass) 
                     # if labels[i][0] == 0:
                         # print("class {}".format(Pclass))
                         # print("label {}".format(labels[i]))
-                        # print(branch)
-                    # pred_entropy.append(calcEntropy(branch[0]))                       
+                    # print(branch)
+                    pred_entropy.append(calcEntropy(branch[0]))  
+                    # print("entropy {}".format(pred_entropy))                     
                 predRaw.append(pred_Raw)
                 predClasses.append(pred_classes)
                 predEntropy.append(pred_entropy)
