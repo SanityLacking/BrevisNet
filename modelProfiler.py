@@ -238,9 +238,9 @@ def getLayerFlops_old(filename="",name = "",saveFile = True, printOutput = True 
     model.summary()
    
     for i, layer in enumerate(model.layers):
-        # if any(s in layer.name for s in ('softmax', 'dense_2','branch_flatten')):
+        if any(s in layer.name for s in ('input','softmax', 'dense_2','branch_flatten')):
         # if any(s in layer.name for s in ("input_1","conv2d_1","batch_normalization_1","activation_1","conv2d_2","batch_normalization_2","activation_2","conv2d_3","batch_normalization_3","activation_3","max_pooling2d_1","conv2d_4","batch_normalization_4","activation_4","conv2d_5","batch_normalization_5","activation_5","max_pooling2d_2","mixed0","mixed1","mixed2","mixed3","mixed4","mixed5","mixed6","mixed7","mixed8","mixed9","mixed10","dense_1","dense_2","global_average_pooling2d_1")):
-        if any(s in layer.name for s in ("input_1","conv2d_1","batch_normalization_1","activation_1")):
+        # if any(s in layer.name for s in ("input_1","conv2d_1","batch_normalization_1","activation_1")):
             graph = tf.compat.v1.get_default_graph()
             session = tf.compat.v1.Session()
             with graph.as_default():
@@ -300,11 +300,11 @@ def getLayerFlops_new(filename="",name = "",saveFile = True, printOutput = True 
     # return flops
 
 if __name__ == "__main__":
-    # model = tf.keras.models.load_model('models/InceptionV3.h5')
+    model = tf.keras.models.load_model('models/alexNetv5_alt8_branched.hdf5')
     # model.summary()
     # model.save("models/InceptionV3.h5")
-    # tf.keras.utils.plot_model(model, to_file='Inception_plot.png', show_shapes=True, show_layer_names=True)
-    flops = getLayerFlops_old('models/InceptionV3.h5',printOutput=True,name="inception")
+    tf.keras.utils.plot_model(model, to_file='alexnetplot.png', show_shapes=True, show_layer_names=True)
+    flops = getLayerFlops_old('models/alexNetv5_alt8_branched.hdf5',printOutput=True,name="alexnetv5")
     # print(flops)
 
 # from tensorflow.python.framework.ops import get_stats_for_node_def
