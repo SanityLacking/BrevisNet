@@ -48,7 +48,9 @@ if __name__ == "__main__":
     #### build alexnet model
     # x = branchy.Run_alexNet( 5, modelName="alexNetv4_new.hdf5", saveName = "alexNetv4_branched_new")
 
-    x = branchy.Run_alexNet( 1, modelName="alexNetv5.hdf5", saveName = "alexNetv5_alt9_branched",transfer = False)
+    # x = branchy.Run_alexNet( 1, modelName="alexNetv5.hdf5", saveName = "alexNetv5_alt9_branched",transfer = False)
+    # x = branchy.Run_inceptionv3( 3, modelName="inception_finetuned.hdf5", saveName = "inception_branched",transfer = False)
+    x = branchy.Run_resnet50v2( 3, modelName="resnet50_finetuned.hdf5", saveName = "resnet50_branched",transfer = False)
 
     # x = branchy.Run_mnistNet( 5, modelName="mnistNormal.hdf5", saveName = "mnistNormal_branched",transfer = True)
     

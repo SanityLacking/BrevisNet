@@ -15,6 +15,9 @@ import json
 import math
 import pydot
 import os
+
+from tensorflow.python.keras.layers.pooling import GlobalAveragePooling2D
+from tensorflow.python.ops.gen_math_ops import Xlogy
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 from utils import *
@@ -161,13 +164,13 @@ class BranchyNet:
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
-            image = tf.image.resize(image, (227,227))
+            image = tf.image.resize(image, (224,224))
             return image, label
         def augment_images2(image):
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
-            image = tf.image.resize(image, (227,227))
+            image = tf.image.resize(image, (224,224))
             return image
 
         train_ds_size = len(list(train_ds))
@@ -193,6 +196,38 @@ class BranchyNet:
                         .batch(batch_size=batchsize, drop_remainder=True))
 
         print("testSize2 {}".format(len(list(test_ds))))
+        return train_ds, test_ds, validation_ds
+
+    def prepareInceptionDataset(self, dataset, batch_size=32):
+        (train_images, train_labels), (test_images, test_labels) = dataset
+
+        validation_images, validation_labels = train_images[:5000], train_labels[:5000]
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
+
+        train_ds = (train_ds
+            .map(augment_images)
+            .shuffle(buffer_size=int(train_ds_size))
+            # .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
+            .batch(batch_size=batch_size, drop_remainder=True))
+        test_ds = (test_ds
+            .map(augment_images)
+            # .shuffle(buffer_size=int(train_ds_size)) ##why would you shuffle the test set?
+            .batch(batch_size=batch_size, drop_remainder=True))
+
+        validation_ds = (validation_ds
+            .map(augment_images)
+            # .shuffle(buffer_size=int(train_ds_size))
+            .batch(batch_size=batch_size, drop_remainder=True))
         return train_ds, test_ds, validation_ds
 
     def addBranches(self,model, identifier =[""], customBranch = [],exact = True):
@@ -485,7 +520,7 @@ class BranchyNet:
         x.summary()
         if saveName =="":
             saveName = modelName
-
+        tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         funcModel = self.addBranches(x,["max_pooling2d","max_pooling2d_1","dense"],newBranch_flatten,exact=True)
@@ -497,6 +532,49 @@ class BranchyNet:
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
+
+    def Run_resnet50v2(self, numEpocs = 2, modelName="", saveName ="",transfer = True):
+        # x = tf.keras.models.load_model("models/{}".format(modelName))
+        x = tf.keras.models.load_model("models/{}".format(modelName))
+
+        x.summary()
+        if saveName =="":
+            saveName = modelName
+        tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
+        # funcModel = models.Model([input_layer], [prev_layer])
+        # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
+        funcModel = self.addBranches(x,["conv1_block3_out","conv3_block2_out","conv5_block3_out"],newBranch_flatten,exact=True)
+
+        # funcModel = self.addBranches(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
+        funcModel.summary()
+        funcModel.save("models/{}".format(saveName))
+
+        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
+        # funcModel.save("models/{}".format(saveName))
+        # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
+        return x
+
+    def Run_inceptionv3(self, numEpocs = 2, modelName="", saveName ="",transfer = True):
+        # x = tf.keras.models.load_model("models/{}".format(modelName))
+        x = tf.keras.models.load_model("models/{}".format(modelName))
+
+        x.summary()
+        if saveName =="":
+            saveName = modelName
+        tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
+        # funcModel = models.Model([input_layer], [prev_layer])
+        # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
+        funcModel = self.addBranches(x,["mixed1","mixed3","mixed6"],newBranch_flatten,exact=True)
+
+        # funcModel = self.addBranches(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
+        funcModel.summary()
+        funcModel.save("models/{}".format(saveName))
+
+        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
+        # funcModel.save("models/{}".format(saveName))
+        # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
+        return x
+
 
     def Run_mnistNet(self, numEpocs = 5, modelName="", saveName ="",transfer = True):
         x = tf.keras.models.load_model("models/{}".format(modelName))
@@ -786,7 +864,7 @@ class BranchyNet:
 
         return 
     
-    def GetResultsCSV(self,model,dataset,suffix=""):
+    def GetResultsCSV(self,model,dataset,suffix="", validation=True):
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
         if self.ALEXNET:
             train_ds, test_ds, validation_ds = self.prepareAlexNetDataset_old(1)
@@ -802,6 +880,8 @@ class BranchyNet:
 
         iterator = iter(test_ds)
         print(len(test_ds))
+
+        
         for j in range(len(test_ds)):
         # for j in range(12):
 
