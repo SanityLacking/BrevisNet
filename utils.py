@@ -313,12 +313,12 @@ def newestModelPath(modelNames):
     return result
 
 
-def augment_images(image, label,label2=""):
+def augment_images(image, label):
     # Normalize images to have a mean of 0 and standard deviation of 1
     # image = tf.image.per_image_standardization(image)
     # Resize images from 32x32 to 277x277
     image = tf.image.resize(image, (227,227))
-    return image, label,label
+    return image, label
     
 def resize(image):
     # Normalize images to have a mean of 0 and standard deviation of 1
