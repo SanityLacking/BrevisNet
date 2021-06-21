@@ -42,8 +42,7 @@ def fullprint(*args, **kwargs):
 def calcEntropy(y_hat):
         #entropy is the sum of y * log(y) for all possible labels.
         sum_entropy = 0
-        print("y_hat {}".format(y_hat))
-
+        # print("y_hat {}".format(y_hat))
         for i in range(len(y_hat)):
             if y_hat[i] != 0: # log of zero is undefined, see MacKay's book "Information Theory, Inference, and Learning Algorithms"  for more info on this workaround reasoning.
                 entropy =y_hat[i] * math.log(y_hat[i],2)
@@ -343,3 +342,127 @@ def exitAccuracy(results, labels, classes=[]):
     for i, labelClass in enumerate(classes):
         classAcc[labelClass] = results[np.where(labels==labelClass)].sum()/len(labels[np.where(labels == labelClass)])
     return classAcc
+
+class ConfusionMatrixMetric(tf.keras.metrics.Metric):
+
+            
+    def update_state(self, y_true, y_pred,sample_weight=None):
+        self.total_cm.assign_add(self.confusion_matrix(y_true,y_pred))
+        return self.total_cm
+        
+    def result(self):
+        return self.process_confusion_matrix()
+    
+    def confusion_matrix(self,y_true, y_pred):
+        """
+        Make a confusion matrix
+        """
+        y_pred=tf.argmax(y_pred,1)
+        cm=tf.math.confusion_matrix(y_true,y_pred,dtype=tf.float32,num_classes=self.num_classes)
+        return cm
+    
+    def process_confusion_matrix(self):
+        "returns precision, recall and f1 along with overall accuracy"
+        cm=self.total_cm
+        diag_part=tf.linalg.diag_part(cm)
+        precision=diag_part/(tf.reduce_sum(cm,0)+tf.constant(1e-15))
+        recall=diag_part/(tf.reduce_sum(cm,1)+tf.constant(1e-15))
+        f1=2*precision*recall/(precision+recall+tf.constant(1e-15))
+        return precision,recall,f1
+
+def confidenceScore(y_true, y_pred):
+        # print(y_pred)
+        # print(tf.keras.backend.get_value(y_pred))
+        
+        y_true =y_true.numpy()
+        y_pred = y_pred.numpy()
+        AvgConfidence = -1
+        pred_label = list(map(np.argmax,np.array(y_pred)))
+        countCorrect=0
+        for i in range(len(y_pred)):
+            if pred_label[i] == y_true[i]:
+                countCorrect += 1
+                AvgConfidence += calcEntropy(y_pred[i])
+        
+        if countCorrect == 0: #hack so i don't divide by zero
+            countCorrect = 1
+            
+        AvgConfidence = AvgConfidence/countCorrect
+        return AvgConfidence
+
+
+def unconfidence(y_true, y_pred):
+        #avg confidence of incorrect items.
+
+        y_true =y_true.numpy()
+        y_pred = y_pred.numpy()
+        AvgConfidence = -1
+        pred_label = list(map(np.argmax,np.array(y_pred)))
+        count=0
+        for i in range(len(y_pred)):
+            if pred_label[i] != y_true[i]:
+                count += 1
+                AvgConfidence += calcEntropy(y_pred[i])
+        
+        if count == 0: #hack so i don't divide by zero
+            count = 1
+            
+        AvgConfidence = AvgConfidence/count
+        return AvgConfidence
+
+
+class EntropyConfidenceMetric(tf.keras.metrics.Metric):
+    #metric of average confidence for correct answers          
+    def update_state(self, y_true, y_pred,sample_weight=None):
+        self.confidenceScore(y_true,y_pred)
+
+        return self.AvgConfidence
+        
+    def confidenceScore(self, y_true, y_pred):
+        self.AvgConfidence = -1
+        pred_label = list(map(np.argmax,np.array(y_pred)))
+        countCorrect=0
+        for i in range(len(y_pred)):
+            if pred_label[i] == y_true[i]:
+                countCorrect += 1
+                self.AvgConfidence += calcEntropy(y_pred[i])
+        
+        if countCorrect == 0: #hack so i don't divide by zero
+            countCorrect = 1
+
+        self.AvgConfidence = self.AvgConfidence/countCorrect
+
+def custom_loss_addition(y_true, y_pred):
+    #Entropy is added to the CrossE divided by the len of inputs
+    pred_label = list(map(np.argmax,np.array(y_pred)))
+    crossE = tf.keras.losses.SparseCategoricalCrossentropy()
+    sumEntropy = 0
+    for i in range(len(y_pred)):
+        # print("Entropy : ",calcEntropy(y_pred[i]))
+        if pred_label[i] == y_true[i]:
+            sumEntropy += calcEntropy(y_pred[i])
+    sumEntropy = sumEntropy / len(y_pred)         
+    loss = crossE(y_true, y_pred)
+    
+    loss +=sumEntropy
+    return loss
+
+def custom_loss_multi(y_true, y_pred):
+    #CrossE is multiplied by the Entropy
+    pred_label = list(map(np.argmax,np.array(y_pred)))
+    crossE = tf.keras.losses.SparseCategoricalCrossentropy()
+    sumLoss = 0
+    
+    for i in range(len(y_pred)):
+        loss = crossE(y_true[i], y_pred[i])
+#         print('crossE: ',loss)
+        if pred_label[i] == y_true[i]:
+#             print('calcEntropy ',calcEntropy(y_pred[i]))
+            loss = loss * calcEntropy(y_pred[i])
+        sumLoss += loss
+    sumLoss = sumLoss / len(y_pred)         
+    
+#     loss = crossE(y_true, y_pred)
+#     print("CrossE : ",loss.numpy())
+#     print("Loss : ",sumLoss)
+    return sumLoss

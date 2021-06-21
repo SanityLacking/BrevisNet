@@ -1,3 +1,10 @@
+import neptune.new as neptune
+
+run = neptune.init(project='cailen01/branchingDNN', api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI2NDJjNzA1Yi1iMTA5LTRjYzgtYTAyNS1lMDE1NTFkZjQ2NDEifQ==')
+from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+neptune_cbk = NeptuneCallback(run=run, base_namespace='metrics')
+
+
 # import the necessary packages
 import numpy as np
 import tensorflow as tf
@@ -164,14 +171,9 @@ class BranchyNet:
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
-            image = tf.image.resize(image, (224,224))
+            image = tf.image.resize(image, (227,227))
             return image, label
-        def augment_images2(image):
-            # Normalize images to have a mean of 0 and standard deviation of 1
-            # image = tf.image.per_image_standardization(image)
-            # Resize images from 32x32 to 277x277
-            image = tf.image.resize(image, (224,224))
-            return image
+        
 
         train_ds_size = len(list(train_ds))
         test_ds_size = len(list(test_ds))
@@ -360,7 +362,7 @@ class BranchyNet:
         for j in range(epocs):
             print("epoc: {}".format(j))
             results = [j]           
-            history = model.fit(train_ds, epochs=epocs, validation_data=validation_ds, callbacks=[tensorboard_cb,checkpoint])
+            history = model.fit(train_ds, epochs=epocs, validation_data=validation_ds, callbacks=[tensorboard_cb,checkpoint,neptune_cbk])
             print(history)
             test_scores = model.evaluate(test_ds, verbose=2)
             print("overall loss: {}".format(test_scores[0]))
@@ -378,7 +380,7 @@ class BranchyNet:
         return model
   
 
-    def trainModelTransfer(self, model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True, saveName =""):
+    def trainModelTransfer(self, model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True, saveName ="",custom=False):
         """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
         logs = []
@@ -409,10 +411,10 @@ class BranchyNet:
                 print("setting layer training to True")
 
         # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
-        if self.ALEXNET: 
-            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
-        else:
-            model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+        # if custom == False: 
+            # model.compile(optimizer=tf.optimizers.SGD(lr=0.001), loss=custom_loss_addition, metrics=['accuracy',confidenceScore,unconfidence],run_eagerly=True)
+        # else:
+        model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy',confidenceScore,unconfidence],run_eagerly=True)
 
         run_logdir = get_run_logdir(model.name)
         tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
@@ -431,10 +433,10 @@ class BranchyNet:
             print("epoc: {}".format(j))
             results = [j]           
             history =model.fit(train_ds,
-                    epochs=50,
+                    epochs=epocs,
                     validation_data=validation_ds,
                     validation_freq=1,
-                    callbacks=[tensorboard_cb,checkpoint])
+                    callbacks=[tensorboard_cb,checkpoint,neptune_cbk])
 
                                 
                                 # batch_size=32,
@@ -514,7 +516,7 @@ class BranchyNet:
     ###### RUN MODEL SHORTCUTS ######
 
         
-    def Run_alexNet(self, numEpocs = 2, modelName="", saveName ="",transfer = True):
+    def Run_alexNet(self, numEpocs = 2, modelName="", saveName ="",transfer = True,custom=False):
         x = tf.keras.models.load_model("models/{}".format(modelName))
 
         x.summary()
@@ -528,7 +530,7 @@ class BranchyNet:
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
 
-        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
+        funcModel = self.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,custom=custom)
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x

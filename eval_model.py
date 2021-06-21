@@ -72,8 +72,8 @@ if __name__ == "__main__":
     # y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_results")
     # y = branchy.GetResultsCSV(x,keras.datasets.mnist.load_data(), "_mnist")
     
-    x = tf.keras.models.load_model("models/resnet50_branched.hdf5")
-    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"res_results")
+    x = tf.keras.models.load_model("models/alexNetv5_BRAN_2.hdf5")
+    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"BRAN_2")
 
     # import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')

@@ -48,9 +48,21 @@ if __name__ == "__main__":
     #### build alexnet model
     # x = branchy.Run_alexNet( 5, modelName="alexNetv4_new.hdf5", saveName = "alexNetv4_branched_new")
 
-    # x = branchy.Run_alexNet( 1, modelName="alexNetv5.hdf5", saveName = "alexNetv5_alt9_branched",transfer = False)
+    x = branchy.Run_alexNet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5_customLoss_3",transfer = False)
+ 
+
+
+    # x = branchy.Run_alexNet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5_customLoss_3",transfer = False, custom=True)
+
+    x = tf.keras.models.load_model("models/alexNetv5_customLoss_3.hdf5")
+    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"custloss_3")
+
+
+    # x = tf.keras.models.load_model("models/alexNetv5_customLoss_2.hdf5")
+    # y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"custloss_2")
+
     # x = branchy.Run_inceptionv3( 3, modelName="inception_finetuned.hdf5", saveName = "inception_branched",transfer = False)
-    x = branchy.Run_resnet50v2( 3, modelName="resnet50_finetuned.hdf5", saveName = "resnet50_branched",transfer = False)
+    # x = branchy.Run_resnet50v2( 3, modelName="resnet50_finetuned.hdf5", saveName = "resnet50_branched",transfer = False)
 
     # x = branchy.Run_mnistNet( 5, modelName="mnistNormal.hdf5", saveName = "mnistNormal_branched",transfer = True)
     
