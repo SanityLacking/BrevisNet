@@ -12,6 +12,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+*\images
+#neptune
+*\.neptune
+
 # C extensions
 *.so
 
