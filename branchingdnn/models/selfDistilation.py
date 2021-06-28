@@ -27,7 +27,7 @@ class SelfDistilation(branchingdnn.core):
         return 
 
     # initialize an implementation of alexnet branching that uses the selfdistil methodology
-    def Alex_SelfDistil(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
+    def alexnet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
         x = tf.keras.models.load_model("models/{}".format(modelName))
 
         x.summary()
@@ -37,7 +37,7 @@ class SelfDistilation(branchingdnn.core):
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         funcModel = branches.add(x,["max_pooling2d","max_pooling2d_1","dense"],branches.newBranch_flatten,exact=True)
-        
+        #so to self distil, I have to pipe the loss from the main exit back to the branches.
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
         

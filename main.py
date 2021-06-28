@@ -35,12 +35,8 @@ root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 
 if __name__ == "__main__":
-    print(dir(branching))
-    # branching.BranchingDnn.ALEXNET = True
-    print(branching.utils.calcEntropy([0,.3,.3]))
-    print(branching.core.printStuff())
-    # x = branching.Run_mnistNormal(1)
-    # x = branching.Run_mnistTransfer(1)
+    # print(branching.utils.calcEntropy([0,.3,.3]))
+    # print(branching.core.printStuff())
     
     #### build alexnet model
     # x = branching.Run_alexNet( 5, modelName="alexNetv4_new.hdf5", saveName = "alexNetv4_branched_new")
@@ -48,8 +44,8 @@ if __name__ == "__main__":
     # x = branching.Run_alexNet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5_crossE",transfer = False,customOptions="CrossE")
     
 
-    x = branching.core.Run_alexNet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5___",transfer = False,customOptions="CrossE_Eadd")
-    # x = branching.SelfDistilation.Alex_SelfDistil( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5_crossE_Eadd",transfer = False,customOptions="CrossE_Eadd")
+    # x = branching.core.Run_alexNet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5___",transfer = False,customOptions="CrossE_Eadd")
+    x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5_crossE_Eadd",transfer = False,customOptions="CrossE_Eadd")
   
   
     # x = tf.keras.models.load_model("models/alexNetv5_crossE.hdf5")

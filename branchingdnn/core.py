@@ -94,7 +94,7 @@ class BranchingDnn:
         x.summary()
         if saveName =="":
             saveName = modelName
-        tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
+        tf.keras.utils.plot_model(x, to_file="images/{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         funcModel = branchingdnn.branches.add(x,["max_pooling2d","max_pooling2d_1","dense"],branches.newBranch_flatten,exact=True)
