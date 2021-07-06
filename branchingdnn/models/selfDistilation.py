@@ -17,6 +17,7 @@ import os
 
 from branchingdnn.utils import *
 from branchingdnn.branches import branch
+from branchingdnn.dataset import prepare
 # import branchyNet
 #class for building a seflDistilation branching model.
 
@@ -40,8 +41,8 @@ class SelfDistilation(branchingdnn.core):
         #so to self distil, I have to pipe the loss from the main exit back to the branches.
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
-        
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
+        dataset = prepare.dataset_distil(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel, dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x

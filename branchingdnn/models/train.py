@@ -1,4 +1,5 @@
 
+from tensorflow._api.v2 import data
 import branchingdnn
 import numpy as np
 import tensorflow as tf
@@ -60,7 +61,7 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     """
     logs = []
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-    train_ds, test_ds, validation_ds = prepare.dataset(dataset,32,5000,22500,(227,227))
+    train_ds, test_ds, validation_ds = dataset
     # train_ds, test_ds, validation_ds = prepare.prepareMnistDataset(dataset, batch_size=32)
 
     #Freeze main branch layers
