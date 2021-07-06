@@ -6,8 +6,8 @@ from tensorflow.keras.models import load_model
 import itertools
 import time
 import json
-from branchyNet import BranchyNet
-from utils import *
+import branchingdnn
+from branchingdnn.utils import *
 
 
 class mnistBranch(BranchyNet):

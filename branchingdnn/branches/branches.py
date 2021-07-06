@@ -9,9 +9,9 @@ import time
 import json
 
 import branchingdnn
-from utils import *
+from branchingdnn.utils import *
 
-class Branches:
+class branch:
     #add a branch
     def add(model, identifier =[""], customBranch = [],exact = True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
@@ -41,7 +41,7 @@ class Branches:
         if type(customBranch) != list:
             customBranch = [customBranch]
         if len(customBranch) == 0:
-            customBranch = [Branches.newBranch_flatten]
+            customBranch = [branch.newBranch_flatten]
         branches = 0
         # print(customBranch)
         if len(identifier) > 0:
@@ -97,7 +97,7 @@ class Branches:
 
     class LogisticEndpoint(keras.layers.Layer):
         def __init__(self, name=None):
-            super(LogisticEndpoint, self).__init__(name=name)
+            super(branch.LogisticEndpoint, self).__init__(name=name)
             self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
             self.accuracy_fn = keras.metrics.BinaryAccuracy()
 
@@ -114,6 +114,60 @@ class Branches:
 
             # Return the inference-time prediction tensor (for `.predict()`).
             return tf.nn.softmax(logits)
+        
+    class BranchEndpoint(keras.layers.Layer):
+        def __init__(self, name=None):
+            super(branch.BranchEndpoint, self).__init__(name=name)
+            self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
+            self.loss_coefficient = 1
+            self.feature_loss_coefficient = 1
+    #         self.loss_fn = keras.losses.sparse_categorical_crossentropy()
+
+        def call(self, prediction, targets, additional_loss=None, student_features=None, teaching_features=None, sample_weights=None):
+            # Compute the training-time loss value and add it
+            # to the layer using `self.add_loss()`.
+            print(prediction)
+            #loss functions are (True, Prediction)
+            loss = self.loss_fn(targets, prediction, sample_weights)
+            
+            #if loss is a list of additional loss objects
+            if isinstance(additional_loss,list):
+                for i in range(len(additional_loss)):
+                    loss += self.loss_fn(targets, additional_loss[i], sample_weights) * self.loss_coefficient
+            elif additional_loss is not None:
+                loss += self.loss_fn(targets, additional_loss, sample_weights) * self.loss_coefficient
+                
+            #feature distillation
+            if teaching_features is not None and student_features is not None:
+                diff = tf.norm(tf.math.abs(student_features - teaching_features)) * self.feature_loss_coefficient
+                loss += self.loss_fn(targets, additional_loss, sample_weights)
+                
+            
+            #TODO might be faster to concatenate all elements together and then perform the loss once on all the elements.
+            
+            self.add_loss(loss)
+
+            return tf.nn.softmax(prediction)
+        
+        
+        
+    class FeatureDistillation(keras.layers.Layer):
+        def __init__(self, name=None):
+            super(branch.FeatureDistillation, self).__init__(name=name)
+            self.loss_coefficient = 1
+            self.feature_loss_coefficient = 0.3
+            self.regularizer_fn = tf.keras.regularizers.L2(self.feature_loss_coefficient)
+    #         self.loss_fn = keras.losses.sparse_categorical_crossentropy()
+        def call(self, prediction, teaching_features, sample_weights=None):
+            # Compute the training-time loss value and add it
+            # to the layer using `self.add_loss()`.
+            print(prediction)
+            #loss functions are (True, Prediction)
+            #feature distillation
+            l2_loss = self.regularizer_fn(prediction, teaching_features)
+            #TODO might be faster to concatenate all elements together and then perform the loss once on all the elements.
+            self.add_loss(l2_loss)
+            return prediction
 
     def add_distil(model, identifier =[""], customBranch = [],exact = True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
@@ -134,7 +188,9 @@ class Branches:
         for i in model.outputs:
             outputs.append(i)
 
-
+        model.summary()
+        teaching_feature = model.get_layer('dense_1').output
+        # print(teaching_feature)
         #get the loss from the main exit and combine it with the loss of the 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
@@ -145,7 +201,7 @@ class Branches:
         if type(customBranch) != list:
             customBranch = [customBranch]
         if len(customBranch) == 0:
-            customBranch = [Branches.newBranch_flatten]
+            customBranch = [branch.newBranch_distil]
         branches = 0
         # print(customBranch)
         if len(identifier) > 0:
@@ -155,7 +211,7 @@ class Branches:
                 for i in identifier: 
                     print(model.layers[i].name)
                     try:
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -169,7 +225,7 @@ class Branches:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
                     else:
@@ -177,7 +233,7 @@ class Branches:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
@@ -283,8 +339,16 @@ class Branches:
 
         return output
 
-    def newBranch_distil(prevLayer):
-        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+
+    # need a bottleneck layer to squeeze the feature hints down to a viable size.
+    def newBranch_distil(prevLayer, featureLayer =None):
+        if featureLayer is not None:
+            bottle_neck = branch.bottleneck(prevLayer,featureLayer)
+            branchLayer = branch.FeatureDistillation(name="branch_teaching")(bottle_neck,featureLayer)    
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+        else:
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
@@ -294,3 +358,45 @@ class Branches:
         
         
         return output
+
+    #build from LinfengZhang self distillation bottleneck code
+    #  Idea is to squeeze the teaching feature set to the same size as the previousLayer,
+    #  this is then provided as a part of the overall loss of the branch classifier.
+    #bottleneck expands the previous layer to match the feature size of the teaching layer so comparision can be made.
+    # I wonder if the expansion should be just done for the teaching process, not actually passed to the rest of the branch. 
+    # so the bottleneck's expanded features are not actually passed on, just used to see if they are on the right track.
+
+    def bottleneck(prevLayer, featureLayer):
+        base_width = 64
+        groups = 1
+        stride = 1  
+        print(prevLayer)
+        print(featureLayer)
+        if len(featureLayer.shape)>2: #mutli-dimensional layer output, aka not a dense fullyconnected layer.
+            filters = featureLayer.shape[3]    
+        else:
+            filters = featureLayer.shape[1]
+        planes = featureLayer.shape[1]
+        
+        width = int(planes * (base_width / 64.)) * groups
+        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
+        bottleneck = layers.Conv2D(filters, (1,1),activation='relu')(prevLayer)
+        # self.bn1 = norm_layer(width)
+        bottleneck = layers.BatchNormalization()(bottleneck)
+        # self.conv2 = conv3x3(width, width, stride, groups, dilation)
+        bottleneck = layers.Conv2D(filters,(3,3),activation='relu')(bottleneck)
+        # self.bn2 = norm_layer(width)
+        bottleneck = layers.BatchNormalization()(bottleneck)
+        # self.conv3 = conv1x1(width, planes * self.expansion)
+        bottleneck = layers.Conv2D(filters, (1,1),activation='relu')(bottleneck)
+        # self.bn3 = norm_layer(planes * self.expansion)
+        bottleneck = layers.BatchNormalization()(bottleneck)
+        # self.relu = nn.ReLU(inplace=True)
+        bottleneck = layers.ReLU()(bottleneck)
+        # self.downsample = downsample
+        # self.stride = stride
+
+
+
+        return bottleneck
+

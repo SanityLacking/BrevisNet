@@ -1,1 +1,1 @@
-from branchingdnn.branches.branches import * 
+from .branches import branch

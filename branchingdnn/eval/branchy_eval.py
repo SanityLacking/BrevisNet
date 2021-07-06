@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 import matplotlib.cm as cm
 
-from utils import *
+from branchingdnn.utils import *
 
 
 class branchyEval:
