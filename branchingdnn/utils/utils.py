@@ -10,7 +10,7 @@ import pandas as pd
 # from keras.models import load_model
 # from keras.utils import CustomObjectScope
 # from keras.initializers import glorot_uniform
-
+import time
 import pandas as pd
 import math
 import pydot
@@ -19,6 +19,8 @@ import math
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
+root_logdir = os.path.join(os.curdir, "logs\\fit\\")
+
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 

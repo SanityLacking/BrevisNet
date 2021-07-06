@@ -106,8 +106,8 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_acc', verbose=1, mode='max')
 
     neptune_cbk = Neptune.getcallback()
-    print("epoc: {}".format(j))
-    results = [j]           
+    # print("epoc: {}".format(j))
+    # results = [j]           
     history =model.fit(train_ds,
             epochs=epocs,
             validation_data=validation_ds,
@@ -118,12 +118,12 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     print(history)
     test_scores = model.evaluate(test_ds, verbose=2)
     print("overall loss: {}".format(test_scores[0]))
-    if num_outputs > 1:
-        for i in range(num_outputs):
-            print("Output {}: Test loss: {}, Test accuracy {}".format(i, test_scores[i+1], test_scores[i+1+num_outputs]))
-            results.append("Output {}: Test loss: {}, Test accuracy {}".format(i, test_scores[i+1], test_scores[i+1+num_outputs]))
-    else:
-        print("Test loss:", test_scores[0])
-        print("Test accuracy:", test_scores[1])
-    logs.append(results)
+    # if num_outputs > 1:
+    #     for i in range(num_outputs):
+    #         print("Output {}: Test loss: {}, Test accuracy {}".format(i, test_scores[i+1], test_scores[i+1+num_outputs]))
+    #         results.append("Output {}: Test loss: {}, Test accuracy {}".format(i, test_scores[i+1], test_scores[i+1+num_outputs]))
+    # else:
+    #     print("Test loss:", test_scores[0])
+    #     print("Test accuracy:", test_scores[1])
+    # logs.append(results)
     return model

@@ -156,17 +156,17 @@ class branch:
             super(branch.FeatureDistillation, self).__init__(name=name)
             self.loss_coefficient = 1
             self.feature_loss_coefficient = 0.3
-            self.regularizer_fn = tf.keras.regularizers.L2(self.feature_loss_coefficient)
-    #         self.loss_fn = keras.losses.sparse_categorical_crossentropy()
+            
+            
         def call(self, prediction, teaching_features, sample_weights=None):
             # Compute the training-time loss value and add it
             # to the layer using `self.add_loss()`.
-            print(prediction)
+            # print(prediction)
             #loss functions are (True, Prediction)
             #feature distillation
-            l2_loss = self.regularizer_fn(prediction, teaching_features)
+            # l2_loss = self.feature_loss_coefficient * tf.reduce_sum(tf.square(prediction - teaching_features))
             #TODO might be faster to concatenate all elements together and then perform the loss once on all the elements.
-            self.add_loss(l2_loss)
+            # self.add_loss(l2_loss)
             return prediction
 
     def add_distil(model, identifier =[""], customBranch = [],exact = True):
@@ -190,7 +190,7 @@ class branch:
 
         model.summary()
         teaching_feature = model.get_layer('dense_1').output
-        # print(teaching_feature)
+        print("teaching Feature:", teaching_feature)
         #get the loss from the main exit and combine it with the loss of the 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
@@ -211,7 +211,7 @@ class branch:
                 for i in identifier: 
                     print(model.layers[i].name)
                     try:
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -225,7 +225,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
                     else:
@@ -233,7 +233,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
@@ -347,6 +347,7 @@ class branch:
             branchLayer = branch.FeatureDistillation(name="branch_teaching")(bottle_neck,featureLayer)    
             branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
         else:
+            print("no teaching feature Provided, bottleneck and teaching loss skipped")
             branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
 
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)

@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 
 
 class prepare:
-    def augment_images(image, label):
+    def augment_images(image, label,input_size):
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
@@ -18,6 +18,9 @@ class prepare:
     def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=()):
         (train_images, train_labels), (test_images, test_labels) = dataset
 
+        #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
+        def augment_images(image, label,input_size=input_size):
+            return prepare.augment_images(image, label, input_size)
         
         validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
         train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
@@ -34,17 +37,17 @@ class prepare:
         print("trainSize {}".format(train_ds_size))
         print("testSize {}".format(test_ds_size))
         train_ds = (train_ds
-                        .map(prepare.augment_images)
+                        .map(augment_images)
                         .shuffle(buffer_size=tf.cast(shuffle_size,'int64'))
                         .batch(batch_size=batch_size, drop_remainder=True))
 
         test_ds = (test_ds
-                        .map(prepare.augment_images)
+                        .map(augment_images)
                         #   .shuffle(buffer_size=train_ds_size)
                         .batch(batch_size=batch_size, drop_remainder=True))
 
         validation_ds = (validation_ds
-                        .map(prepare.augment_images)
+                        .map(augment_images)
                         #   .shuffle(buffer_size=validation_ds_size)
                         .batch(batch_size=batch_size, drop_remainder=True))
 
