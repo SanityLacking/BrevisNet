@@ -102,7 +102,9 @@ class BranchingDnn:
         # funcModel= x
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
+        dataset = prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
+
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
@@ -122,8 +124,9 @@ class BranchingDnn:
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
+        dataset = prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
 
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
@@ -143,8 +146,9 @@ class BranchingDnn:
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
+        dataset = prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
 
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,tf.keras.datasets.cifar10.load_data(), epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName)
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
@@ -163,8 +167,9 @@ class BranchingDnn:
             funcModel.save("models/{}_branched.hdf5".format(modelName))
         else: 
             funcModel.save("models/{}".format(saveName))
+        dataset = prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
 
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,keras.datasets.mnist.load_data(),epocs = numEpocs, transfer = transfer, saveName = saveName)
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,dataset,epocs = numEpocs, transfer = transfer, saveName = saveName)
         if saveName == "":
             funcModel.save("models/{}_branched.hdf5".format(modelName))
         else: 
@@ -219,6 +224,8 @@ class BranchingDnn:
 
 
         #run training
+        dataset = prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
+
         x = branchingdnn.models.trainModelTransfer(x,dataset,epocs = numEpocs, save = False)
 
 

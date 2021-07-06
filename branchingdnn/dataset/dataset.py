@@ -8,16 +8,79 @@ from tensorflow.keras.models import load_model
 
 
 class prepare:
-    def augment_images(image, label):
+    def augment_images(image, label,input_size=None):
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
             image = tf.image.resize(image,input_size)
             return image, label
+    
+    
+    #dataset for knowledge distillation, includes a second input of labels to input "targets"
+    def dataset_distil(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=()):
+        (train_images, train_labels), (test_images, test_labels) = dataset
+
+        #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
+        def augment_images(image, label,input_size=input_size):
+            return prepare.augment_images(image, label, input_size)
+        
+        validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
+        train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+        
+        train_ds = (train_ds.map(augment_images))
+        validation_ds = (validation_ds.map(augment_images))
+        test_ds = (test_ds.map(augment_images))
+
+
+        
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+        target = tf.data.Dataset.from_tensor_slices((train_labels))
+        train_ds = tf.data.Dataset.zip((train_ds,target))
+
+        v_target = tf.data.Dataset.from_tensor_slices((validation_labels))
+        validation_ds = tf.data.Dataset.zip((validation_ds,v_target))
+
+        t_target = tf.data.Dataset.from_tensor_slices((test_labels))
+        test_ds = tf.data.Dataset.zip((test_ds,t_target))
+
+        
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
+        train_ds = (train_ds
+                        # .map(augment_images)
+                        .shuffle(buffer_size=tf.cast(shuffle_size,'int64'))
+                        .batch(batch_size=batch_size, drop_remainder=True))
+
+        test_ds = (test_ds
+                        # .map(augment_images)
+                        #   .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=batch_size, drop_remainder=True))
+
+        validation_ds = (validation_ds
+                        # .map(augment_images)
+                        #   .shuffle(buffer_size=validation_ds_size)
+                        .batch(batch_size=batch_size, drop_remainder=True))
+
+
+        print(train_ds)
+
+        print(test_ds)
+        return (train_ds, test_ds, validation_ds)
+
 
     def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=()):
         (train_images, train_labels), (test_images, test_labels) = dataset
 
+        #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
+        def augment_images(image, label,input_size=input_size):
+            return prepare.augment_images(image, label, input_size)
         
         validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
         train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
@@ -34,21 +97,21 @@ class prepare:
         print("trainSize {}".format(train_ds_size))
         print("testSize {}".format(test_ds_size))
         train_ds = (train_ds
-                        .map(prepare.augment_images)
+                        .map(augment_images)
                         .shuffle(buffer_size=tf.cast(shuffle_size,'int64'))
                         .batch(batch_size=batch_size, drop_remainder=True))
 
         test_ds = (test_ds
-                        .map(prepare.augment_images)
+                        .map(augment_images)
                         #   .shuffle(buffer_size=train_ds_size)
                         .batch(batch_size=batch_size, drop_remainder=True))
 
         validation_ds = (validation_ds
-                        .map(prepare.augment_images)
+                        .map(augment_images)
                         #   .shuffle(buffer_size=validation_ds_size)
                         .batch(batch_size=batch_size, drop_remainder=True))
 
-        return train_ds, test_ds, validation_ds
+        return (train_ds, test_ds, validation_ds)
 
     def prepareMnistDataset(dataset,batch_size=32):
             import csv

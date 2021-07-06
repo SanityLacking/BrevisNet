@@ -113,41 +113,38 @@ class branch:
             self.add_metric(acc, name="accuracy")
 
             # Return the inference-time prediction tensor (for `.predict()`).
-            return tf.nn.softmax(logits)
-        
+            return tf.nn.softmax(logits)         
+                
     class BranchEndpoint(keras.layers.Layer):
         def __init__(self, name=None):
             super(branch.BranchEndpoint, self).__init__(name=name)
-            self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
+            # self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
             self.loss_coefficient = 1
             self.feature_loss_coefficient = 1
-    #         self.loss_fn = keras.losses.sparse_categorical_crossentropy()
+            self.kl = tf.keras.losses.KLDivergence()
+            self.loss_fn = keras.losses.sparse_categorical_crossentropy
 
-        def call(self, prediction, targets, additional_loss=None, student_features=None, teaching_features=None, sample_weights=None):
+        def call(self, inputs, labels, teacher_sm=None, sample_weights=None):
             # Compute the training-time loss value and add it
             # to the layer using `self.add_loss()`.
-            print(prediction)
             #loss functions are (True, Prediction)
-            loss = self.loss_fn(targets, prediction, sample_weights)
+            softmax = tf.nn.softmax(inputs)
             
-            #if loss is a list of additional loss objects
-            if isinstance(additional_loss,list):
-                for i in range(len(additional_loss)):
-                    loss += self.loss_fn(targets, additional_loss[i], sample_weights) * self.loss_coefficient
-            elif additional_loss is not None:
-                loss += self.loss_fn(targets, additional_loss, sample_weights) * self.loss_coefficient
-                
-            #feature distillation
-            if teaching_features is not None and student_features is not None:
-                diff = tf.norm(tf.math.abs(student_features - teaching_features)) * self.feature_loss_coefficient
-                loss += self.loss_fn(targets, additional_loss, sample_weights)
-                
-            
-            #TODO might be faster to concatenate all elements together and then perform the loss once on all the elements.
-            
-            self.add_loss(loss)
-
-            return tf.nn.softmax(prediction)
+            #loss 1. normal loss, predictions vs labels
+            normal_loss = self.loss_fn(labels, softmax, sample_weights)
+            # self.add_loss(normal_loss) 
+            # currently turned off, the normal loss is still managed by the compile function. use this if no default loss is defined.
+            #loss 2. KL divergence loss, aka the difference between the student and teacher's softmax
+            if teacher_sm is not None:
+                kl_loss = self.kl(softmax,teacher_sm)
+                self.add_loss(kl_loss)
+                self.add_metric(kl_loss, name=self.name+"_KL")
+            #NOTE
+            # The total loss is different from parts_loss because it includes the regularization term.
+            # In other words, loss is computed as loss = parts_loss + k*R, where R is the regularization term 
+            # (typically the L1 or L2 norm of the model's weights) and k a hyperparameter that controls the 
+            # contribution of the regularization loss in the total loss.
+            return softmax
         
         
         
@@ -156,18 +153,13 @@ class branch:
             super(branch.FeatureDistillation, self).__init__(name=name)
             self.loss_coefficient = 1
             self.feature_loss_coefficient = 0.3
-            self.regularizer_fn = tf.keras.regularizers.L2(self.feature_loss_coefficient)
-    #         self.loss_fn = keras.losses.sparse_categorical_crossentropy()
-        def call(self, prediction, teaching_features, sample_weights=None):
-            # Compute the training-time loss value and add it
-            # to the layer using `self.add_loss()`.
-            print(prediction)
-            #loss functions are (True, Prediction)
-            #feature distillation
-            l2_loss = self.regularizer_fn(prediction, teaching_features)
-            #TODO might be faster to concatenate all elements together and then perform the loss once on all the elements.
+        def call(self, inputs, teaching_features, sample_weights=None):
+            #loss 3. Feature distillation of the difference between features of teaching layer and student layer.
+            l2_loss = self.feature_loss_coefficient * tf.reduce_sum(tf.square(inputs - teaching_features))
             self.add_loss(l2_loss)
-            return prediction
+            self.add_metric(l2_loss, name=self.name+"_distill") # metric so this loss value can be monitored.
+            return inputs
+
 
     def add_distil(model, identifier =[""], customBranch = [],exact = True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
@@ -188,9 +180,25 @@ class branch:
         for i in model.outputs:
             outputs.append(i)
 
+
+        inputs = []
+        for i in model.inputs:
+            inputs.append(i)
+        inputs.append(keras.Input(shape=(1,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
+        #add targets as an input to the model so it can be used for the custom losses.
+        #   input size is the size of the     
+        #add target input 
+        model = keras.Model(inputs=inputs, outputs=outputs)
+
         model.summary()
-        teaching_feature = model.get_layer('dense_1').output
-        # print(teaching_feature)
+
+
+        targets = model.get_layer('targets').output
+        print("targets:", targets)
+        teacher_softmax = outputs[0]
+        print("teacher_softmax:", teacher_softmax)
+        teaching_features = model.get_layer('dense_1').output
+        print("teaching Feature:", teaching_features)
         #get the loss from the main exit and combine it with the loss of the 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
@@ -211,7 +219,7 @@ class branch:
                 for i in identifier: 
                     print(model.layers[i].name)
                     try:
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -225,7 +233,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
                     else:
@@ -233,7 +241,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,teaching_feature))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
@@ -242,7 +250,7 @@ class branch:
                 print(model.layers[i].name)
                 # if "dense" in model.layers[i].name:
                 # outputs = newBranch(model.layers[i].output,outputs)
-                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs)
+                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features)
                 branches=branches+1
             # for j in range(len(model.layers[i].inbound_nodes)):
             #     print(dir(model.layers[i].inbound_nodes[j]))
@@ -341,22 +349,24 @@ class branch:
 
 
     # need a bottleneck layer to squeeze the feature hints down to a viable size.
-    def newBranch_distil(prevLayer, featureLayer =None):
-        if featureLayer is not None:
-            bottle_neck = branch.bottleneck(prevLayer,featureLayer)
-            branchLayer = branch.FeatureDistillation(name="branch_teaching")(bottle_neck,featureLayer)    
-            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
-        else:
-            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+    def newBranch_distil(prevLayer, targets, teacher_sm, teaching_features):
+        print("targets::::",targets)
+        print("teacher_sm::::",teacher_sm)
+        print("teaching_features::::",teaching_features)
+        # if teaching_features is not None:
+        #     bottle_neck = branch.bottleneck(prevLayer,teaching_features)
+        #     branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(bottle_neck,teaching_features)    
+        #     branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+        # else:
+        #     print("no teaching feature Provided, bottleneck and teaching loss skipped")
+        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
 
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        output = branch.BranchEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets, teacher_sm)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
-        
-        
-        
         return output
 
     #build from LinfengZhang self distillation bottleneck code
