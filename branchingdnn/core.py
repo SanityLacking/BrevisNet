@@ -29,7 +29,7 @@ from tensorflow.python.ops.gen_math_ops import Xlogy
 #from tensorflow.keras.utils import plot_model
 
 
-from Alexnet_kaggle_v2 import * 
+# from Alexnet_kaggle_v2 import * 
 
 
 #local imports
