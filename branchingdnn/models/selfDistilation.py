@@ -22,11 +22,7 @@ from branchingdnn import branches
 
 class SelfDistilation(branchingdnn.core):
 
-    def printStuff():
-        print("helloworld")
-        return 
-
-    # initialize an implementation of alexnet branching that uses the selfdistil methodology
+     # initialize an implementation of alexnet branching that uses the selfdistil methodology
     def alexnet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
         x = tf.keras.models.load_model("models/{}".format(modelName))
 
@@ -46,3 +42,34 @@ class SelfDistilation(branchingdnn.core):
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
     
+    class BranchEndpoint(keras.layers.Layer):
+        def __init__(self, name=None):
+            super(BranchEndpoint, self).__init__(name=name)
+            self.loss_fn = keras.losses.SparseCategoricalCrossentropy()
+            self.loss_coefficient = 1
+            self.feature_loss_coefficient = 1
+    #         self.loss_fn = keras.losses.sparse_categorical_crossentropy()
+
+        def call(self, prediction, targets, additional_loss=None, student_features=None, teaching_features=None, sample_weights=None):
+            # Compute the training-time loss value and add it
+            # to the layer using `self.add_loss()`.
+            print(prediction, targets, additional_loss)
+            #loss functions are (True, Prediction)
+            loss = self.loss_fn(targets, prediction, sample_weights)
+            print(loss)
+            #if loss is a list of additional loss objects
+            if isinstance(additional_loss,list):
+                for i in range(len(additional_loss)):
+                    loss += self.loss_fn(targets, additional_loss[i], sample_weights) * self.loss_coefficient
+            elif additional_loss is not None:
+                loss += self.loss_fn(targets, additional_loss, sample_weights) * self.loss_coefficient
+                
+            #feature distillation
+            if teaching_features is not None and student_features is not None:
+                diff = tf.norm(tf.math.abs(student_features - teaching_features)) * self.feature_loss_coefficient
+                loss += self.loss_fn(targets, additional_loss, sample_weights)
+            #TODO might be faster to concatenate all elements together and then perform the loss once on all the elements.
+            
+            self.add_loss(loss)
+
+            return tf.nn.softmax(prediction)
