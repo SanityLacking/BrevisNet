@@ -37,11 +37,6 @@ train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
 test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
 validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
 
-
-
-
-
-
 def augment_images(image, label):
     # Normalize images to have a mean of 0 and standard deviation of 1
     # image = tf.image.per_image_standardization(image)
@@ -159,33 +154,6 @@ tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
 #     model.evaluate(test_ds)
     
 #     return model 
-
-def prepareAlexNetDataset(self, dataset, batch_size =32):
-        (train_images, train_labels), (test_images, test_labels) = dataset
-
-        validation_images, validation_labels = train_images[:5000], train_labels[:5000]
-        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
-        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
-
-        train_ds_size = len(list(train_ds))
-        train_ds_size = len(list(test_ds))
-        validation_ds_size = len(list(validation_ds))
-        train_ds = (train_ds
-            .map(augment_images)
-            .shuffle(buffer_size=int(train_ds_size))
-            # .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
-            .batch(batch_size=batch_size, drop_remainder=True))
-        test_ds = (test_ds
-            .map(augment_images)
-            # .shuffle(buffer_size=int(train_ds_size)) ##why would you shuffle the test set?
-            .batch(batch_size=batch_size, drop_remainder=True))
-
-        validation_ds = (validation_ds
-            .map(augment_images)
-            # .shuffle(buffer_size=int(train_ds_size))
-            .batch(batch_size=batch_size, drop_remainder=True))
-        return train_ds, test_ds, validation_ds
 
 if __name__ == '__main__':
 

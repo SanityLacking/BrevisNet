@@ -35,7 +35,7 @@ from tensorflow.python.ops.gen_math_ops import Xlogy
 #local imports
 from .utils import *
 from .dataset import prepare
-from .branches import branches
+from .branches import branch
 from .eval import branchy_eval as eval
 
 
@@ -97,7 +97,8 @@ class BranchingDnn:
         tf.keras.utils.plot_model(x, to_file="images/{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
-        funcModel = branchingdnn.branches.add(x,["max_pooling2d","max_pooling2d_1","dense"],branches.newBranch_flatten,exact=True)
+        
+        funcModel = branch.add(x,["max_pooling2d","max_pooling2d_1","dense"],branch.newBranch_flatten,exact=True)
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         # funcModel= x
         funcModel.summary()
@@ -119,7 +120,7 @@ class BranchingDnn:
         tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
-        funcModel = branchingdnn.branches.add(x,["conv1_block3_out","conv3_block2_out","conv5_block3_out"],branches.newBranch_flatten,exact=True)
+        funcModel = branch.add(x,["conv1_block3_out","conv3_block2_out","conv5_block3_out"],branch.newBranch_flatten,exact=True)
 
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         funcModel.summary()
@@ -141,7 +142,7 @@ class BranchingDnn:
         tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
-        funcModel = branchingdnn.branches.add(x,["mixed1","mixed3","mixed6"],branches.newBranch_flatten,exact=True)
+        funcModel = branch.add(x,["mixed1","mixed3","mixed6"],branch.newBranch_flatten,exact=True)
 
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         funcModel.summary()
@@ -161,7 +162,7 @@ class BranchingDnn:
             saveName = modelName
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
-        funcModel = branchingdnn.branches.add(x,["dense","dense_2","dense_3"],branches.newBranch,exact=True)
+        funcModel = branch.add(x,["dense","dense_2","dense_3"],branch.newBranch,exact=True)
         funcModel.summary()
         if saveName == "":
             funcModel.save("models/{}_branched.hdf5".format(modelName))
@@ -445,13 +446,22 @@ class BranchingDnn:
 
         return 
     
+    def evalModel(model,dataset,suffix="", validation=True):
+        train_ds, test_ds, validation_ds = prepare.dataset(dataset,32,5000,22500,(227,227))
+        model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+        history = model.evaluate(validation_ds, verbose=2)
+        history = model.evaluate(test_ds, verbose=2)
+
+        return history
+
+
     def GetResultsCSV(model,dataset,suffix="", validation=True):
         num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-        if BranchingDnn.ALEXNET:
-            train_ds, test_ds, validation_ds = prepare.prepareAlexNetDataset_old(1)
-        else:
-            train_ds, test_ds, validation_ds = prepare.prepareMnistDataset(dataset,1)
-        
+        # if BranchingDnn.ALEXNET:
+            # train_ds, test_ds, validation_ds = prepare.prepareAlexNetDataset_old(1)
+        # else:
+            # train_ds, test_ds, validation_ds = prepare.prepareMnistDataset(dataset,1)
+        train_ds, test_ds, validation_ds = prepare.dataset(dataset,32,5000,22500,(227,227))
         predictions = []
         labels = []
         model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])

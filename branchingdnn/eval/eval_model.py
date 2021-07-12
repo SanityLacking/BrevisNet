@@ -11,10 +11,11 @@ import pydot
 import os
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
+# from Alexnet_kaggle_v2 import * 
+import branchingdnn as branching
+
 from branchingdnn.utils import *
 
-from Alexnet_kaggle_v2 import * 
-from branchyNet import BranchyNet
 
 def evalBranchMatrix_old(model, input, labels=""):
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
@@ -72,8 +73,9 @@ if __name__ == "__main__":
     # y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_results")
     # y = branchy.GetResultsCSV(x,keras.datasets.mnist.load_data(), "_mnist")
     
-    x = tf.keras.models.load_model("models/alexNetv5_BRAN_2.hdf5")
-    y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"BRAN_2")
+    x = tf.keras.models.load_model("models/alexNetv5.hdf5")
+    
+    y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"natural")
 
     # import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')
