@@ -88,10 +88,11 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     elif customOptions == "CrossE_Eadd":
         
         entropyAdd = entropyAddition_loss()
-        model.compile(optimizer=tf.optimizers.SGD(lr=0.001), loss=[crossE_test, entropyAdd, entropyAdd, entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
-    # else:
+        model.compile(optimizer=tf.optimizers.SGD(lr=0.001), loss=[keras.losses.SparseCategoricalCrossentropy(),entropyAdd,entropyAdd,entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
+        # model.compile(optimizer=tf.optimizers.SGD(lr=0.001), loss=[crossE_test, entropyAdd, entropyAdd, entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
+    else:
     # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
-    # model.compile(loss='SparseCategoricalCrossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
+        model.compile(loss='SparseCategoricalCrossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
 
     run_logdir = get_run_logdir(model.name)
     tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
