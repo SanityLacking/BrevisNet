@@ -96,7 +96,7 @@ class branch:
 
 
     class LogisticEndpoint(keras.layers.Layer):
-        def __init__(self, name=None):
+        def __init__(self, name=None, **kwargs):
             super(branch.LogisticEndpoint, self).__init__(name=name)
             self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
             self.accuracy_fn = keras.metrics.BinaryAccuracy()
@@ -116,7 +116,7 @@ class branch:
             return tf.nn.softmax(logits)         
                 
     class BranchEndpoint(keras.layers.Layer):
-        def __init__(self, name=None):
+        def __init__(self, name=None, **kwargs):
             super(branch.BranchEndpoint, self).__init__(name=name)
             # self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
             self.loss_coefficient = 1
@@ -149,7 +149,7 @@ class branch:
         
         
     class FeatureDistillation(keras.layers.Layer):
-        def __init__(self, name=None):
+        def __init__(self, name=None, **kwargs):
             super(branch.FeatureDistillation, self).__init__(name=name)
             self.loss_coefficient = 1
             self.feature_loss_coefficient = 0.3
