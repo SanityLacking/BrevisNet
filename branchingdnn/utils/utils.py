@@ -364,6 +364,26 @@ class  unconfidenceConditional(tf.keras.metrics.Metric):
     def reset_states(self):
         self.metric_variable.assign(0.)
 
+class  confidenceDifference(tf.keras.metrics.Metric):
+    def __init__(self, **kwargs):
+        # Initialise as normal and add flag variable for when to run computation
+        super(confidenceDifference, self).__init__(**kwargs)
+        self.metric_variable = self.add_weight(name='metric_variable', initializer='zeros')
+        self.update_metric = tf.Variable(False)
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        # Use conditional to determine if computation is done
+        if self.update_metric:
+            # run computation
+            computation_result = unconfidence(y_true,y_pred)
+            self.metric_variable.assign_add(computation_result)
+
+    def result(self):
+        return self.metric_variable
+
+    def reset_states(self):
+        self.metric_variable.assign(0.)
+
 class ToggleMetrics(tf.keras.callbacks.Callback):
     '''On test begin (i.e. when evaluate() is called or 
      validation data is run during fit()) toggle metric flag '''
@@ -424,6 +444,36 @@ def unconfidence(y_true, y_pred):
             incorrectEntropies = calcEntropy_Tensors2(entropies)
         
         return incorrectEntropies
+
+
+def confidenceDifference(y_true, y_pred):
+        #difference of the average confidence of correct/incorrect predictions.
+        # print(y_pred)
+        # print(tf.keras.backend.get_value(y_pred))
+        
+        pred_labels = tf.math.argmax(y_pred,1)
+
+        correct_indexes = tf.where(tf.math.equal(pred_labels, tf.cast(tf.reshape(y_true,pred_labels.shape),'int64')))
+        correct_indexes = tf.reshape(correct_indexes,[-1])
+        correct_entropies = tf.gather(y_pred,correct_indexes)
+
+
+        incorrect_indexes = tf.where(tf.math.not_equal(pred_labels, tf.cast(tf.reshape(y_true,pred_labels.shape),'int64')))
+        incorrect_indexes = tf.reshape(incorrect_indexes,[-1])
+        incorrect_entropies = tf.gather(y_pred,incorrect_indexes)
+        
+        if tf.equal(tf.size(correct_entropies), 0):
+            correctEntropies = tf.cast(1e-8,'float')
+        else:
+            correctEntropies = calcEntropy_Tensors2(correct_entropies)
+        
+        
+        if tf.equal(tf.size(incorrect_entropies), 0):
+            incorrectEntropies = tf.cast(1e-8,'float')
+        else:
+            incorrectEntropies = calcEntropy_Tensors2(incorrect_entropies)
+        
+        return tf.abs(incorrectEntropies - correctEntropies)
 
 
 class EntropyConfidenceMetric(tf.keras.metrics.Metric):

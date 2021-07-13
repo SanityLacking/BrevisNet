@@ -8,6 +8,7 @@ import itertools
 import time
 import json
 
+
 import branchingdnn
 from branchingdnn.utils import *
 
@@ -155,6 +156,8 @@ class branch:
             self.feature_loss_coefficient = 0.3
         def call(self, inputs, teaching_features, sample_weights=None):
             #loss 3. Feature distillation of the difference between features of teaching layer and student layer.
+            # print("input",inputs)
+            # print("teaching",teaching_features)
             l2_loss = self.feature_loss_coefficient * tf.reduce_sum(tf.square(inputs - teaching_features))
             self.add_loss(l2_loss)
             self.add_metric(l2_loss, name=self.name+"_distill") # metric so this loss value can be monitored.
@@ -353,13 +356,13 @@ class branch:
         print("targets::::",targets)
         print("teacher_sm::::",teacher_sm)
         print("teaching_features::::",teaching_features)
-        # if teaching_features is not None:
-        #     bottle_neck = branch.bottleneck(prevLayer,teaching_features)
-        #     branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(bottle_neck,teaching_features)    
-        #     branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
-        # else:
-        #     print("no teaching feature Provided, bottleneck and teaching loss skipped")
-        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+        if teaching_features is not None:
+            branchLayer = branch.bottleneck(prevLayer,teaching_features)
+            branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
+            # branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottle_neck)
+        else:
+            print("no teaching feature Provided, bottleneck and teaching loss skipped")
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
 
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
@@ -383,26 +386,76 @@ class branch:
         print(prevLayer)
         print(featureLayer)
         if len(featureLayer.shape)>2: #mutli-dimensional layer output, aka not a dense fullyconnected layer.
-            filters = featureLayer.shape[3]    
+            teacher_size = featureLayer.shape[3]    
         else:
-            filters = featureLayer.shape[1]
+            teacher_size = featureLayer.shape[1]
         planes = featureLayer.shape[1]
         
         width = int(planes * (base_width / 64.)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        bottleneck = layers.Conv2D(filters, (1,1),activation='relu')(prevLayer)
-        # self.bn1 = norm_layer(width)
-        bottleneck = layers.BatchNormalization()(bottleneck)
+
+        print("prev layer", prevLayer)
+        print("prev shape", len(prevLayer.shape))
+        print("conv shape",teacher_size)
+        filt = int(math.sqrt(prevLayer.shape[1]))
+        prev_Size= 1
+        pool_times = 0
+        for i, dim in enumerate(prevLayer.shape):
+            if dim is not None:
+                prev_Size = prev_Size * dim 
+            
+        if prev_Size ==69984:
+            pool_times = 2
+        print("prev size is:",prev_Size)
+        bottleneck = prevLayer
+        # if len(prevLayer.shape) > 2 :
+        #     #reshape the input
+        #     bottleneck = layers.Reshape((filt, filt))(prevLayer)
+        # else:
+        #     bottleneck = layers.Conv2D(256, kernel_size=(1,1),activation='relu', name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(prevLayer)
+        # stride = input / output
+        stride = int(prevLayer.shape[1] / featureLayer.shape[1])
+        # poolSize = int(prevLayer.shape[1] / featureLayer.shape[1])
+        # bottleneck = layers.Reshape((prev_Size),input_shape=bottleneck.shape)(bottleneck)
+        # x = keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same",name=tf.compat.v1.get_default_graph().unique_name("branch_Conv2d"))(x)
+        # keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+        for i in range(pool_times):
+            bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
+        
+
+        bottleneck = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottleneck)
+        
+        bottleneck = layers.Reshape((int(bottleneck.shape[1]),1),name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottleneck)
+        print(bottleneck)
+
+        # bottleneck = layers.MaxPool1D(pool_size=stride, strides=stride, padding='same',name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool1D_{}".format(stride)))(bottleneck)
+        # bottleneck = layers.Dense(teacher_size, name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(bottleneck)
+        # bottleneck = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(bottleneck,featureLayer)    
+        
+
+        ### Attempt at conv2d  bottleneck 
+        # if len(prevLayer.shape) == 2 :
+        #     #reshape the input
+        #     bottleneck = layers.Reshape((filt, filt))(prevLayer)
+        # else:
+        #     bottleneck = layers.Conv2D(256, kernel_size=(1,1),activation='relu', name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(prevLayer)
+        # # self.bn1 = norm_layer(width)
+        # bottleneck = layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_norm"))(bottleneck)
+
+
+
+
+
         # self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        bottleneck = layers.Conv2D(filters,(3,3),activation='relu')(bottleneck)
-        # self.bn2 = norm_layer(width)
-        bottleneck = layers.BatchNormalization()(bottleneck)
-        # self.conv3 = conv1x1(width, planes * self.expansion)
-        bottleneck = layers.Conv2D(filters, (1,1),activation='relu')(bottleneck)
-        # self.bn3 = norm_layer(planes * self.expansion)
-        bottleneck = layers.BatchNormalization()(bottleneck)
-        # self.relu = nn.ReLU(inplace=True)
-        bottleneck = layers.ReLU()(bottleneck)
+        # bottleneck = layers.Conv2D(filters,(3,3),activation='relu')(bottleneck)
+        # # self.bn2 = norm_layer(width)
+        # bottleneck = layers.BatchNormalization()(bottleneck)
+        # # self.conv3 = conv1x1(width, planes * self.expansion)
+        # bottleneck = layers.Conv2D(filters, (1,1),activation='relu')(bottleneck)
+        # # self.bn3 = norm_layer(planes * self.expansion)
+        # bottleneck = layers.BatchNormalization()(bottleneck)
+        # # self.relu = nn.ReLU(inplace=True)
+        # bottleneck = layers.ReLU()(bottleneck)
         # self.downsample = downsample
         # self.stride = stride
 
