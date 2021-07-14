@@ -232,8 +232,11 @@ def getLayerFlops_old(filename="",name = "",saveFile = True, printOutput = True 
     flops = {}
     tempModelFileName= 'models/tempmodel.hdf5'
     tf.compat.v1.reset_default_graph()
-
-    model = tf.keras.models.load_model(filename)
+    if type(filename) != str:
+        model = filename
+    else:
+        model = tf.keras.models.load_model(filename)
+        
     layerFlops = []
     model.summary()
    

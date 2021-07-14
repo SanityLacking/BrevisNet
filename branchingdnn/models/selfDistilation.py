@@ -33,12 +33,19 @@ class SelfDistilation(branchingdnn.core):
         tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = self.addBranches(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
-        funcModel = branch.add_distil(x,["max_pooling2d","max_pooling2d_1","dense"],branch.newBranch_distil,exact=True)
+        funcModel = branch.add_distil(x,["max_pooling2d","max_pooling2d_1","dense"],[branch.newBranch_distil],exact=True)
         #so to self distil, I have to pipe the loss from the main exit back to the branches.
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
         dataset = prepare.dataset_distil(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel, dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,
+                                                            dataset,
+                                                            epocs = numEpocs,
+                                                            save = False,
+                                                            transfer = transfer,
+                                                            saveName = saveName,
+                                                            customOptions=customOptions,
+                                                            tags =["v6","distil"])
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
