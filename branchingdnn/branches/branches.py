@@ -214,8 +214,11 @@ class branch:
         print("targets:", targets)
         teacher_softmax = outputs[0]
         print("teacher_softmax:", teacher_softmax)
-        teaching_features = model.get_layer('max_pooling2d_2').output
+        teaching_features = [model.get_layer('max_pooling2d_1').output, model.get_layer('max_pooling2d_2').output, model.get_layer('max_pooling2d_2').output]
         print("teaching Feature:", teaching_features)
+
+        if type(teaching_features) != list:
+            teaching_features = [teaching_features]
         #get the loss from the main exit and combine it with the loss of the 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
@@ -236,7 +239,8 @@ class branch:
                 for i in identifier: 
                     print(model.layers[i].name)
                     try:
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features))
+
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -250,7 +254,9 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features))
+                            # print("test",teaching_features[min(branches, len(teaching_features))-1])
+
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
                     else:
@@ -258,7 +264,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
@@ -267,7 +273,7 @@ class branch:
                 print(model.layers[i].name)
                 # if "dense" in model.layers[i].name:
                 # outputs = newBranch(model.layers[i].output,outputs)
-                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features)
+                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features[min(branches, len(teaching_features))-1])
                 branches=branches+1
             # for j in range(len(model.layers[i].inbound_nodes)):
             #     print(dir(model.layers[i].inbound_nodes[j]))
@@ -435,7 +441,7 @@ class branch:
         if prevLayer.shape[1] == 27:
             pool_times = 2
         elif prevLayer.shape[1] == 13:
-            pool_times = 1
+            pool_times = 0
         for i in range(pool_times):
             bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
         # bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
@@ -450,7 +456,7 @@ class branch:
         # bottleneck = layers.Dense(teacher_size, name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(bottleneck)
         # bottleneck = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(bottleneck,featureLayer)    
         
-
+        
         ### Attempt at conv2d  bottleneck 
         # if len(prevLayer.shape) == 2 :
         #     #reshape the input
@@ -459,11 +465,6 @@ class branch:
         #     bottleneck = layers.Conv2D(256, kernel_size=(1,1),activation='relu', name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(prevLayer)
         # # self.bn1 = norm_layer(width)
         # bottleneck = layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_norm"))(bottleneck)
-
-
-
-
-
         # self.conv2 = conv3x3(width, width, stride, groups, dilation)
         # bottleneck = layers.Conv2D(filters,(3,3),activation='relu')(bottleneck)
         # # self.bn2 = norm_layer(width)
@@ -480,4 +481,52 @@ class branch:
 
 
         return bottleneck
+
+
+     # need a bottleneck layer to squeeze the feature hints down to a viable size.
+    
+
+    def newBranch_distil_1(prevLayer, targets, teacher_sm, teaching_features):
+        print("targets::::",targets)
+        print("teacher_sm::::",teacher_sm)
+        print("teaching_features::::",teaching_features)
+        if prevLayer.shape[1] == 4096:
+            #don't add a feature distil to the last branch
+            teaching_features = None
+        if teaching_features is not None:
+            prev_Size= 1
+            pool_times = 0
+            for i, dim in enumerate(prevLayer.shape):
+                if dim is not None:
+                    prev_Size = prev_Size * dim 
+            if prev_Size ==69984:
+                pool_times = 2
+            print("prev size is:",prev_Size)
+            bottleneck = prevLayer
+            pool_times = 0
+            if prevLayer.shape[1] == 27:
+                pool_times = 2
+            elif prevLayer.shape[1] == 13:
+                pool_times = 1
+            for i in range(pool_times):
+                bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
+            # bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
+            # if pool_times >0:
+                # bottleneck = keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same",name=tf.compat.v1.get_default_graph().unique_name("branch_conv"))(bottleneck)
+        
+            branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+        else:
+            print("no teaching feature Provided, bottleneck and teaching loss skipped")
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+
+        branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
+        branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+        output = branch.BranchEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets, teacher_sm)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
+        
 
