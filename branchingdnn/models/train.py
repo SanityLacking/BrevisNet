@@ -56,7 +56,7 @@ def trainModel( model, dataset, epocs = 2,save = False):
     return model
 
 
-def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True, saveName ="",customOptions=""):
+def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True, saveName ="",customOptions="",tags = []):
     """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
     """
     logs = []
@@ -84,7 +84,7 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
 
     # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
     if customOptions == "CrossE": 
-        model.compile(optimizer=tf.optimizers.SGD(lr=0.001,clipvalue=0.5), loss='SparseCategoricalCrossentropy', metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
+        model.compile(optimizer=tf.optimizers.SGD(lr=0.001,clipvalue=0.5), loss='SparseCategoricalCrossentropy', metrics=['accuracy',confidenceDifference],run_eagerly=True)
     elif customOptions == "CrossE_Eadd":
         
         entropyAdd = entropyAddition_loss()
@@ -107,7 +107,7 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
         newModelName = saveName
     checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_acc', verbose=1, mode='max')
 
-    neptune_cbk = Neptune.getcallback()
+    neptune_cbk = Neptune.getcallback(name = newModelName, tags =tags)
     # print("epoc: {}".format(j))
     # results = [j]           
     history =model.fit(train_ds,

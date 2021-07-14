@@ -38,7 +38,14 @@ class SelfDistilation(branchingdnn.core):
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
         dataset = prepare.dataset_distil(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel, dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,
+                                                            dataset,
+                                                            epocs = numEpocs,
+                                                            save = False,
+                                                            transfer = transfer,
+                                                            saveName = saveName,
+                                                            customOptions=customOptions,
+                                                            tags =["v6","distil"])
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x

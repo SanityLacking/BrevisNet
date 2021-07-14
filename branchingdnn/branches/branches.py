@@ -163,6 +163,20 @@ class branch:
             self.add_metric(l2_loss, name=self.name+"_distill") # metric so this loss value can be monitored.
             return inputs
 
+    class FeatureDistillation_clear(keras.layers.Layer):
+        def __init__(self, name=None, **kwargs):
+            super(branch.FeatureDistillation_clear, self).__init__(name=name)
+            self.loss_coefficient = 1
+            self.feature_loss_coefficient = 0.3
+        def call(self, inputs, teaching_features, original_inputs, sample_weights=None):
+            #loss 3. Feature distillation of the difference between features of teaching layer and student layer.
+            # print("input",inputs)
+            # print("teaching",teaching_features)
+            l2_loss = self.feature_loss_coefficient * tf.reduce_sum(tf.square(inputs - teaching_features))
+            self.add_loss(l2_loss)
+            self.add_metric(l2_loss, name=self.name+"_distill") # metric so this loss value can be monitored.
+            return original_inputs
+
 
     def add_distil(model, identifier =[""], customBranch = [],exact = True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
@@ -200,7 +214,7 @@ class branch:
         print("targets:", targets)
         teacher_softmax = outputs[0]
         print("teacher_softmax:", teacher_softmax)
-        teaching_features = model.get_layer('dense_1').output
+        teaching_features = model.get_layer('max_pooling2d_2').output
         print("teaching Feature:", teaching_features)
         #get the loss from the main exit and combine it with the loss of the 
         old_output = outputs
@@ -356,10 +370,13 @@ class branch:
         print("targets::::",targets)
         print("teacher_sm::::",teacher_sm)
         print("teaching_features::::",teaching_features)
+        if prevLayer.shape[1] == 4096:
+            #don't add a feature distil to the last branch
+            teaching_features = None
         if teaching_features is not None:
             branchLayer = branch.bottleneck(prevLayer,teaching_features)
             branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
-            # branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottle_neck)
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
         else:
             print("no teaching feature Provided, bottleneck and teaching loss skipped")
             branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
@@ -414,19 +431,20 @@ class branch:
         # else:
         #     bottleneck = layers.Conv2D(256, kernel_size=(1,1),activation='relu', name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(prevLayer)
         # stride = input / output
-        stride = int(prevLayer.shape[1] / featureLayer.shape[1])
-        # poolSize = int(prevLayer.shape[1] / featureLayer.shape[1])
-        # bottleneck = layers.Reshape((prev_Size),input_shape=bottleneck.shape)(bottleneck)
-        # x = keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same",name=tf.compat.v1.get_default_graph().unique_name("branch_Conv2d"))(x)
-        # keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+        pool_times = 0
+        if prevLayer.shape[1] == 27:
+            pool_times = 2
+        elif prevLayer.shape[1] == 13:
+            pool_times = 1
         for i in range(pool_times):
             bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
+        # bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
+        if pool_times >0:
+            bottleneck = keras.layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same",name=tf.compat.v1.get_default_graph().unique_name("branch_conv"))(bottleneck)
+        # bottleneck = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottleneck)
         
-
-        bottleneck = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottleneck)
-        
-        bottleneck = layers.Reshape((int(bottleneck.shape[1]),1),name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottleneck)
-        print(bottleneck)
+        # bottleneck = layers.Reshape((int(bottleneck.shape[1]),1),name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(bottleneck)
+        # print(bottleneck)
 
         # bottleneck = layers.MaxPool1D(pool_size=stride, strides=stride, padding='same',name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool1D_{}".format(stride)))(bottleneck)
         # bottleneck = layers.Dense(teacher_size, name=tf.compat.v1.get_default_graph().unique_name("branch_bottleneck"))(bottleneck)
