@@ -44,9 +44,9 @@ if __name__ == "__main__":
     # x = branching.Run_alexNet( 10, modelName="alexNetv5.hdf5", saveName = "alexNetv5_crossE",transfer = False,customOptions="CrossE")
     
 
-    # x = branching.core.Run_alexNet( 30, modelName="alexNetv6.hdf5", saveName = "alexNetv6_vanilla_T_2",transfer = True,customOptions="CrossE")
+    x = branching.core.Run_alexNet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_compress",transfer = True ,customOptions="CrossE")
     
-    x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5", saveName = "alexNetv6_feat_distill_4",transfer = True,customOptions="CrossE")
+    # x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5", saveName = "alexNetv6_feat_distill_4",transfer = True,customOptions="CrossE")
     
     # x = tf.keras.models.load_model("models/alexNetv6.hdf5")
     # y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"natural")

@@ -528,5 +528,265 @@ class branch:
 
         return output
 
-        
+    def newBranch_compress_2(prevLayer):
 
+        fire2_squeeze = layers.Convolution2D(
+        16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_2_squeeze',
+        data_format="channels_last")(prevLayer)
+        fire2_expand1 = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_2_expand1',
+        data_format="channels_last")(fire2_squeeze)
+        fire2_expand2 = layers.Convolution2D(
+        64, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_2_expand2',
+        data_format="channels_last")(fire2_squeeze)
+        merge2 = layers.Concatenate(axis=1)([fire2_expand1, fire2_expand2])
+
+        fire3_squeeze = layers.Convolution2D(
+        16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_3_squeeze',
+        data_format="channels_last")(merge2)
+        fire3_expand1 = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_3_expand1',
+        data_format="channels_last")(fire3_squeeze)
+        fire3_expand2 = layers.Convolution2D(
+        64, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_3_expand2',
+        data_format="channels_last")(fire3_squeeze)
+        merge3 = layers.Concatenate(axis=1)([fire3_expand1, fire3_expand2])
+
+        fire4_squeeze = layers.Convolution2D(
+        32, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_4_squeeze',
+        data_format="channels_last")(merge3)
+        fire4_expand1 = layers.Convolution2D(
+        128, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_4_expand1',
+        data_format="channels_last")(fire4_squeeze)
+        fire4_expand2 = layers.Convolution2D(
+        128, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_4_expand2',
+        data_format="channels_last")(fire4_squeeze)
+        merge4 = layers.Concatenate(axis=1)([fire4_expand1, fire4_expand2])
+        maxpool4 = layers.MaxPooling2D(
+        pool_size=(3, 3), strides=(2, 2), name='maxpool4',
+        data_format="channels_last")(merge4)
+
+        fire5_squeeze = layers.Convolution2D(
+        32, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_5_squeeze',
+        data_format="channels_last")(maxpool4)
+        fire5_expand1 = layers.Convolution2D(
+        128, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_5_expand1',
+        data_format="channels_last")(fire5_squeeze)
+        fire5_expand2 = layers.Convolution2D(
+        128, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_5_expand2',
+        data_format="channels_last")(fire5_squeeze)
+        merge5 = layers.Concatenate(axis=1)([fire5_expand1, fire5_expand2])
+
+        fire6_squeeze = layers.Convolution2D(
+        48, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_6_squeeze',
+        data_format="channels_last")(merge5)
+        fire6_expand1 = layers.Convolution2D(
+        192, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_6_expand1',
+        data_format="channels_last")(fire6_squeeze)
+        fire6_expand2 = layers.Convolution2D(
+        192, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_6_expand2',
+        data_format="channels_last")(fire6_squeeze)
+        merge6 = layers.Concatenate(axis=1)([fire6_expand1, fire6_expand2])
+
+        fire7_squeeze = layers.Convolution2D(
+        48, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_7_squeeze',
+        data_format="channels_last")(merge6)
+        fire7_expand1 = layers.Convolution2D(
+        192, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_7_expand1',
+        data_format="channels_last")(fire7_squeeze)
+        fire7_expand2 = layers.Convolution2D(
+        192, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_7_expand2',
+        data_format="channels_last")(fire7_squeeze)
+        merge7 = layers.Concatenate(axis=1)([fire7_expand1, fire7_expand2])
+
+        fire8_squeeze = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_8_squeeze',
+        data_format="channels_last")(merge7)
+        fire8_expand1 = layers.Convolution2D(
+        256, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_8_expand1',
+        data_format="channels_last")(fire8_squeeze)
+        fire8_expand2 = layers.Convolution2D(
+        256, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_8_expand2',
+        data_format="channels_last")(fire8_squeeze)
+        merge8 = layers.Concatenate(axis=1)([fire8_expand1, fire8_expand2])
+
+        maxpool8 = layers.MaxPooling2D(
+        pool_size=(3, 3), strides=(2, 2), name='maxpool8',
+        data_format="channels_last")(merge8)
+        fire9_squeeze = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_9_squeeze',
+        data_format="channels_last")(maxpool8)
+        fire9_expand1 = layers.Convolution2D(
+        256, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_9_expand1',
+        data_format="channels_last")(fire9_squeeze)
+        fire9_expand2 = layers.Convolution2D(
+        256, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_9_expand2',
+        data_format="channels_last")(fire9_squeeze)
+        merge9 = layers.Concatenate(axis=1)([fire9_expand1, fire9_expand2])
+
+        fire9_dropout = layers.Dropout(0.5, name='branch_9_dropout')(merge9)
+        conv10 = layers.Convolution2D(
+        10, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='valid', name='branch_conv10'
+        )(fire9_dropout)
+
+        global_avgpool10 = layers.GlobalAveragePooling2D(name='branch_global_avgpool10')(conv10)
+        softmax = layers.Activation("softmax", name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(global_avgpool10)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return softmax
+
+    def newBranch_compress(prevLayer):
+        fire2_squeeze = layers.Convolution2D(
+        16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_2_squeeze',
+        data_format="channels_last")(prevLayer)
+        fire2_expand1 = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_2_expand1',
+        data_format="channels_last")(fire2_squeeze)
+        fire2_expand2 = layers.Convolution2D(
+        64, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_2_expand2',
+        data_format="channels_last")(fire2_squeeze)
+        merge2 = layers.Concatenate(axis=1,name="branch_merge2")([fire2_expand1, fire2_expand2])
+
+        fire3_squeeze = layers.Convolution2D(
+        16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_3_squeeze',
+        data_format="channels_last")(merge2)
+        fire3_expand1 = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_3_expand1',
+        data_format="channels_last")(fire3_squeeze)
+        fire3_expand2 = layers.Convolution2D(
+        64, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_3_expand2',
+        data_format="channels_last")(fire3_squeeze)
+        merge3 = layers.Concatenate(axis=1,name="branch_merge3")([fire3_expand1, fire3_expand2])
+
+        fire4_squeeze = layers.Convolution2D(
+        32, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_4_squeeze',
+        data_format="channels_last")(merge3)
+        fire4_expand1 = layers.Convolution2D(
+        128, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_4_expand1',
+        data_format="channels_last")(fire4_squeeze)
+        fire4_expand2 = layers.Convolution2D(
+        128, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_4_expand2',
+        data_format="channels_last")(fire4_squeeze)
+        merge4 = layers.Concatenate(axis=1)([fire4_expand1, fire4_expand2])
+        maxpool4 = layers.MaxPooling2D(
+        pool_size=(3, 3), strides=(2, 2), name='branch_maxpool4',
+        data_format="channels_last")(merge4)
+
+        fire5_squeeze = layers.Convolution2D(
+        32, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_5_squeeze',
+        data_format="channels_last")(maxpool4)
+        fire5_expand1 = layers.Convolution2D(
+        128, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_5_expand1',
+        data_format="channels_last")(fire5_squeeze)
+        fire5_expand2 = layers.Convolution2D(
+        128, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_5_expand2',
+        data_format="channels_last")(fire5_squeeze)
+        merge5 = layers.Concatenate(axis=1, name="branch_merge5")([fire5_expand1, fire5_expand2])
+
+        fire6_squeeze = layers.Convolution2D(
+        48, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_6_squeeze',
+        data_format="channels_last")(merge5)
+        fire6_expand1 = layers.Convolution2D(
+        192, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_6_expand1',
+        data_format="channels_last")(fire6_squeeze)
+        fire6_expand2 = layers.Convolution2D(
+        192, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_6_expand2',
+        data_format="channels_last")(fire6_squeeze)
+        merge6 = layers.Concatenate(axis=1, name="branch_merge6")([fire6_expand1, fire6_expand2])
+
+        fire7_squeeze = layers.Convolution2D(
+        48, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_7_squeeze',
+        data_format="channels_last")(prevLayer)
+        fire7_expand1 = layers.Convolution2D(
+        192, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_7_expand1',
+        data_format="channels_last")(fire7_squeeze)
+        fire7_expand2 = layers.Convolution2D(
+        192, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_7_expand2',
+        data_format="channels_last")(fire7_squeeze)
+        merge7 = layers.Concatenate(axis=1,name="branch_merge7")([fire7_expand1, fire7_expand2])
+
+        fire8_squeeze = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_8_squeeze',
+        data_format="channels_last")(merge7)
+        fire8_expand1 = layers.Convolution2D(
+        256, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_8_expand1',
+        data_format="channels_last")(fire8_squeeze)
+        fire8_expand2 = layers.Convolution2D(
+        256, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_8_expand2',
+        data_format="channels_last")(fire8_squeeze)
+        merge8 = layers.Concatenate(axis=1, name="branch_merge8")([fire8_expand1, fire8_expand2])
+
+        maxpool8 = layers.MaxPooling2D(
+        pool_size=(3, 3), strides=(2, 2), name='branch_maxpool8',
+        data_format="channels_last")(merge8)
+        fire9_squeeze = layers.Convolution2D(
+        64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_9_squeeze',
+        data_format="channels_last")(maxpool8)
+        fire9_expand1 = layers.Convolution2D(
+        256, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_9_expand1',
+        data_format="channels_last")(fire9_squeeze)
+        fire9_expand2 = layers.Convolution2D(
+        256, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+        padding='same', name='branch_9_expand2',
+        data_format="channels_last")(fire9_squeeze)
+        merge9 = layers.Concatenate(axis=1,name="branch_merge9")([fire9_expand1, fire9_expand2])
+
+        fire9_dropout = layers.Dropout(0.5, name='branch_9_dropout')(merge9)
+        conv10 = layers.Convolution2D(
+        10, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+        padding='valid', name='branch_conv10'
+        )(fire9_dropout)
+
+        global_avgpool10 = layers.GlobalAveragePooling2D(name='branch_global_avgpool10')(conv10)
+        softmax = layers.Activation("softmax", name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(global_avgpool10)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return softmax

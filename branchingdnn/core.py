@@ -98,7 +98,7 @@ class BranchingDnn:
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         
-        funcModel = branch.add(x,["max_pooling2d","max_pooling2d_1","dense"],branch.newBranch_flatten,exact=True)
+        funcModel = branch.add(x,["max_pooling2d"],branch.newBranch_compress,exact=True)
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         # funcModel= x
         funcModel.summary()

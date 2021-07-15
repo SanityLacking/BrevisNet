@@ -8,21 +8,24 @@ from tensorflow.keras.models import load_model
 
 
 class prepare:
-    def augment_images(image, label,input_size=None):
+    def augment_images(image, label,input_size=None, channel_first = False):
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
             image = tf.image.resize(image,input_size)
+            if channel_first:
+                image = tf.transpose(image, [2, 0, 1])
+            
             return image, label
     
     
     #dataset for knowledge distillation, includes a second input of labels to input "targets"
-    def dataset_distil(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=()):
+    def dataset_distil(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(),channel_first= False):
         (train_images, train_labels), (test_images, test_labels) = dataset
 
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
-        def augment_images(image, label,input_size=input_size):
-            return prepare.augment_images(image, label, input_size)
+        def augment_images(image, label,input_size=input_size, channel_first = channel_first):
+            return prepare.augment_images(image, label, input_size, channel_first)
         
         validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
         train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
@@ -75,12 +78,16 @@ class prepare:
         return (train_ds, test_ds, validation_ds)
 
 
-    def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=()):
+    def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False):
         (train_images, train_labels), (test_images, test_labels) = dataset
 
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
-        def augment_images(image, label,input_size=input_size):
-            return prepare.augment_images(image, label, input_size)
+        def augment_images(image, label,input_size=input_size, channel_first= channel_first):
+            # if channel_first:
+                #swap the channels around.
+                # image = tf.transpose(image, [2, 0, 1])
+                # print(image)
+            return prepare.augment_images(image, label, input_size, channel_first)
         
         validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
         train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
@@ -112,6 +119,7 @@ class prepare:
                         .batch(batch_size=batch_size, drop_remainder=True))
 
         return (train_ds, test_ds, validation_ds)
+
 
     def prepareMnistDataset(dataset,batch_size=32):
             import csv
