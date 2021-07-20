@@ -124,6 +124,8 @@ class branch:
             self.feature_loss_coefficient = 1
             self.kl = tf.keras.losses.KLDivergence()
             self.loss_fn = keras.losses.sparse_categorical_crossentropy
+            self.temperature = 10
+            self.alpha = .1
 
         def call(self, inputs, labels, teacher_sm=None, sample_weights=None):
             # Compute the training-time loss value and add it
@@ -133,13 +135,20 @@ class branch:
             
             #loss 1. normal loss, predictions vs labels
             normal_loss = self.loss_fn(labels, softmax, sample_weights)
-            # self.add_loss(normal_loss) 
+            total_loss =tf.reduce_mean(normal_loss)
+            # print("normal loss",normal_loss)
             # currently turned off, the normal loss is still managed by the compile function. use this if no default loss is defined.
             #loss 2. KL divergence loss, aka the difference between the student and teacher's softmax
             if teacher_sm is not None:
-                kl_loss = self.kl(softmax,teacher_sm)
-                self.add_loss(kl_loss)
+                kl_loss = self.kl( tf.nn.softmax(softmax / self.temperature, axis = 1 ),
+                tf.nn.softmax(teacher_sm /self.temperature,axis=1))
+                # print("KL_LOSS", kl_loss)
+                # self.add_loss(kl_loss)
+                total_loss += self.alpha * total_loss + (1- self.alpha) * kl_loss
                 self.add_metric(kl_loss, name=self.name+"_KL")
+                        
+            self.add_loss(total_loss)
+            self.add_metric(tf.reduce_sum(self.losses), name=self.name+"_losses")
             #NOTE
             # The total loss is different from parts_loss because it includes the regularization term.
             # In other words, loss is computed as loss = parts_loss + k*R, where R is the regularization term 
@@ -215,14 +224,14 @@ class branch:
         teacher_softmax = outputs[0]
         print("teacher_softmax:", teacher_softmax)
         teaching_features = [model.get_layer('max_pooling2d_1').output, model.get_layer('max_pooling2d_2').output, model.get_layer('max_pooling2d_2').output]
-        print("teaching Feature:", teaching_features)
+        # print("teaching Feature:", teaching_features)
 
         if type(teaching_features) != list:
             teaching_features = [teaching_features]
         #get the loss from the main exit and combine it with the loss of the 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
-
+        teaching_features= [None]
         if type(identifier) != list:
             identifier = [identifier]
 
@@ -372,7 +381,7 @@ class branch:
 
 
     # need a bottleneck layer to squeeze the feature hints down to a viable size.
-    def newBranch_distil(prevLayer, targets, teacher_sm, teaching_features):
+    def newBranch_distil(prevLayer, targets, teacher_sm, teaching_features=None):
         print("targets::::",targets)
         print("teacher_sm::::",teacher_sm)
         print("teaching_features::::",teaching_features)
@@ -384,7 +393,8 @@ class branch:
             branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
             branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
         else:
-            print("no teaching feature Provided, bottleneck and teaching loss skipped")
+            # print("no teaching feature Provided, bottleneck and teaching loss skipped")
+            branchLayer = branch.bottleneck2(prevLayer)
             branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
 
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
@@ -394,6 +404,47 @@ class branch:
         # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
+
+        # need a bottleneck layer to squeeze the feature hints down to a viable size.
+    def newBranch_bottleneck(prevLayer, targets=None, teacher_sm=None, teaching_features=None):
+        print("targets::::",targets)
+        print("teacher_sm::::",teacher_sm)
+        print("teaching_features::::",teaching_features)
+        if prevLayer.shape[1] == 4096:
+            #don't add a feature distil to the last branch
+            teaching_features = None
+        if teaching_features is not None:
+            branchLayer = branch.bottleneck(prevLayer,teaching_features)
+            branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+        else:
+            branchLayer = branch.bottleneck2(prevLayer)
+            print("no teaching feature Provided, bottleneck and teaching loss skipped")
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+
+        branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
+        branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+        if targets is None and teacher_sm is None:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        else:
+            output = branch.BranchEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets, teacher_sm)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
+    def newBranch_bottleneck2(prevLayer):
+        branchLayer = branch.bottleneck2(prevLayer)
+        print("no teaching feature Provided, bottleneck and teaching loss skipped")
+        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+
+        branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
+        branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
 
     #build from LinfengZhang self distillation bottleneck code
     #  Idea is to squeeze the teaching feature set to the same size as the previousLayer,
@@ -483,6 +534,14 @@ class branch:
         return bottleneck
 
 
+    def bottleneck2(prevLayer):
+        pool_times = 2
+        bottleneck = prevLayer
+
+        for i in range(pool_times):
+            bottleneck = layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_MaxPool2D"))(bottleneck)
+
+        return bottleneck
      # need a bottleneck layer to squeeze the feature hints down to a viable size.
     
 
@@ -528,7 +587,7 @@ class branch:
 
         return output
 
-    def newBranch_compress_2(prevLayer):
+    def newBranch_compress_old(prevLayer):
 
         fire2_squeeze = layers.Convolution2D(
         16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',

@@ -19,7 +19,7 @@ import os
 
 # from Alexnet_kaggle_v2 import * 
 import branchingdnn as branching
-from branchingdnn.utils import * 
+
 
 # ALEXNET = False
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
@@ -35,29 +35,14 @@ root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 
 if __name__ == "__main__":
-    #### build alexnet model
     # x = branching.core.Run_alexNet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_compress",transfer = True ,customOptions="CrossE")
+    # x = branching.models.SelfDistilation.alexnet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_distil_BN_only",transfer = True,customOptions="CrossE")
     
-    
-    x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5", saveName = "alexNetv6_distil_3",transfer = True,customOptions="CrossE")
-    
-
-
-
-    # student = tf.keras.models.load_model("models/alexNetv6.hdf5")
-    # teacher = tf.keras.models.load_model("models/alexNetv6.hdf5")
-    # y = branching.models.selfDistilation.SelfDistilation.normal_distillation(student, teacher,tf.keras.datasets.cifar10.load_data(),["branch_softmax"])
-    # y = branching.models.selfDistilation.SelfDistilation.normal(student,tf.keras.datasets.cifar10.load_data(), ["branch_softmax"])
-
-    # y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"natural")
+    x = tf.keras.models.load_model("models/alexNetv6_compress.hdf5")
+    y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"compressed")
   
-    # x = tf.keras.models.load_model("models/alexNetv6_feat_distill_4.hdf5", custom_objects={'confidenceScore': confidenceScore,
-    #                                                                      'unconfidence': unconfidence,
-    #                                                                      'confidenceDifference': confidenceDifference,
-    #                                                                      'BranchEndpoint': branching.branches.branch.BranchEndpoint,
-    #                                                                      'FeatureDistillation': branching.branches.branch.FeatureDistillation,
-    #                                                                      'FeatureDistillation_clear': branching.branches.branch.FeatureDistillation_clear})
-    # y = branching.core.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_distil_4")
+    # x = tf.keras.models.load_model("models/alexNetv5_crossE.hdf5")
+    # y = branching.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_crossE")
   
     # x = tf.keras.models.load_model("models/alexNetv5_crossE_Eadd.hdf5")
     # y = branching.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_crossE_Eadd")
