@@ -55,6 +55,20 @@ def calcEntropy(y_hat):
 
         return -sum_entropy
 
+def Entropy_raw(y_hat):
+        #entropy is the sum of y * log(y) for all possible labels.
+        # if isinstance(y_hat, list):
+        #     y_hat = np.array(y_hat)
+        # sum_entropy = 0
+        # if y_hat.ndim >1:
+        #     return list(map(calcEntropy,y_hat))
+        # for i in range(len(y_hat)):
+        #     if y_hat[i] != 0: # log of zero is undefined, see MacKay's book "Information Theory, Inference, and Learning Algorithms"  for more info on this workaround reasoning.
+        #         entropy =y_hat[i] * math.log(y_hat[i],2)
+        #         sum_entropy +=  entropy
+
+        return -sum_entropy
+
 def calcEntropy_Tensors(y_hat):
         #entropy is the sum of y * log(y) for all possible labels.
         #log(0) is evaulated as NAN and then clipped to approaching zero

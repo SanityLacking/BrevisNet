@@ -12,6 +12,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+**\variables
+*.pb
 
 *\images
 #neptune

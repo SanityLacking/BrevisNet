@@ -461,7 +461,7 @@ class BranchingDnn:
             # train_ds, test_ds, validation_ds = prepare.prepareAlexNetDataset_old(1)
         # else:
             # train_ds, test_ds, validation_ds = prepare.prepareMnistDataset(dataset,1)
-        train_ds, test_ds, validation_ds = prepare.dataset_distil(dataset,1,5000,22500,(227,227))
+        train_ds, test_ds, validation_ds = prepare.dataset(dataset,1,5000,22500,(227,227))
         predictions = []
         labels = []
         model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
@@ -511,7 +511,7 @@ class BranchingDnn:
                         # print("class {}".format(Pclass))
                         # print("label {}".format(labels[i]))
                     # print(branch)
-                    pred_entropy.append(calcEntropy(branch[0]))  
+                    pred_entropy.append(branch[0])  
                     # print("entropy {}".format(pred_entropy))                     
                 predRaw.append(pred_Raw)
                 predClasses.append(pred_classes)

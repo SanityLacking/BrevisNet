@@ -19,7 +19,7 @@ import os
 
 # from Alexnet_kaggle_v2 import * 
 import branchingdnn as branching
-
+from branchingdnn.utils import *
 
 # ALEXNET = False
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
@@ -38,11 +38,15 @@ if __name__ == "__main__":
     # x = branching.core.Run_alexNet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_compress",transfer = True ,customOptions="CrossE")
     # x = branching.models.SelfDistilation.alexnet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_distil_BN_only",transfer = True,customOptions="CrossE")
     
-    x = tf.keras.models.load_model("models/alexNetv6_compress.hdf5")
-    y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"compressed")
+    x = tf.keras.models.load_model("models/alexNetv6_compress.hdf5",custom_objects={'confidenceScore': confidenceScore,
+                                                                         'unconfidence': unconfidence,
+                                                                         'confidenceDifference': confidenceDifference,
+                                                                         'BranchEndpoint': branching.branches.branch.BranchEndpoint,
+                                                                         'FeatureDistillation': branching.branches.branch.FeatureDistillation})
+    # y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"compressed")
   
     # x = tf.keras.models.load_model("models/alexNetv5_crossE.hdf5")
-    # y = branching.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_crossE")
+    y = branching.core.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_compressed")
   
     # x = tf.keras.models.load_model("models/alexNetv5_crossE_Eadd.hdf5")
     # y = branching.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_crossE_Eadd")
