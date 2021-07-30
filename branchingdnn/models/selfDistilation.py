@@ -38,7 +38,7 @@ class SelfDistilation(branchingdnn.core):
         funcModel = branch.add_distil(x,["max_pooling2d"],[branch.newBranch_bottleneck],exact=True)
         #so to self distil, I have to pipe the loss from the main exit back to the branches.
         funcModel.summary()
-        funcModel.save("models/{}".format(saveName))
+        # funcModel.save("models/{}".format(saveName))
         dataset = prepare.dataset_distil(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
         funcModel = branchingdnn.models.trainModelTransfer(funcModel,
                                                             dataset,
@@ -47,7 +47,7 @@ class SelfDistilation(branchingdnn.core):
                                                             transfer = transfer,
                                                             saveName = saveName,
                                                             customOptions=customOptions,
-                                                            tags =["v6","distil"])
+                                                            tags =["v6","drt"])
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
 

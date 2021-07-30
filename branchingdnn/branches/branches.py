@@ -95,6 +95,90 @@ class branch:
         model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
         return model
 
+    class EvidenceEndpoint(keras.layers.Layer):
+        def __init__(self, name=None, **kwargs):
+            super(branch.EvidenceEndpoint, self).__init__(name=name)
+            self.num_outputs = 10
+            self.loss_coefficient = 1
+            self.feature_loss_coefficient = 1
+            self.kl = tf.keras.losses.KLDivergence()
+            self.global_step = tf.Variable(initial_value=0.0, name='global_step', trainable=False)
+            self.crossE = tf.keras.losses.SparseCategoricalCrossentropy()
+            self.loss_fn = utils.loss_function()
+            self.temperature = 10
+            self.alpha = .1
+            self.lmb = 0.005
+        def build(self, input_shape):
+            self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]),
+                                                    self.num_outputs])
+
+        def call(self, inputs, labels):
+            outputs = tf.matmul(inputs,self.kernel)
+            # Compute the training-time loss value and add it
+            # to the layer using `self.add_loss()`.
+            #loss functions are (True, Prediction)
+            # softmax = tf.nn.softmax(inputs)
+            # print("inputs",input)
+            #loss 1. normal loss, predictions vs labels
+            evidence, normal_loss = self.loss_fn(labels, outputs)
+
+            # softmax = tf.nn.softmax(outputs)
+            # evidence2, normal_loss2 = self.loss_fn(labels, softmax)
+            # print(self.weights, self.lmb)
+            # l2_loss = tf.nn.l2_loss(self.weights)# * self.lmb
+            # print("l2_loss",l2_loss)
+            # print(evidence.shape)
+            # print(normal_loss)
+            total_loss =tf.reduce_mean(normal_loss)# + l2_loss
+            # print(total_loss)
+            total_evidence = tf.reduce_sum(evidence,1, keepdims=True) 
+            # print(total_evidence)
+            pred = tf.argmax(outputs, 1)
+            # truth = tf.argmax(labels, 1)
+            # print("labels",labels)
+            truth = tf.cast(labels,tf.int64)
+            # print("evid", evidence)
+            # print("loss", normal_loss)
+            # print("truth",truth)
+            # print("pred",pred)
+            match = (tf.equal(tf.reshape(truth,(1,32)),pred))
+            # match = tf.where(tf.math.equal(pred, tf.cast(tf.reshape(truth,(32,1)),'int64')))
+            match = tf.cast(match,tf.float32)
+            # match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
+            # print("match",match)
+            mean_avg = tf.reduce_mean(total_evidence)
+            # print("mean_Avg")
+            # print("match",match)
+            mean_succ = tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)* match) / tf.reduce_sum(match+1e-20)
+            # print("mean_fail")
+            # side_x = tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*(1-match))
+            # print("side_x",side_x)
+            # side_y = (tf.reduce_sum(tf.abs(1-match))+1e-20)
+            # print("side_y",side_y)
+            # div = tf.reduce_sum(side_x/side_y)
+            # print("div",div)
+            mean_fail = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*(1-match)) / (tf.reduce_sum(tf.abs(1-match))+1e-20) )
+            # print('end')
+            self.add_metric(normal_loss, name=self.name+"_normal_loss")
+            # self.add_metric(normal_loss2, name=self.name+"_softmax_loss")
+            # self.add_metric(evidence, name=self.name+"_evidence")
+            # self.add_metric(mean_avg, name=self.name+"_mean_ev_avg")
+            # self.add_metric(mean_succ, name=self.name+"_mean_ev_succ")
+            # self.add_metric(mean_fail, name=self.name+"_mean_ev_fail")
+            # print('metrics')
+            self.add_loss(normal_loss)
+            
+            # CrossE_loss= self.crossE(labels,softmax)
+            # self.add_loss(CrossE_loss)
+
+            # print("pred",inputs)
+            # print("loss")
+            #NOTE
+            # The total loss is different from parts_loss because it includes the regularization term.
+            # In other words, loss is computed as loss = parts_loss + k*R, where R is the regularization term 
+            # (typically the L1 or L2 norm of the model's weights) and k a hyperparameter that controls the 
+            # contribution of the regularization loss in the total loss.
+            return outputs
 
     class LogisticEndpoint(keras.layers.Layer):
         def __init__(self, name=None, **kwargs):
@@ -208,24 +292,30 @@ class branch:
 
 
         inputs = []
+        ready = False
         for i in model.inputs:
+            if i.name == "targets":
+                ready = True
             inputs.append(i)
-        inputs.append(keras.Input(shape=(1,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
+        if not ready:
+            inputs.append(keras.Input(shape=(10,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
         #add targets as an input to the model so it can be used for the custom losses.
         #   input size is the size of the     
         #add target input 
         model = keras.Model(inputs=inputs, outputs=outputs)
 
         model.summary()
-
+        # outputs = []
 
         targets = model.get_layer('targets').output
         print("targets:", targets)
-        teacher_softmax = outputs[0]
-        print("teacher_softmax:", teacher_softmax)
-        teaching_features = [model.get_layer('max_pooling2d_1').output, model.get_layer('max_pooling2d_2').output, model.get_layer('max_pooling2d_2').output]
-        # print("teaching Feature:", teaching_features)
+        # teacher_softmax = outputs[0]
+        teaching_features = None
 
+        # print("teacher_softmax:", teacher_softmax)
+        # teaching_features = [model.get_layer('max_pooling2d_1').output, model.get_layer('max_pooling2d_2').output, model.get_layer('max_pooling2d_2').output]
+        # print("teaching Feature:", teaching_features)
+        teacher_softmax = [None]
         if type(teaching_features) != list:
             teaching_features = [teaching_features]
         #get the loss from the main exit and combine it with the loss of the 
@@ -249,7 +339,8 @@ class branch:
                     print(model.layers[i].name)
                     try:
 
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets, teacher_sm = teacher_softmax, teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets,
+                                 teacher_sm = teacher_softmax, teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -353,6 +444,8 @@ class branch:
         branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
         branchLayer = layers.Dense(256, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        
+        
         branchLayer = layers.Dense(100, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
         output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
@@ -418,18 +511,19 @@ class branch:
             branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
             branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
         else:
-            branchLayer = branch.bottleneck2(prevLayer)
+            # branchLayer = branch.bottleneck2(prevLayer)
             print("no teaching feature Provided, bottleneck and teaching loss skipped")
-            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
+            branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
 
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
-        branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        if targets is None and teacher_sm is None:
-            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
-        else:
-            output = branch.BranchEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets, teacher_sm)
+        # branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+        # if targets is None and teacher_sm is None:
+            # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        # else:
+            # output = branch.BranchEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets, teacher_sm)
         # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        output = branch.EvidenceEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer, targets)
 
         return output
 

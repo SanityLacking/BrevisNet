@@ -486,12 +486,14 @@ class BranchingDnn:
             labels.append(item[1].numpy().tolist())
         # print("labels")
         # print(labels)
+        labels = np.argmax(labels)
+        print(labels)
         if BranchingDnn.ALEXNET:
-            labels = [expandlabels(x,num_outputs)for x in labels]
+            labels = np.argmax([expandlabels(x,num_outputs)for x in labels])
         else:
             for i, val in enumerate(labels):
                 print(i)
-                labels[i]= [val]* num_outputs
+                labels[i]= [np.argmax(val)]* num_outputs
 
         predEntropy =[]
         predClasses =[]
@@ -536,6 +538,79 @@ class BranchingDnn:
 
         # results = KneeGraph(predClasses, labels,predEntropy, num_outputs,labelClasses,output_names)
         # results.to_csv("logs_entropy/{}_{}_entropyStats.csv".format(model.name,time.strftime("%Y%m%d_%H%M%S")), sep=',', mode='a')
+        return
+
+    
+    def GetResultsCSV_evidence(model,dataset,suffix="", validation=True):
+        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+        train_ds, test_ds, validation_ds = (dataset)
+        predictions = []
+        labels = []
+        #already compiled
+        # model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
+        iterator = iter(test_ds)
+        print(len(test_ds))
+
+        # for j in range(len(test_ds)):
+        for j in range(10):
+            print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
+            item = iterator.get_next()
+            prediction = model.predict(item[0])
+            # print("predictions {}".format(prediction))
+            predictions.append(prediction)
+            # print(prediction)
+            labels.append(item[1].numpy().tolist())
+        print("labels")
+        print(labels)
+        if BranchingDnn.ALEXNET:
+            labels = [expandlabels(x,num_outputs)for x in labels]
+        else:
+            for i, val in enumerate(labels):
+                # print(i)
+                labels[i]= [np.argmax(val)]* num_outputs
+
+        predEvidence_fail =[]
+        predEvidence_true = []
+
+        predClasses =[]
+        predRaw=[]
+        # print("predictions", predictions)
+        print("predictions complete, analyizing") 
+        for i,output in enumerate(predictions):
+            for k, pred in enumerate(output):
+                pred_classes=[]
+                pred_evidence = []
+                pred_Raw=[]
+                print("image: {} of {}".format(i,len(predictions)),end='\r')
+                for l, branch in enumerate(pred):
+                    
+                    pred_Raw.append(branch[0])
+                    Pclass = np.argmax(branch[0])
+                    pred_classes.append(Pclass) 
+                    evidence = exp_evidence(branch[0])
+                    total_evidence = tf.reduce_sum([evidence],1, keepdims=True) 
+                    match = tf.reshape(tf.cast(tf.equal(Pclass, labels[i][l]), tf.float32),(-1,1))
+                    if l ==0:
+                        print("match", match.numpy())
+                        print(total_evidence.numpy())
+                    pred_evidence.append(total_evidence)
+                predRaw.append(pred_Raw)
+                predClasses.append(pred_classes)
+                predEvidence_fail.append(pred_evidence)
+                predEvidence_true.append(pred_evidence)
+                
+        labelClasses = [0,1,2,3,4,5,6,7,8,9]
+        predClasses = pd.DataFrame(predClasses)
+        labels = pd.DataFrame(labels)
+        predEvidence_fail = pd.DataFrame(predEvidence_fail)
+        predEvidence_true = pd.DataFrame(predEvidence_true)
+        
+        PredRaw = pd.DataFrame(predRaw)
+        PredRaw.to_csv("results/predRaw_temp.csv", sep=',', mode='w',index=False)
+        predClasses.to_csv("results/predClasses{}.csv".format(suffix), sep=',', mode='w',index=False)
+        labels.to_csv("results/labels{}.csv".format(suffix), sep=',', mode='w',index=False)
+        predEvidence_fail.to_csv("results/predEvidence_fail{}.csv".format(suffix), sep=',', mode='w',index=False)
+        predEvidence_true.to_csv("results/predEvidence_true{}.csv".format(suffix), sep=',', mode='w',index=False)
         return
 
     def BranchKneeGraph(model,dataset):

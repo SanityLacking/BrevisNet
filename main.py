@@ -39,7 +39,9 @@ if __name__ == "__main__":
     # x = branching.core.Run_alexNet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_compress",transfer = True ,customOptions="CrossE")
     
     
-    x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5", saveName = "alexNetv6_distil_3",transfer = True,customOptions="CrossE")
+    x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5",
+                                             saveName = "alexNetv6_distil_new",
+                                             transfer = True,customOptions="CrossE")
     
 
 

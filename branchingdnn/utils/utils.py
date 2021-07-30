@@ -516,6 +516,148 @@ def crossE_test(y_true, y_pred):
     scce = tf.math.add(crossE(y_true, y_pred), 10)
     # print("crossE",scce)
     return scce
+
+######################################
+
+def exp_evidence(logits): 
+    return tf.exp(tf.clip_by_value(logits,-10,10))
+def KL(alpha):
+    K=10
+    beta=tf.constant(np.ones((1,K)),dtype=tf.float32)
+    S_alpha = tf.reduce_sum(alpha,axis=1,keepdims=True)
+    S_beta = tf.reduce_sum(beta,axis=1,keepdims=True)
+    lnB = tf.compat.v1.lgamma(S_alpha) - tf.reduce_sum(tf.compat.v1.lgamma(alpha),axis=1,keepdims=True)
+    lnB_uni = tf.reduce_sum(tf.compat.v1.lgamma(beta),axis=1,keepdims=True) - tf.compat.v1.lgamma(S_beta)
+    
+    dg0 = tf.compat.v1.digamma(S_alpha)
+    dg1 = tf.compat.v1.digamma(alpha)
+    
+    kl = tf.reduce_sum((alpha - beta)*(dg1-dg0),axis=1,keepdims=True) + lnB + lnB_uni
+    print("kl", kl)
+    return kl
+
+def mse_loss(p, alpha, global_step, annealing_step): 
+    S = tf.reduce_sum(alpha, axis=1, keepdims=True) 
+    E = alpha - 1
+    m = alpha / S
+    
+    A = tf.reduce_sum((p-m)**2, axis=1, keepdims=True) 
+    B = tf.reduce_sum(alpha*(S-alpha)/(S*S*(S+1)), axis=1, keepdims=True) 
+
+    annealing_coef = tf.minimum(1.0,tf.cast(global_step/annealing_step,tf.float32))
+    
+    alp = E*(1-p) + 1 
+    print("alp", alp)
+
+    C =  annealing_coef * KL(alp)
+    return (A + B) + C
+
+def loss_function():
+    #create a wrapper function that returns a function
+    kl = tf.keras.losses.KLDivergence()
+    temperature = 1
+    Classes = 10
+    crossE = tf.keras.losses.CategoricalCrossentropy()
+    mse =mse_loss
+    global_step = tf.Variable(initial_value=0, name='global_step', trainable=False)
+    annealing_step = 320
+    def EMSE_Loss(y_true, y_pred):
+#         softmax = tf.nn.softmax(y_pred)
+        evidence = exp_evidence(y_pred)
+        alpha  = evidence + 1
+        
+        u = Classes / tf.reduce_sum(alpha, axis=1) #uncertainty
+        
+        prob = alpha/tf.reduce_sum(alpha, 1,keepdims=True) 
+        
+        loss = tf.reduce_mean(mse(y_true, alpha,global_step,annealing_step))
+#         l2_loss = (tf.nn.l2_loss(W3)+tf.nn.l2_loss(W4)) * lmb
+#         l2_loss = tf.reduce_sum(tf.square(inputs - teaching_features))
+        
+        final_loss = loss #+ l2_loss
+        
+#         kl_loss = kl( tf.nn.softmax(softmax / self.temperature, axis = 1 ),
+        
+        return evidence, final_loss
+    return  EMSE_Loss
+####################################################
+
+
+def evidence_loss(classes = 10, temperature=1, global_step=None):
+    #create a wrapper function that returns a function
+    kl = tf.keras.losses.KLDivergence()
+    temperature = temperature
+    Classes = classes
+    # K =10
+    crossE = tf.keras.losses.CategoricalCrossentropy()
+    def relu_evidence(logits):
+        return tf.nn.relu(logits)
+
+    def exp_evidence(logits): 
+        return tf.exp(tf.clip_by_value(logits,-10,10))
+
+    def softplus_evidence(logits):
+        return tf.nn.softplus(logits)
+
+    def KL(alpha):
+        beta=tf.constant(np.ones((1,Classes)),dtype=tf.float32)
+        S_alpha = tf.reduce_sum(alpha,axis=1,keepdims=True)
+        S_beta = tf.reduce_sum(beta,axis=1,keepdims=True)
+        lnB = tf.compat.v1.lgamma(S_alpha) - tf.reduce_sum(tf.compat.v1.lgamma(alpha),axis=1,keepdims=True)
+        lnB_uni = tf.reduce_sum(tf.compat.v1.lgamma(beta),axis=1,keepdims=True) - tf.compat.v1.lgamma(S_beta)
+        
+        dg0 = tf.compat.v1.digamma(S_alpha)
+        dg1 = tf.compat.v1.digamma(alpha)
+        
+        kl = tf.reduce_sum((alpha - beta)*(dg1-dg0),axis=1,keepdims=True) + lnB + lnB_uni
+        return kl
+    def mse_loss(p, alpha, global_step=global_step, annealing_step=320): 
+        S = tf.reduce_sum(alpha, axis=1, keepdims=True) 
+        E = alpha - 1
+        m = alpha / S
+        
+        A = tf.reduce_sum((p-m)**2, axis=1, keepdims=True) 
+        B = tf.reduce_sum(alpha*(S-alpha)/(S*S*(S+1)), axis=1, keepdims=True) 
+        # print("global",global_step)
+        # annealing_coef = tf.minimum(1.0,tf.cast(global_step/annealing_step,tf.float32))
+        
+        alp = E*(1-p) + 1 
+
+        # C =  annealing_coef * KL(alp)
+        
+        C = KL(alp)
+        print("KL", C)
+        return (A+B)+ C
+    
+    # mse =mse_loss
+
+    # global_step = tf.Variable(initial_value=0, name='global_step', trainable=False)
+    global_step= global_step
+    annealing_step = 320
+    def EMSE_Loss(y_true, y_pred):
+#         softmax = tf.nn.softmax(y_pred)
+        evidence = exp_evidence(y_pred)
+        alpha  = evidence + 1
+        
+        u = Classes / tf.reduce_sum(alpha, axis=1) #uncertainty
+        
+        prob = alpha/tf.reduce_sum(alpha, 1,keepdims=True) 
+        
+        loss = tf.reduce_mean(mse_loss(y_true, alpha,global_step,annealing_step))
+#         l2_loss = (tf.nn.l2_loss(W3)+tf.nn.l2_loss(W4)) * lmb
+#         l2_loss = tf.reduce_sum(tf.square(inputs - teaching_features))
+        
+        final_loss = loss #+ l2_loss
+        
+#         kl_loss = kl( tf.nn.softmax(softmax / self.temperature, axis = 1 ),
+        # print("evidence",evidence)
+        # print("final_loss",final_loss)
+        return evidence, final_loss
+    return  EMSE_Loss
+
+
+
+
 def entropyAddition_loss():
     #create a wrapper function that returns a function
 

@@ -84,13 +84,15 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
 
     # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
     if customOptions == "CrossE": 
-        model.compile(optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9,clipvalue=0.5), loss='SparseCategoricalCrossentropy', metrics=['accuracy',confidenceDifference],run_eagerly=True)
+        print("customOption: CrossE")
+        model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
     elif customOptions == "CrossE_Eadd":
-        
+        print("customOption: CrossE_Eadd")
         entropyAdd = entropyAddition_loss()
         model.compile(optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9,clipvalue=0.5), loss=[keras.losses.SparseCategoricalCrossentropy(),entropyAdd,entropyAdd,entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
         # model.compile(optimizer=tf.optimizers.SGD(lr=0.001), loss=[crossE_test, entropyAdd, entropyAdd, entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
     else:
+        print("customOption: Other")
     # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
         model.compile(loss='SparseCategoricalCrossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy',confidenceDifference],run_eagerly=True)
 
