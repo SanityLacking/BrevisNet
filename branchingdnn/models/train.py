@@ -83,6 +83,11 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
             print("setting layer training to True")
 
     # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
+    print(customOptions)
+    if customOptions == "customLoss": 
+        print("customOption: customLoss")
+        model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
+
     if customOptions == "CrossE": 
         print("customOption: CrossE")
         model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
@@ -94,7 +99,7 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     else:
         print("customOption: Other")
     # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
-        model.compile(loss='SparseCategoricalCrossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy',confidenceDifference],run_eagerly=True)
+        model.compile(optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
 
     run_logdir = get_run_logdir(model.name)
     tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)

@@ -40,8 +40,8 @@ if __name__ == "__main__":
     
     
     x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5",
-                                             saveName = "alexNetv6_distil_new",
-                                             transfer = True,customOptions="CrossE")
+                                             saveName = "alexNetv6_evidence",
+                                             transfer = True,customOptions="customLoss")
     
 
 

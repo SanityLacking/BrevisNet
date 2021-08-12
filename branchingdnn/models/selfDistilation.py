@@ -35,7 +35,8 @@ class SelfDistilation(branchingdnn.core):
         tf.keras.utils.plot_model(x, to_file="{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branch.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],branch.newBranch)
-        funcModel = branch.add_distil(x,["max_pooling2d"],[branch.newBranch_bottleneck],exact=True)
+        # ["max_pooling2d","max_pooling2d_1","dense"]
+        funcModel = branch.add_distil(x,["max_pooling2d","max_pooling2d_1","dense"],[branch.newBranch_flatten_evidence],exact=True)
         #so to self distil, I have to pipe the loss from the main exit back to the branches.
         funcModel.summary()
         # funcModel.save("models/{}".format(saveName))

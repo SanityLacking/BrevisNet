@@ -1,30 +1,38 @@
 
 
 
-# import the necessary packages
-import branchingdnn
+import itertools
+import json
+import math
+import os
+import time
+
 import numpy as np
+import pydot
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, models
 from tensorflow.keras.models import load_model
-import itertools
-import time
-import json
+from tensorflow.python.keras.layers.pooling import GlobalAveragePooling2D
+from tensorflow.python.ops.gen_math_ops import Xlogy
+
+# import the necessary packages
+import branchingdnn
+#neptune remote ML monitoring 
+from initNeptune import Neptune
+
+from .branches import branch
+from .dataset import prepare
+from .eval import branchy_eval as eval
+#local imports
+from .utils import *
 
 # from keras.models import load_model
 # from keras.utils import CustomObjectScope
 # from keras.initializers import glorot_uniform
 
-import math
-import pydot
-import os
 
-#neptune remote ML monitoring 
-from initNeptune import Neptune
 
-from tensorflow.python.keras.layers.pooling import GlobalAveragePooling2D
-from tensorflow.python.ops.gen_math_ops import Xlogy
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 
@@ -32,11 +40,6 @@ from tensorflow.python.ops.gen_math_ops import Xlogy
 # from Alexnet_kaggle_v2 import * 
 
 
-#local imports
-from .utils import *
-from .dataset import prepare
-from .branches import branch
-from .eval import branchy_eval as eval
 
 
 
@@ -97,7 +100,7 @@ class BranchingDnn:
         tf.keras.utils.plot_model(x, to_file="images/{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
-        
+        # ["max_pooling2d","max_pooling2d_1","dense"]
         funcModel = branch.add(x,["max_pooling2d"],branch.newBranch_compress,exact=True)
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         # funcModel= x
