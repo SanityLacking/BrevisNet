@@ -40,17 +40,18 @@ class SelfDistilation(branchingdnn.core):
         #so to self distil, I have to pipe the loss from the main exit back to the branches.
         funcModel.summary()
         # funcModel.save("models/{}".format(saveName))
-        dataset = prepare.dataset_distil(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,
-                                                            dataset,
-                                                            epocs = numEpocs,
-                                                            save = False,
-                                                            transfer = transfer,
-                                                            saveName = saveName,
-                                                            customOptions=customOptions,
-                                                            tags =["v6","drt"])
+        dataset = prepare.dataset_distil(tf.keras.datasets.cifar10.load_data(),64,5000,22500,(227,227))
+        # funcModel = branchingdnn.models.trainModelTransfer(funcModel,
+        #                                                     dataset,
+        #                                                     epocs = numEpocs,
+        #                                                     save = False,
+        #                                                     transfer = transfer,
+        #                                                     saveName = saveName,
+        #                                                     customOptions=customOptions,
+        #                                                     tags =["v6","drt"])
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
+        return None
 
 
     def normal(student_model,data, student_output=[]):  

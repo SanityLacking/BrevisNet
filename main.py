@@ -36,12 +36,12 @@ root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 if __name__ == "__main__":
     #### build alexnet model
-    # x = branching.core.Run_alexNet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_compress",transfer = True ,customOptions="CrossE")
+    x = branching.core.Run_alexNet_evidence( 20, modelName="alexNetv6_logits.hdf5", saveName = "alexNetv6_evidence",transfer = True ,customOptions="customLoss")
     
     
-    x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5",
-                                             saveName = "alexNetv6_evidence",
-                                             transfer = True,customOptions="customLoss")
+    # x = branching.models.SelfDistilation.alexnet( 10, modelName="alexNetv6.hdf5",
+    #                                          saveName = "alexNetv6_evidence",
+    #                                          transfer = True,customOptions="customLoss")
     
 
 

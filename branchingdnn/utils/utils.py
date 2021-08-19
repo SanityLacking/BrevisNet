@@ -607,7 +607,7 @@ class AnnealingCallback(keras.callbacks.Callback):
         if self.verbose==2:
             print("...Training: step: {} start of batch {}; annealing_rate = {}".format(self.step_counter, batch, self.annealing_rate))
 
-def evidence_loss(annealing_rate=1, momentum=1, decay=1, evidence_function=softplus_evidence):
+def evidence_loss(annealing_rate=1, momentum=1, decay=1, evidence_function=softplus_evidence, sparse=True):
     #create a wrapper function that returns a function
     temperature = 1
     Classes = 10
@@ -617,7 +617,15 @@ def evidence_loss(annealing_rate=1, momentum=1, decay=1, evidence_function=softp
     decay_rate = decay
     # evidence_function = evidence_function
 
-    def mse_loss_global(labels, outputs): 
+    def sparse_mse_loss_global(labels, outputs):
+        labels = tf.one_hot(tf.cast(labels, tf.int32), 10)
+#         print("onehot",labels)
+        labels = tf.cast(labels, dtype=tf.float32)
+        try:
+            labels= tf.squeeze(labels,[1])
+        except:
+                print("loss labels can't be squeezed")
+        # labels = tf.keras.utils.to_categorical(labels,10) #TODO change 10 to the number of inputs.
         evidence = evidence_function(outputs)
         alpha = evidence + 1
         S = tf.reduce_sum(alpha, axis=1, keepdims=True) 
@@ -635,7 +643,31 @@ def evidence_loss(annealing_rate=1, momentum=1, decay=1, evidence_function=softp
 #         print(alpha)
 #         C = keras_kl(labels, alpha)
         return (A + B) + C
-    return  mse_loss_global
+
+    def mse_loss_global(labels, outputs): 
+        
+        evidence = evidence_function(outputs)
+        alpha = evidence + 1
+        S = tf.reduce_sum(alpha, axis=1, keepdims=True) 
+        E = alpha - 1
+        m = alpha / S
+
+        A = tf.reduce_sum((labels-m)**2, axis=1, keepdims=True) 
+        B = tf.reduce_sum(alpha*(S-alpha)/(S*S*(S+1)), axis=1, keepdims=True) 
+
+        annealing_coef = tf.minimum(1.0,tf.cast(annealing_rate,tf.float32))
+#         annealing_coef = 1
+        alp = E*(1-labels) + 1 
+        # print("alp", alp)
+        C =  annealing_coef * KL(alp)
+#         print(alpha)
+#         C = keras_kl(labels, alpha)
+        return (A + B) + C
+        
+    if sparse == True:
+        return  sparse_mse_loss_global
+    else:
+        return  mse_loss_global
 ####################################################
 
 #old version

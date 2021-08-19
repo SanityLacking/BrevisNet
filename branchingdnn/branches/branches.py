@@ -14,7 +14,7 @@ from branchingdnn.utils import *
 
 class branch:
     #add a branch
-    def add(model, identifier =[""], customBranch = [],exact = True):
+    def add(model, identifier =[""], customBranch = [],exact = True, target_input= True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
             identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
             If identifier is not blank, a branch will be added to each layer with identifier in its name. (identifier = "dense", all dense layers will be branched.)
@@ -32,6 +32,25 @@ class branch:
         outputs = []
         for i in model.outputs:
             outputs.append(i)
+        
+        inputs = []
+        ready = False
+        if target_input:
+            for i in model.inputs:
+                if i.name == "targets":
+                    ready = True
+                inputs.append(i)
+            if not ready:
+                inputs.append(keras.Input(shape=(10,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
+        #add targets as an input to the model so it can be used for the custom losses.
+        #   input size is the size of the     
+        #add target input 
+        model = keras.Model(inputs=inputs, outputs=outputs)
+
+        model.summary()
+        # outputs = []
+
+        targets = model.get_layer('targets').output
 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
@@ -52,7 +71,7 @@ class branch:
                 for i in identifier: 
                     print(model.layers[i].name)
                     try:
-                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
                         branches=branches+1
                         # outputs = newBranch(model.layers[i].output,outputs)
                     except:
@@ -66,7 +85,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
                     else:
@@ -74,7 +93,7 @@ class branch:
                             print("add Branch")
                             # print(customBranch[min(i, len(customBranch))-1])
                             # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output))
+                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
                             branches=branches+1
                             # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
@@ -83,7 +102,7 @@ class branch:
                 print(model.layers[i].name)
                 # if "dense" in model.layers[i].name:
                 # outputs = newBranch(model.layers[i].output,outputs)
-                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs)
+                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs,targets = targets)
                 branches=branches+1
             # for j in range(len(model.layers[i].inbound_nodes)):
             #     print(dir(model.layers[i].inbound_nodes[j]))
@@ -101,7 +120,7 @@ class branch:
             super(branch.EvidenceEndpoint, self).__init__(name=name)
             self.num_outputs = num_outputs
 #             self.kl = tf.keras.losses.KLDivergence()
-            self.loss_fn = evidence_loss()
+            self.loss_fn = evidence_loss(sparse=False)
 #             self.loss_fn = tf.keras.losses.categorical_crossentropy
             self.evidence = relu_evidence
 #             self.evidence = tf.compat.v1.distributions.Dirichlet
@@ -123,8 +142,16 @@ class branch:
             softmax = tf.nn.softmax(outputs)
             evidence = softplus_evidence(outputs)
             alpha = evidence + 1
-
+            
+            ## convert labels to logits
             loss = tf.reduce_mean(self.loss_fn(labels, outputs))
+            # labels = tf.cast(tf.one_hot(tf.cast(labels, tf.int32), 10), dtype=labels.dtype)
+            # try:
+            #     labels= tf.squeeze(labels,[1])
+            # except:
+            #     print("labels can't be squeezed")
+
+                
             u = self.num_outputs / tf.reduce_sum(alpha, axis=1, keepdims=True) #uncertainty
             prob = alpha/tf.reduce_sum(alpha, 1, keepdims=True) 
             l2_loss = tf.nn.l2_loss(self.weights) * self.lmb
@@ -350,7 +377,7 @@ class branch:
                 ready = True
             inputs.append(i)
         if not ready:
-            inputs.append(keras.Input(shape=(10,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
+            inputs.append(keras.Input(shape=(1,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
         #add targets as an input to the model so it can be used for the custom losses.
         #   input size is the size of the     
         #add target input 
@@ -437,8 +464,11 @@ class branch:
         model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
         return model
 
+    
 
-    def newBranchCustom(prevLayer, outputs=[]):
+
+
+    def newBranchCustom(prevLayer):
         """ example of a custom branching layer, used as a drop in replacement of "newBranch"
         """                 
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(prevLayer)
@@ -446,7 +476,7 @@ class branch:
 
         return outputs
 
-    def newBranch_flatten(prevLayer):
+    def newBranch_flatten(prevLayer, targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
@@ -454,7 +484,10 @@ class branch:
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
 
@@ -471,7 +504,7 @@ class branch:
         return output
 
         
-    def newBranch_flatten_alt(prevLayer):
+    def newBranch_flatten_alt(prevLayer,targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
@@ -481,11 +514,14 @@ class branch:
         branchLayer = layers.Dense(2048, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch2048"))(branchLayer)
         branchLayer = keras.layers.Dropout(0.5,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
 
-    def newBranch_resnet(prevLayer):
+    def newBranch_resnet(prevLayer,targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
@@ -497,11 +533,14 @@ class branch:
         # branchLayer = layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(227,227,3))(branchLayer)
         branchLayer = layers.Dense(2048, name=tf.compat.v1.get_default_graph().unique_name("branch_2048"))(branchLayer)
         branchLayer = layers.Dense(1000, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
 
-    def newBranch_flatten100(prevLayer):
+    def newBranch_flatten100(prevLayer,targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
@@ -511,29 +550,35 @@ class branch:
         
         
         branchLayer = layers.Dense(100, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
-
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
         return output
 
-    def newBranch_oneLayer(prevLayer):
+    def newBranch_oneLayer(prevLayer,targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
         # branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(prevLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
-
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
         return output
 
-    def newBranch(prevLayer):
+    def newBranch(prevLayer,targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(prevLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
-
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
         return output
 
 
@@ -591,7 +636,7 @@ class branch:
 
         return output
 
-    def newBranch_bottleneck2(prevLayer):
+    def newBranch_bottleneck2(prevLayer,targets=None):
         branchLayer = branch.bottleneck2(prevLayer)
         print("no teaching feature Provided, bottleneck and teaching loss skipped")
         branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchLayer)
@@ -599,8 +644,10 @@ class branch:
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
-
+        if targets:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
+        else:
+            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
         return output
 
 

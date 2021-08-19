@@ -86,20 +86,22 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     print(customOptions)
     if customOptions == "customLoss": 
         print("customOption: customLoss")
-        model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
-
-    if customOptions == "CrossE": 
+        model.compile(loss="categorical_crossentropy" , optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
+    elif customOptions == "customLoss_onehot": 
+        print("customOption: CrossE")
+        model.compile( loss={"dense_2":keras.losses.CategoricalCrossentropy(from_logits=True)}, optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
+    elif customOptions == "CrossE": 
         print("customOption: CrossE")
         model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
     elif customOptions == "CrossE_Eadd":
         print("customOption: CrossE_Eadd")
         entropyAdd = entropyAddition_loss()
-        model.compile(optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9,clipvalue=0.5), loss=[keras.losses.SparseCategoricalCrossentropy(),entropyAdd,entropyAdd,entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
+        model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9,clipvalue=0.5), loss=[keras.losses.SparseCategoricalCrossentropy(),entropyAdd,entropyAdd,entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
         # model.compile(optimizer=tf.optimizers.SGD(lr=0.001), loss=[crossE_test, entropyAdd, entropyAdd, entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
     else:
         print("customOption: Other")
     # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
-        model.compile(optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
+        model.compile(loss={"dense_2":keras.losses.SparseCategoricalCrossentropy(from_logits=True)} , optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
 
     run_logdir = get_run_logdir(model.name)
     tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
