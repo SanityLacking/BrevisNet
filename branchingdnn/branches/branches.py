@@ -34,13 +34,19 @@ class branch:
         
         inputs = []
         ready = False
+        
+        targets= None
+        
+        for i in model.inputs:
+            if i.name == "targets":
+                ready = True
+            inputs.append(i)
         if target_input:
-            for i in model.inputs:
-                if i.name == "targets":
-                    ready = True
-                inputs.append(i)
+            print("add targets")
             if not ready:
                 inputs.append(keras.Input(shape=(10,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
+            targets = model.get_layer('targets').output
+
         #add targets as an input to the model so it can be used for the custom losses.
         #   input size is the size of the     
         #add target input 
@@ -49,7 +55,6 @@ class branch:
         model.summary()
         # outputs = []
 
-        targets = model.get_layer('targets').output
 
         old_output = outputs
         # outputs.append(i in model.outputs) #get model outputs that already exist 
@@ -107,10 +112,10 @@ class branch:
             #     print(dir(model.layers[i].inbound_nodes[j]))
             #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
-        print(outputs)
-        print(model.input)
-        outputs.pop(0)
-        print(outputs)
+        # print(outputs)
+        # print(model.input)
+        # outputs.pop(0)
+        # print(outputs)
         # input_layer = layers.Input(batch_shape=model.layers[0].input_shape)
         model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
         return model
@@ -350,8 +355,8 @@ class branch:
 #             self.evidence = tf.compat.v1.distributions.Dirichlet
             self.temperature = 10
             self.lmb = 0.005
-        # def build(self, input_shape):
-            # self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
+        def build(self, input_shape):
+            self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
             # print(self.kernel)
         def get_config(self):
             config = super().get_config().copy()
@@ -362,7 +367,7 @@ class branch:
             return config
 
         def call(self, inputs, labels,learning_rate=1):
-            # outputs = tf.matmul(inputs,self.kernel)
+            outputs = tf.matmul(inputs,self.kernel)
             outputs = inputs
             # print("endpoint", outputs)
             # outputs = tf.keras.activations.relu(outputs)
@@ -542,7 +547,7 @@ class branch:
 
         return outputs
 
-    def newBranch_flatten(prevLayer, targets=None):
+    def newBranch_flatten(prevLayer, targets):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
@@ -550,14 +555,11 @@ class branch:
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        if targets:
-            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer,targets))
-        else:
-            output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
 
-    def newBranch_flatten_evidence(prevLayer, targets, teacher_sm = None, teaching_features=None):
+    def newBranch_flatten_evidence(prevLayer, targets=None, teacher_sm = None, teaching_features=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 

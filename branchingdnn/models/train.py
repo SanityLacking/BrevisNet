@@ -92,9 +92,11 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     elif customOptions == "customLoss_onehot": 
         print("customOption: CrossE")
         model.compile( loss={"dense_2":keras.losses.CategoricalCrossentropy(from_logits=True)}, optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
+
     elif customOptions == "CrossE": 
         print("customOption: CrossE")
-        model.compile( optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
+        model.compile( loss =keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
+
     elif customOptions == "CrossE_Eadd":
         print("customOption: CrossE_Eadd")
         entropyAdd = entropyAddition_loss()
