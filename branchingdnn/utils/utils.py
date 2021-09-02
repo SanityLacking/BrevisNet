@@ -607,6 +607,47 @@ class AnnealingCallback(keras.callbacks.Callback):
         if self.verbose==2:
             print("...Training: step: {} start of batch {}; annealing_rate = {}".format(self.step_counter, batch, self.annealing_rate))
 
+    
+def evidence_crossentropy(annealing_rate=1, momentum=1, decay=1, global_loss=False):
+    #create a wrapper function that returns a function
+    temperature = 1
+    Classes = 10
+    keras_kl = tf.keras.losses.KLDivergence()
+    annealing_rate = annealing_rate
+    momentum_rate = momentum
+    decay_rate = decay
+
+    def cross_entropy_evidence(labels, outputs): 
+        softmax = tf.nn.softmax(outputs)
+
+        # activated_outputs =tf.keras.activations.sigmoid(softmax)
+        evidence = softplus_evidence(outputs)
+        alpha = evidence + 1
+        S = tf.reduce_sum(alpha, axis=1, keepdims=True) 
+        E = alpha - 1
+        m = alpha / S
+        A = tf.reduce_sum((labels-m)**2, axis=1, keepdims=True) 
+        B = tf.reduce_sum(alpha*(S-alpha)/(S*S*(S+1)), axis=1, keepdims=True) 
+
+        annealing_coef = tf.minimum(1.0,tf.cast(annealing_rate,tf.float32))
+#         annealing_coef = 1
+        alp = E*(1-labels) + 1 
+        # print("alp", alp)
+        C =  1 * KL(alp)
+        D = keras_kl(labels,(labels * evidence))
+        loss = tf.keras.losses.categorical_crossentropy(labels, tf.nn.softmax(outputs))
+        # pred = tf.argmax(outputs,1)
+        # truth = tf.argmax(labels,1)
+        # match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
+        return loss + D
+        # return (A + B) + C
+
+    return  cross_entropy_evidence
+
+
+
+
+''' Old evidence based loss, no longer used'''
 def evidence_loss(annealing_rate=1, momentum=1, decay=1, evidence_function=softplus_evidence, sparse=True):
     #create a wrapper function that returns a function
     temperature = 1

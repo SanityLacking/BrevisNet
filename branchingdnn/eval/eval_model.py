@@ -1,4 +1,5 @@
 ###evaluate the completed models. ####
+from re import X
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -41,6 +42,58 @@ def evalBranchMatrix_old(model, input, labels=""):
 
     return
 
+def loss_function(annealing_rate=1, momentum=1, decay=1, global_loss=False):
+    def crossEntropy_loss(labels, outputs): 
+#         softmax = tf.nn.softmax(outputs)
+        loss = tf.keras.losses.categorical_crossentropy(labels, outputs)
+        return loss
+    return  crossEntropy_loss
+    
+class EntropyEndpoint(tf.keras.layers.Layer):
+        def __init__(self, num_outputs, name=None, **kwargs):
+            super(EntropyEndpoint, self).__init__(name=name)
+            self.num_outputs = num_outputs
+            self.loss_fn = tf.keras.losses.CategoricalCrossentropy()
+        # def build(self, input_shape):
+        #     self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
+
+        def get_config(self):
+            config = super().get_config().copy()
+            config.update({
+                'num_outputs': self.num_outputs,
+                'name': self.name
+            })
+            return config
+
+        def call(self, inputs, labels,learning_rate=1):
+            # outputs = tf.matmul(inputs,self.kernel)
+            # outputs = inputs
+            tf.print("inputs",inputs)
+            outputs = tf.nn.softmax(inputs)
+            tf.print("softmax",outputs)
+            entropy = calcEntropy_Tensors(inputs)
+            # tf.print("entropy",entropy)
+            # print(entropy)
+            pred = tf.argmax(outputs,1)
+            # tf.print("pred", pred)
+            truth = tf.argmax(labels,1)
+            # tf.print("truth", truth)
+            match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
+            # tf.print("match", match)
+            # tf.print("match",match)
+
+            # tf.print("succ",tf.reduce_sum(entropy*match),tf.reduce_sum(match+1e-20))
+            # tf.print("fail",tf.reduce_sum(entropy*(1-match)),(tf.reduce_sum(tf.abs(1-match))+1e-20) )
+            mean_succ = tf.reduce_sum(entropy*match) / tf.reduce_sum(match+1e-20)
+            mean_fail = tf.reduce_sum(entropy*(1-match)) / (tf.reduce_sum(tf.abs(1-match))+1e-20) 
+            
+            self.add_metric(entropy, name=self.name+"_entropy")
+            # self.add_metric(total_entropy, name=self.name+"_entropy",aggregation='mean')
+            self.add_metric(mean_succ, name=self.name+"_mean_ev_succ",aggregation='mean')
+            self.add_metric(mean_fail, name=self.name+"_mean_ev_fail",aggregation='mean')
+            
+            return inputs
+
 if __name__ == "__main__":
     opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
     args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
@@ -57,8 +110,6 @@ if __name__ == "__main__":
     print("evalModel")
 
     #load the model
-    branchy = BranchyNet()
-    branchy.ALEXNET = True
     #load the dataset
     # x = tf.keras.models.load_model("models/alexnet_branched_new_trained.hdf5")
     # normal one
@@ -69,13 +120,13 @@ if __name__ == "__main__":
     # x.summary()
     # print(x.outputs)
 
+    # x = tf.keras.models.load_model("models/alexNetv5.hdf5")
+    x = tf.keras.models.load_model('alexnet_entropy_results.hdf5',custom_objects={"EntropyEndpoint":EntropyEndpoint,"crossEntropy_loss":loss_function()})
 
-    # y = branchy.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_results")
+    y = branching.core.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"entropy_results")
     # y = branchy.GetResultsCSV(x,keras.datasets.mnist.load_data(), "_mnist")
     
-    x = tf.keras.models.load_model("models/alexNetv5.hdf5")
-    
-    y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"natural")
+    # y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"natural")
 
     # import modelProfiler
     # layerBytes = modelProfiler.getLayerBytes(x,'alexnet_branch_pooling')

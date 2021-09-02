@@ -1,5 +1,6 @@
 
 from tensorflow._api.v2 import data
+from tensorflow.python import util
 import branchingdnn
 import numpy as np
 import tensorflow as tf
@@ -86,7 +87,8 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
     print(customOptions)
     if customOptions == "customLoss": 
         print("customOption: customLoss")
-        model.compile(loss="categorical_crossentropy" , optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
+        loss_fn = evidence_crossentropy()
+        model.compile(loss=loss_fn, optimizer=tf.optimizers.SGD(lr=0.001,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
     elif customOptions == "customLoss_onehot": 
         print("customOption: CrossE")
         model.compile( loss={"dense_2":keras.losses.CategoricalCrossentropy(from_logits=True)}, optimizer=tf.optimizers.SGD(lr=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True)
@@ -114,7 +116,7 @@ def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = F
         newModelName = "{}_branched.hdf5".format(model.name )
     else:
         newModelName = saveName
-    checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_acc', verbose=1, mode='max')
+    checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_loss', verbose=1, mode='max')
 
     neptune_cbk = Neptune.getcallback(name = newModelName, tags =tags)
     # print("epoc: {}".format(j))

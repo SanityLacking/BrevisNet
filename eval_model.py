@@ -32,21 +32,70 @@ root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 
 
+def loss_function(annealing_rate=1, momentum=1, decay=1, global_loss=False):
+    def crossEntropy_loss(labels, outputs): 
+#         softmax = tf.nn.softmax(outputs)
+        loss = tf.keras.losses.categorical_crossentropy(labels, outputs)
+        return loss
+    return  crossEntropy_loss
+    
+class EntropyEndpoint(tf.keras.layers.Layer):
+        def __init__(self, num_outputs, name=None, **kwargs):
+            super(EntropyEndpoint, self).__init__(name=name)
+            self.num_outputs = num_outputs
+            self.loss_fn = tf.keras.losses.CategoricalCrossentropy()
+        # def build(self, input_shape):
+        #     self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
+
+        def get_config(self):
+            config = super().get_config().copy()
+            config.update({
+                'num_outputs': self.num_outputs,
+                'name': self.name
+            })
+            return config
+
+        def call(self, inputs, labels,learning_rate=1):
+            # outputs = tf.matmul(inputs,self.kernel)
+            # outputs = inputs
+            tf.print("inputs",inputs)
+            outputs = tf.nn.softmax(inputs)
+            tf.print("softmax",outputs)
+            entropy = calcEntropy_Tensors(inputs)
+            # tf.print("entropy",entropy)
+            # print(entropy)
+            pred = tf.argmax(outputs,1)
+            # tf.print("pred", pred)
+            truth = tf.argmax(labels,1)
+            # tf.print("truth", truth)
+            match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
+            # tf.print("match", match)
+            # tf.print("match",match)
+
+            # tf.print("succ",tf.reduce_sum(entropy*match),tf.reduce_sum(match+1e-20))
+            # tf.print("fail",tf.reduce_sum(entropy*(1-match)),(tf.reduce_sum(tf.abs(1-match))+1e-20) )
+            mean_succ = tf.reduce_sum(entropy*match) / tf.reduce_sum(match+1e-20)
+            mean_fail = tf.reduce_sum(entropy*(1-match)) / (tf.reduce_sum(tf.abs(1-match))+1e-20) 
+            
+            self.add_metric(entropy, name=self.name+"_entropy")
+            # self.add_metric(total_entropy, name=self.name+"_entropy",aggregation='mean')
+            self.add_metric(mean_succ, name=self.name+"_mean_ev_succ",aggregation='mean')
+            self.add_metric(mean_fail, name=self.name+"_mean_ev_fail",aggregation='mean')
+            
+            return inputs
 
 
 if __name__ == "__main__":
     # x = branching.core.Run_alexNet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_compress",transfer = True ,customOptions="CrossE")
     # x = branching.models.SelfDistilation.alexnet( 20, modelName="alexNetv6.hdf5", saveName = "alexNetv6_distil_BN_only",transfer = True,customOptions="CrossE")
     
-    x = tf.keras.models.load_model("models/alexNetv6_compress.hdf5",custom_objects={'confidenceScore': confidenceScore,
-                                                                         'unconfidence': unconfidence,
-                                                                         'confidenceDifference': confidenceDifference,
-                                                                         'BranchEndpoint': branching.branches.branch.BranchEndpoint,
-                                                                         'FeatureDistillation': branching.branches.branch.FeatureDistillation})
-    # y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"compressed")
+    # x = tf.keras.models.load_model('notebooks/alexnet_entropy_results.hdf5',custom_objects={"EntropyEndpoint":EntropyEndpoint,"crossEntropy_loss":loss_function()})
+    x = tf.keras.models.load_model('notebooks/alexnet_entropy_results.hdf5', custom_objects={"EntropyEndpoint":EntropyEndpoint,"crossEntropy_loss":loss_function()})
+    y = branching.core.GetResultsCSV(x, prepare.dataset(tf.keras.datasets.cifar10.load_data(),64,5000,22500,(227,227),include_targets=True),"entropy_results")
+    y = branching.core.evalModel(x, tf.keras.datasets.cifar10.load_data(),"compressed")
   
     # x = tf.keras.models.load_model("models/alexNetv5_crossE.hdf5")
-    y = branching.core.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_compressed")
+    # y = branching.core.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_compressed")
   
     # x = tf.keras.models.load_model("models/alexNetv5_crossE_Eadd.hdf5")
     # y = branching.GetResultsCSV(x, tf.keras.datasets.cifar10.load_data(),"_crossE_Eadd")

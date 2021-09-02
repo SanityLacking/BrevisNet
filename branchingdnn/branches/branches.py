@@ -21,7 +21,6 @@ class branch:
             Warning! individual layers are defined according to how TF defines them. this means that for layers that would be normally grouped, they will be treated as individual layers (conv2d, pooling, flatten, etc)
             customBranch: optional function that can be passed to provide a custom branch to be inserted. Check "newBranch" function for default shape of branches and how to build custom branching function. Can be provided as a list and each branch will iterate through provided customBranches, repeating last the last branch until function completes
         """
-        
         # model = keras.Model([model.input], [model_old.output], name="{}_branched".format(model_old.name))
         # model.summary()
 
@@ -110,6 +109,8 @@ class branch:
             #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
         print(outputs)
         print(model.input)
+        outputs.pop(0)
+        print(outputs)
         # input_layer = layers.Input(batch_shape=model.layers[0].input_shape)
         model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
         return model
@@ -259,6 +260,9 @@ class branch:
     #         # contribution of the regularization loss in the total loss.
     #         return outputs
 
+
+    ''' first version learning how custom layers work with keras
+    '''
     class LogisticEndpoint(keras.layers.Layer):
         def __init__(self, name=None, **kwargs):
             super(branch.LogisticEndpoint, self).__init__(name=name)
@@ -318,7 +322,69 @@ class branch:
             # (typically the L1 or L2 norm of the model's weights) and k a hyperparameter that controls the 
             # contribution of the regularization loss in the total loss.
             return softmax
+    class printFeatureSet(keras.layers.Layer):
+        def __init__(self, name=None, **kwargs):
+            super(branch.printFeatureSet, self).__init__(name=name)
+            self.loss_fn = keras.losses.CategoricalCrossentropy()
+            self.temperature = 10
+            self.lmb = 0.005
+        # def build(self, input_shape):
+            # self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
         
+        def call(self, inputs, labels, title="feature_set:"):
+            outputs = tf.keras.activations.relu(inputs)
+            print(title, outputs)
+            
+            return outputs
+    ''' Third version, doesn't have its own loss, so it just provides the evidence as a metric
+        Doesn't apply softmax, as the custom loss does that itself.
+    '''
+    class CrossEntropyEndpoint(keras.layers.Layer):
+        def __init__(self, num_outputs, name=None, **kwargs):
+            super(branch.CrossEntropyEndpoint, self).__init__(name=name)
+            self.num_outputs = num_outputs
+#             self.kl = tf.keras.losses.KLDivergence()
+            self.loss_fn = keras.losses.CategoricalCrossentropy()
+#             self.loss_fn = tf.keras.losses.categorical_crossentropy
+            self.evidence = softplus_evidence
+#             self.evidence = tf.compat.v1.distributions.Dirichlet
+            self.temperature = 10
+            self.lmb = 0.005
+        # def build(self, input_shape):
+            # self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
+            # print(self.kernel)
+        def get_config(self):
+            config = super().get_config().copy()
+            config.update({
+                'num_outputs': self.num_outputs,
+                'name': self.name
+            })
+            return config
+
+        def call(self, inputs, labels,learning_rate=1):
+            # outputs = tf.matmul(inputs,self.kernel)
+            outputs = inputs
+            # print("endpoint", outputs)
+            # outputs = tf.keras.activations.relu(outputs)
+            softmax = tf.nn.softmax(outputs)
+            evidence = self.evidence (outputs)
+            alpha = evidence + 1
+            u = self.num_outputs / tf.reduce_sum(alpha, axis=1, keepdims=True) #uncertainty
+          
+            prob = alpha/tf.reduce_sum(alpha, 1, keepdims=True) 
+            pred = tf.argmax(outputs,1)
+            truth = tf.argmax(labels,1)
+            match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
+            total_evidence = tf.reduce_sum(evidence,1, keepdims=True)
+            mean_succ = tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*match) / tf.reduce_sum(match+1e-20)
+            mean_fail = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*(1-match)) / (tf.reduce_sum(tf.abs(1-match))+1e-20) )
+            
+            self.add_metric(evidence, name=self.name+"_evidence",aggregation='mean')
+            self.add_metric(u, name=self.name+"_uncertainty",aggregation='mean')
+            self.add_metric(mean_succ, name=self.name+"_mean_ev_succ",aggregation='mean')
+            self.add_metric(mean_fail, name=self.name+"_mean_ev_fail",aggregation='mean')
+            
+            return outputs
         
         
     class FeatureDistillation(keras.layers.Layer):
@@ -498,11 +564,29 @@ class branch:
         branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
-        output = branch.EvidenceEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets)
+        output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets)
         # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
+    def newBranch_flatten_evidence2(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+        branchLayer = keras.layers.Dropout(0.5,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchLayer)
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_1")
+        branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
+        branchLayer = keras.layers.Dropout(0.4,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchLayer)
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_2")
+        branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        branchLayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchLayer)
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        branchLayer = layers.Dense(10,name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchLayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
+        return output
         
     def newBranch_flatten_alt(prevLayer,targets=None):
         """ Add a new branch to a model connecting at the output of prevLayer. 

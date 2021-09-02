@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, models
 from tensorflow.keras.models import load_model
+from tensorflow.python.keras.backend import print_tensor
 
 
 
@@ -75,11 +76,12 @@ class prepare:
         return (train_ds, test_ds, validation_ds)
 
 
-    def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False, include_targets=False):
+    def dataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False, include_targets=False, categorical = True):
         (train_images, train_labels), (test_images, test_labels) = dataset
         
-        train_labels = tf.keras.utils.to_categorical(train_labels,10)
-        test_labels = tf.keras.utils.to_categorical(test_labels,10)
+        if categorical:
+            train_labels = tf.keras.utils.to_categorical(train_labels,10)
+            test_labels = tf.keras.utils.to_categorical(test_labels,10)
 
 
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
@@ -108,9 +110,9 @@ class prepare:
         validation_ds = (validation_ds.map(augment_images))
         test_ds = (test_ds.map(augment_images))
 
-
+        print("targetsis :", include_targets)
         #if include_targets is flagged, add an additional input with the label, this is used by custom loss layers that need a separate label source in the inputs to process.
-        if include_targets:
+        if include_targets == True:
             print("adding targets to inputs")
             target = tf.data.Dataset.from_tensor_slices((train_labels))
             train_ds = tf.data.Dataset.zip((train_ds,target))

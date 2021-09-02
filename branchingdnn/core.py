@@ -101,14 +101,14 @@ class BranchingDnn:
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         # ["max_pooling2d","max_pooling2d_1","dense"]
-        funcModel = branch.add(x,["max_pooling2d"],branch.newBranch_compress,exact=True)
+        funcModel = branch.add(x,["max_pooling2d","max_pooling2d_1","dense"],branch.newBranch_flatten,exact=True)
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         # funcModel= x
         funcModel.summary()
         funcModel.save("models/{}".format(saveName))
         dataset = prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
 
-        funcModel = branchingdnn.models.trainModelTransfer(funcModel,dataset, epocs = numEpocs, save = False, transfer = transfer, saveName = saveName,customOptions=customOptions)
+        funcModel = branchingdnn.models.trainModelTransfer(funcModel,dataset, epocs = numEpocs,  transfer = transfer, saveName = saveName,customOptions=customOptions)
         # funcModel.save("models/{}".format(saveName))
         # x = keras.Model(inputs=x.inputs, outputs=x.outputs, name="{}_normal".format(x.name))
         return x
@@ -119,7 +119,7 @@ class BranchingDnn:
         x.summary()
         if saveName =="":
             saveName = modelName
-        tf.keras.utils.plot_model(x, to_file="images/{}.png".format(saveName), show_shapes=True, show_layer_names=True)
+        # tf.keras.utils.plot_model(x, to_file="images/{}.png".format(saveName), show_shapes=True, show_layer_names=True)
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         # ["max_pooling2d","max_pooling2d_1","dense"]
@@ -127,7 +127,7 @@ class BranchingDnn:
         # funcModel.layers.pop()
         # layer = branch.EvidenceEndpoint
 
-        funcModel = branch.add(x,["max_pooling2d"],branch.newBranch_flatten_evidence,exact=True)
+        funcModel = branch.add(x,["max_pooling2d"],branch.newBranch_flatten_evidence2,exact=True)
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         # funcModel= x
         funcModel.summary()
@@ -490,7 +490,9 @@ class BranchingDnn:
             # train_ds, test_ds, validation_ds = prepare.prepareAlexNetDataset_old(1)
         # else:
             # train_ds, test_ds, validation_ds = prepare.prepareMnistDataset(dataset,1)
-        train_ds, test_ds, validation_ds = prepare.dataset(dataset,1,5000,22500,(227,227))
+        # train_ds, test_ds, validation_ds = prepare.dataset(dataset,1,5000,22500,(227,227))
+        train_ds, test_ds, validation_ds = dataset
+
         predictions = []
         labels = []
         model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
@@ -502,8 +504,8 @@ class BranchingDnn:
         print(len(test_ds))
 
         
-        for j in range(len(test_ds)):
-        # for j in range(12):
+        # for j in range(len(test_ds)-1):
+        for j in range(10):
 
             print("prediction: {} of {}".format(j,len(test_ds)),end='\r')
 
@@ -515,13 +517,13 @@ class BranchingDnn:
             labels.append(item[1].numpy().tolist())
         # print("labels")
         # print(labels)
-        labels = np.argmax(labels)
-        print(labels)
+        # labels = np.argmax(labels)
+        # print(labels)
         if BranchingDnn.ALEXNET:
             labels = np.argmax([expandlabels(x,num_outputs)for x in labels])
         else:
             for i, val in enumerate(labels):
-                print(i)
+                # print(i)
                 labels[i]= [np.argmax(val)]* num_outputs
 
         predEntropy =[]
@@ -557,6 +559,8 @@ class BranchingDnn:
         labels = pd.DataFrame(labels)
         predEntropy = pd.DataFrame(predEntropy)
         
+        
+        print("save to csv")
         PredRaw = pd.DataFrame(predRaw)
         PredRaw.to_csv("results/predRaw_temp.csv", sep=',', mode='w',index=False)
 
