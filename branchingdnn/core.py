@@ -88,14 +88,12 @@ class BranchingDnn:
         return result
 
 
-    ###### RUN MODEL SHORTCUTS ######
+        ###### RUN MODEL SHORTCUTS ######
     
     ''' class version of the model short cut functions
         designed to provide better control of the entire process at the start rather then having to change the internal files over and over
     '''
     class branched_model:
-        self.branchName = ""
-        self.dataset =""
         def __init__(self, modelName="",saveName="",transfer=True,customOptions="") -> None:
             self.modelName=modelName
             self.saveName=saveName
@@ -103,14 +101,13 @@ class BranchingDnn:
             self.customOptions=customOptions
             self.originalModel = tf.keras.models.load_model("models/{}".format(modelName))
             self.model = self.originalModel
-
-            return self
-
+            self.branchName = ""
+            self.dataset =""
+            return None
         
         def build(self):
             return
-
-
+        
         def set_branches(self, branchName=""):
             self.branchName = branchName
             return self
@@ -121,10 +118,10 @@ class BranchingDnn:
             # ["max_pooling2d","max_pooling2d_1","dense"]
             # branch.newBranch_flatten
             self.model = branch.add(self.model,branchPoints,branchName, exact=exact, target_input = target_input)
-
+            print(self)
             return self
 
-        def dataset(self, dataset):
+        def set_dataset(self, dataset):
             self.dataset = dataset
             return self
 

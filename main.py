@@ -39,11 +39,12 @@ if __name__ == "__main__":
     #### build alexnet model
     # x = branching.core.Run_alexNet_evidence( 20, modelName="alexNetv6_logits.hdf5", saveName = "alexNetv6_evidence_3_cross_3b",transfer = True ,customOptions="customLoss")
     # x = branching.core.Run_alexNet( 30, modelName="alexNetv6_logits.hdf5", saveName = "alexNetv6_entropy_dense",transfer = True ,customOptions="CrossE")
-    dataset = branching.prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
+    dataset = branching.dataset.prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
     brevis = (branching.core.branched_model(modelName="alexNetv6_logits.hdf5",saveName="alexNetv6_entropy_class",transfer=True,customOptions="")
             .add_branches(branching.branches.branch.newBranch_flatten,["max_pooling2d","max_pooling2d_1","dense"])
-            .dataset(dataset)
-            .train(30,True,"CrossE"))
+            .set_dataset(dataset)
+            .train(30,True,"CrossE")
+            )
             
     
 
