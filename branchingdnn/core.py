@@ -89,7 +89,48 @@ class BranchingDnn:
 
 
     ###### RUN MODEL SHORTCUTS ######
+    
+    ''' class version of the model short cut functions
+        designed to provide better control of the entire process at the start rather then having to change the internal files over and over
+    '''
+    class branched_model:
+        self.branchName = ""
+        self.dataset =""
+        def __init__(self, modelName="",saveName="",transfer=True,customOptions="") -> None:
+            self.modelName=modelName
+            self.saveName=saveName
+            self.transfer=transfer
+            self.customOptions=customOptions
+            self.originalModel = tf.keras.models.load_model("models/{}".format(modelName))
+            self.model = self.originalModel
 
+            return self
+
+        
+        def build(self):
+            return
+
+
+        def set_branches(self, branchName=""):
+            self.branchName = branchName
+            return self
+
+        def add_branches(self,branchName, branchPoints=[], exact = True, target_input = False):
+            if len(branchPoints) == 0:
+                return
+            # ["max_pooling2d","max_pooling2d_1","dense"]
+            # branch.newBranch_flatten
+            self.model = branch.add(self.model,branchPoints,branchName, exact=exact, target_input = target_input)
+
+            return self
+
+        def dataset(self, dataset):
+            self.dataset = dataset
+            return self
+
+        def train(self,numEpocs,transfer,customOptions):
+            self.model = branchingdnn.models.trainModelTransfer(self.model,self.dataset, epocs = numEpocs,  transfer = transfer,customOptions=customOptions)
+            return self
         
     def Run_alexNet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
         x = tf.keras.models.load_model("models/{}".format(modelName))
@@ -101,7 +142,7 @@ class BranchingDnn:
         # funcModel = models.Model([input_layer], [prev_layer])
         # funcModel = branchingdnn.branches.add(x,["dense","conv2d","max_pooling2d","batch_normalization","dense","dropout"],newBranch)
         # ["max_pooling2d","max_pooling2d_1","dense"]
-        funcModel = branch.add(x,["max_pooling2d","max_pooling2d_1","dense"],branch.newBranch_flatten_alt, exact=True, target_input = False)
+        funcModel = branch.add(x,["max_pooling2d","max_pooling2d_1","dense"],branch.newBranch_flatten, exact=True, target_input = False)
         # funcModel = branchingdnn.branches.add(x,["dense","dense_1"],newBranch_oneLayer,exact=True)
         # funcModel= x
         funcModel.summary()
