@@ -372,7 +372,7 @@ class branch:
             # print("endpoint", outputs)
             # outputs = tf.keras.activations.relu(outputs)
             softmax = tf.nn.softmax(outputs)
-            evidence = self.evidence (outputs)
+            evidence = self.evidence(outputs)
             alpha = evidence + 1
             u = self.num_outputs / tf.reduce_sum(alpha, axis=1, keepdims=True) #uncertainty
           
@@ -583,7 +583,7 @@ class branch:
         branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
         branchLayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchLayer)
         # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
-        branchLayer = layers.Dense(10,name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchLayer)
+        # branchLayer = layers.Dense(10,name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchLayer)
         # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
         output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets)
         # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))

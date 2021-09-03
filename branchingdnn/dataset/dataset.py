@@ -144,34 +144,125 @@ class prepare:
         return (train_ds, test_ds, validation_ds)
 
 
-    def prepareMnistDataset(dataset,batch_size=32):
-            import csv
-            (train_images, train_labels), (test_images, test_labels) = dataset
-            train_images = train_images.reshape(60000, 784).astype("float32") / 255
-            test_images = test_images.reshape(10000, 784).astype("float32") / 255
+    def dataset_normalized(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False, include_targets=False, categorical = True):
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        train_images = train_images.reshape(50000, 32,32,3).astype("float32") / 255
+        test_images = test_images.reshape(10000, 32,32,3).astype("float32") / 255
 
-            validation_images, validation_labels = train_images[:12000], train_labels[:12000]
-            train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
-            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-            validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+        if categorical:
+            train_labels = tf.keras.utils.to_categorical(train_labels,10)
+            test_labels = tf.keras.utils.to_categorical(test_labels,10)
 
-            train_ds_size = len(list(train_ds))
-            test_ds_size = len(list(test_ds))
-            validation_ds_size = len(list(validation_ds))
-            train_ds = (train_ds
-                # .map(prepare.augment_images)
-                .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
-                .batch(batch_size=batch_size, drop_remainder=True))
-            test_ds = (test_ds
-                # .map(prepare.augment_images)
-                .shuffle(buffer_size=int(test_ds_size)) ##why would you shuffle the test set?
-                .batch(batch_size=batch_size, drop_remainder=True))
 
-            validation_ds = (validation_ds
-                # .map(prepare.augment_images)
-                .shuffle(buffer_size=int(validation_ds_size))
-                .batch(batch_size=batch_size, drop_remainder=True))
-            return train_ds, test_ds, validation_ds
+        #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
+        def augment_images(image, label,input_size=input_size, channel_first= channel_first):
+            # if channel_first:
+                #swap the channels around.
+                # image = tf.transpose(image, [2, 0, 1])
+                # print(image)
+            return prepare.augment_images(image, label, input_size, channel_first)
+        
+        validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
+        train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+
+
+        
+        
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+        print("augment Dataset")
+        # train_ds = (train_ds.map(augment_images))
+        # validation_ds = (validation_ds.map(augment_images))
+        # test_ds = (test_ds.map(augment_images))
+
+        print("targetsis :", include_targets)
+        #if include_targets is flagged, add an additional input with the label, this is used by custom loss layers that need a separate label source in the inputs to process.
+        if include_targets == True:
+            print("adding targets to inputs")
+            target = tf.data.Dataset.from_tensor_slices((train_labels))
+            train_ds = tf.data.Dataset.zip((train_ds,target))
+
+            v_target = tf.data.Dataset.from_tensor_slices((validation_labels))
+            validation_ds = tf.data.Dataset.zip((validation_ds,v_target))
+
+            t_target = tf.data.Dataset.from_tensor_slices((test_labels))
+            test_ds = tf.data.Dataset.zip((test_ds,t_target))
+
+        print("trainSize {}".format(train_ds_size))
+        print("testSize {}".format(test_ds_size))
+        
+        train_ds = (train_ds
+                        # .map(augment_images)
+                        .shuffle(buffer_size=tf.cast(shuffle_size,'int64'))
+                        .batch(batch_size=batch_size, drop_remainder=True))
+
+        test_ds = (test_ds
+                        # .map(augment_images)
+                        #   .shuffle(buffer_size=train_ds_size)
+                        .batch(batch_size=1, drop_remainder=True))
+
+        validation_ds = (validation_ds
+                        # .map(augment_images)
+                        #   .shuffle(buffer_size=validation_ds_size)
+                        .batch(batch_size=batch_size, drop_remainder=True))
+
+        return (train_ds, test_ds, validation_ds)
+
+
+
+    def prepareMnistDataset(dataset,batch_size=32, validation_size = 0, shuffle_size = 0, input_size=(), channel_first = False, include_targets=False, categorical = True):
+        (train_images, train_labels), (test_images, test_labels) = dataset
+        train_images = train_images.reshape(60000, 784).astype("float32") / 255
+        test_images = test_images.reshape(10000, 784).astype("float32") / 255
+
+        validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
+        train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
+        train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
+        validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
+       
+       
+        print("augment Dataset")
+        # train_ds = (train_ds.map(augment_images))
+        # validation_ds = (validation_ds.map(augment_images))
+        # test_ds = (test_ds.map(augment_images))
+
+        print("targetsis :", include_targets)
+        #if include_targets is flagged, add an additional input with the label, this is used by custom loss layers that need a separate label source in the inputs to process.
+        if include_targets == True:
+            print("adding targets to inputs")
+            target = tf.data.Dataset.from_tensor_slices((train_labels))
+            train_ds = tf.data.Dataset.zip((train_ds,target))
+
+            v_target = tf.data.Dataset.from_tensor_slices((validation_labels))
+            validation_ds = tf.data.Dataset.zip((validation_ds,v_target))
+
+            t_target = tf.data.Dataset.from_tensor_slices((test_labels))
+            test_ds = tf.data.Dataset.zip((test_ds,t_target))
+
+        train_ds_size = len(list(train_ds))
+        test_ds_size = len(list(test_ds))
+        validation_ds_size = len(list(validation_ds))
+
+        train_ds = (train_ds
+            # .map(prepare.augment_images)
+            .shuffle(buffer_size=int(train_ds_size),reshuffle_each_iteration=True)
+            .batch(batch_size=batch_size, drop_remainder=True))
+        test_ds = (test_ds
+            # .map(prepare.augment_images)
+            .shuffle(buffer_size=int(test_ds_size)) ##why would you shuffle the test set?
+            .batch(batch_size=batch_size, drop_remainder=True))
+
+        validation_ds = (validation_ds
+            # .map(prepare.augment_images)
+            .shuffle(buffer_size=int(validation_ds_size))
+            .batch(batch_size=batch_size, drop_remainder=True))
+        return train_ds, test_ds, validation_ds
 
     def prepareAlexNetDataset_alt(dataset,batch_size=32):
         import csv
