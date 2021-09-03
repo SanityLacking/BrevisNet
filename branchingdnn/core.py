@@ -124,9 +124,13 @@ class BranchingDnn:
         def set_dataset(self, dataset):
             self.dataset = dataset
             return self
+        
+        def train (self,numEpocs, loss, optimizer, saveName = "", transfer = True,customOptions=""):
+            self.model = branchingdnn.models.trainModel(self.model, loss, optimizer, self.dataset, epocs = numEpocs, saveName =saveName, transfer = transfer,customOptions=customOptions)
+            return self
 
-        def train(self,numEpocs,transfer,customOptions):
-            self.model = branchingdnn.models.trainModelTransfer(self.model,self.dataset, epocs = numEpocs,  transfer = transfer,customOptions=customOptions)
+        def trainTransfer(self,numEpocs, saveName = "", transfer = True,customOptions=""):
+            self.model = branchingdnn.models.trainModelTransfer(self.model,self.dataset, epocs = numEpocs, saveName =saveName, transfer = transfer,customOptions=customOptions)
             return self
         
     def Run_alexNet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):

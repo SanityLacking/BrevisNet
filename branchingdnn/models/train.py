@@ -18,14 +18,14 @@ from branchingdnn.branches import branches
 from branchingdnn.eval import branchy_eval as eval
 from branchingdnn.initNeptune import Neptune
 
-def trainModel( model, dataset, epocs = 2,save = False):
+def trainModel( model, dataset, loss, optimizer,  resetBranches = False, epocs = 1,save = False,transfer = True, saveName ="",customOptions="",tags = []):
     """ Train the model that is passed through. This function works for both single and multiple branch models.
     """
     logs = []
     train_ds, test_ds, validation_ds = prepare.prepareAlexNetDataset(dataset, batch_size=32)
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
 
-    model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), metrics=['accuracy'])
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
     # model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
 
     run_logdir = get_run_logdir(model.name)
@@ -57,7 +57,9 @@ def trainModel( model, dataset, epocs = 2,save = False):
     return model
 
 
-def trainModelTransfer(model, dataset, resetBranches = False, epocs = 2,save = False,transfer = True, saveName ="",customOptions="",tags = []):
+
+
+def trainModelTransfer(model, dataset, loss,  resetBranches = False, epocs = 1,save = False,transfer = True, saveName ="",customOptions="",tags = []):
     """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
     """
     logs = []
