@@ -40,13 +40,20 @@ if __name__ == "__main__":
     # x = branching.core.Run_alexNet_evidence( 20, modelName="alexNetv6_logits.hdf5", saveName = "alexNetv6_evidence_3_cross_3b",transfer = True ,customOptions="customLoss")
     # x = branching.core.Run_alexNet( 30, modelName="alexNetv6_logits.hdf5", saveName = "alexNetv6_entropy_dense",transfer = True ,customOptions="CrossE")
     dataset = branching.dataset.prepare.dataset(tf.keras.datasets.cifar10.load_data(),32,5000,22500,(227,227))
+    
+    ####### the original entropy model ####
+    # brevis = (branching.core.branched_model(modelName="models/alexNetv6_logits.hdf5",saveName="alexNetv6_entropy_class",transfer=True,customOptions="")
+    #         .add_branches(branching.branches.branch.newBranch_flatten,["max_pooling2d","max_pooling2d_1","dense"])
+    #         .set_dataset(dataset)
+    #         .train(30,True, loss=tf.keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), customOptions="CrossE")
+    #         )
+            
+    #### the new improved evidence model ####
     brevis = (branching.core.branched_model(modelName="models/alexNetv6_logits.hdf5",saveName="alexNetv6_entropy_class",transfer=True,customOptions="")
-            .add_branches(branching.branches.branch.newBranch_flatten,["max_pooling2d","max_pooling2d_1","dense"])
+            .add_branches(branching.branches.branch.newBranch_flatten_evidence,["max_pooling2d","max_pooling2d_1","dense"])
             .set_dataset(dataset)
             .train(30,True, loss=tf.keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), customOptions="CrossE")
             )
-            
-    
 
 
     # x = branching.core.Run_alexNet( 30, modelName="alexNetv6_logits.hdf5", saveName = "alexNetv6_entropy",transfer = True ,customOptions="CrossE")
