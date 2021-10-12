@@ -10,6 +10,12 @@ print("Tensorflow version " + tf.__version__)
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session(config=config)
+from datetime import datetime
+
+
+# Define the Keras TensorBoard callback.
+logdir="logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
 
 BATCH_SIZE = 32 
@@ -87,6 +93,10 @@ def prepareDataset( batchsize=64):
         # train_ds = tf.data.Dataset.from_tensor_slices((train_images, alt_trainLabels))
         # test_ds = tf.data.Dataset.from_tensor_slices((test_images, alt_testLabels))
 
+        #make categorical
+        train_labels = tf.keras.utils.to_categorical(train_labels,10)
+        test_labels = tf.keras.utils.to_categorical(test_labels,10)
+        
         ###normal method
         validation_images, validation_labels = train_images[:5000], train_labels[:5000]
         train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
@@ -110,7 +120,7 @@ def prepareDataset( batchsize=64):
 
         train_ds = (train_ds
                         .map(augment_images)
-                        .shuffle(buffer_size=train_ds_size)
+                        .shuffle(buffer_size=int(train_ds_size/2))
                         .batch(batch_size=batchsize, drop_remainder=True))
 
         test_ds = (test_ds
@@ -154,13 +164,14 @@ model = tf.keras.models.Model(inputs=base_model.input, outputs=x)
 
 
 model.compile(optimizer='SGD', 
-                loss='sparse_categorical_crossentropy',
+                loss='categorical_crossentropy',
                 metrics = ['accuracy'])
 
 model.summary()
 train_ds, test_ds, validation_ds = prepareDataset(32)
 EPOCHS = 3
-history = model.fit(train_ds, epochs=EPOCHS, validation_data = validation_ds, batch_size=64)
+checkpoint = tf.keras.callbacks.ModelCheckpoint("models/resnet50_finetuned.hdf5", monitor='val_loss', verbose=1, mode='max')
+history = model.fit(train_ds, epochs=EPOCHS, validation_data = validation_ds, batch_size=64,callbacks=[tensorboard_callback,checkpoint])
 
 loss, accuracy = model.evaluate(test_ds, batch_size=64)
 model.save("resnet50_finetuned.hdf5")

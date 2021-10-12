@@ -42,17 +42,21 @@ class branch:
                 ready = True
             inputs.append(i)
         if target_input:
-            print("add targets")
+            print("targets already present? ",ready)
+
             if not ready:
-                inputs.append(keras.Input(shape=(10,), name="targets")) #shape is (1,) for sparse_categorical_crossentropy
-            targets = model.get_layer('targets').output
+                print("added targets")
+                targets = keras.Input(shape=(10,), name="targets")
+                inputs.append(targets) #shape is (1,) for sparse_categorical_crossentropy
+            else:
+                targets = model.get_layer('targets').output
 
         #add targets as an input to the model so it can be used for the custom losses.
         #   input size is the size of the     
         #add target input 
         model = keras.Model(inputs=inputs, outputs=outputs)
 
-        model.summary()
+        # model.summary()
         # outputs = []
 
 
@@ -69,41 +73,31 @@ class branch:
         branches = 0
         # print(customBranch)
         if len(identifier) > 0:
-            print(">0")
+            print("Matching Branchpoint by id number")
             if type(identifier[0]) == int:
-                print("int")
                 for i in identifier: 
-                    print(model.layers[i].name)
                     try:
                         outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
                         branches=branches+1
-                        # outputs = newBranch(model.layers[i].output,outputs)
                     except:
                         pass
             else:
-                print("abc")
+                print("Matching Branchpoint by name")
                 for i in range(len(model.layers)):
-                    print(model.layers[i].name)
                     if exact == True:
                         if model.layers[i].name in identifier:
-                            print("add Branch")
-                            # print(customBranch[min(i, len(customBranch))-1])
-                            # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
+                            print("add Branch to branch point ",model.layers[i].name)
+                            outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,targets = targets))
                             branches=branches+1
-                            # outputs = newBranch(model.layers[i].output,outputs)
                     else:
                         if any(id in model.layers[i].name for id in identifier):
-                            print("add Branch")
-                            # print(customBranch[min(i, len(customBranch))-1])
-                            # print(min(i, len(customBranch))-1)
-                            outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
+                            print("add Branch to branch point ",model.layers[i].name)
+                            outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,targets = targets))
                             branches=branches+1
-                            # outputs = newBranch(model.layers[i].output,outputs)
         else: #if identifier is blank or empty
-            print("nothing")
+            # print("nothing")
             for i in range(1-len(model.layers)-1):
-                print(model.layers[i].name)
+                # print(model.layers[i].name)
                 # if "dense" in model.layers[i].name:
                 # outputs = newBranch(model.layers[i].output,outputs)
                 outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs,targets = targets)
@@ -344,20 +338,21 @@ class branch:
     ''' Third version, doesn't have its own loss, so it just provides the evidence as a metric
         Doesn't apply softmax, as the custom loss does that itself.
     '''
-    class CrossEntropyEndpoint(keras.layers.Layer):
+    class CrossEntropyEndpoint(tf.keras.layers.Layer):
         def __init__(self, num_outputs, name=None, **kwargs):
             super(branch.CrossEntropyEndpoint, self).__init__(name=name)
             self.num_outputs = num_outputs
 #             self.kl = tf.keras.losses.KLDivergence()
-            self.loss_fn = keras.losses.CategoricalCrossentropy()
+            self.loss_fn = tf.keras.losses.CategoricalCrossentropy()
 #             self.loss_fn = tf.keras.losses.categorical_crossentropy
             self.evidence = softplus_evidence
 #             self.evidence = tf.compat.v1.distributions.Dirichlet
             self.temperature = 10
             self.lmb = 0.005
         def build(self, input_shape):
+            tf.print("inputShape",input_shape)
             self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
-            # print(self.kernel)
+        
         def get_config(self):
             config = super().get_config().copy()
             config.update({
@@ -368,24 +363,20 @@ class branch:
 
         def call(self, inputs, labels,learning_rate=1):
             outputs = tf.matmul(inputs,self.kernel)
-            outputs = inputs
-            # print("endpoint", outputs)
-            # outputs = tf.keras.activations.relu(outputs)
             softmax = tf.nn.softmax(outputs)
-            evidence = self.evidence(outputs)
+            evidence = self.evidence (outputs)
             alpha = evidence + 1
             u = self.num_outputs / tf.reduce_sum(alpha, axis=1, keepdims=True) #uncertainty
           
-            prob = alpha/tf.reduce_sum(alpha, 1, keepdims=True) 
+            # prob = alpha/tf.reduce_sum(alpha, 1, keepdims=True) 
             pred = tf.argmax(outputs,1)
             truth = tf.argmax(labels,1)
             match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
-            total_evidence = tf.reduce_sum(evidence,1, keepdims=True)
+            # total_evidence = tf.reduce_sum(evidence,1, keepdims=True)
             mean_succ = tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*match) / tf.reduce_sum(match+1e-20)
             mean_fail = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*(1-match)) / (tf.reduce_sum(tf.abs(1-match))+1e-20) )
             
             self.add_metric(evidence, name=self.name+"_evidence",aggregation='mean')
-            self.add_metric(u, name=self.name+"_uncertainty",aggregation='mean')
             self.add_metric(mean_succ, name=self.name+"_mean_ev_succ",aggregation='mean')
             self.add_metric(mean_fail, name=self.name+"_mean_ev_fail",aggregation='mean')
             
@@ -453,10 +444,6 @@ class branch:
         #   input size is the size of the     
         #add target input 
         model = keras.Model(inputs=inputs, outputs=outputs)
-
-        model.summary()
-        # outputs = []
-
         targets = model.get_layer('targets').output
         print("targets:", targets)
         # teacher_softmax = outputs[0]
@@ -551,11 +538,23 @@ class branch:
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
-        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
-        branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
-        branchLayer = layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
-        branchLayer = layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
-        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+        branchLayer = keras.layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+        branchLayer = keras.layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
+        branchLayer = keras.layers.Dense(64, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        branchLayer = keras.layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+        output = (keras.layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+        
+    def newBranch_flatten_incept(prevLayer, targets):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        branchLayer = keras.layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+        branchLayer = keras.layers.Dense(1024, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
+        branchLayer = keras.layers.Dense(512, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch64"))(branchLayer)
+        branchLayer = keras.layers.Dense(10, name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer)
+        output = (keras.layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
 
@@ -574,7 +573,7 @@ class branch:
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
         """ 
-        branchLayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+        branchLayer = keras.layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
         branchLayer = keras.layers.Dropout(0.5,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchLayer)
         # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_1")
         branchLayer = layers.Dense(124, activation="relu",name=tf.compat.v1.get_default_graph().unique_name("branch124"))(branchLayer)
@@ -589,6 +588,179 @@ class branch:
         # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
+
+    def branch_large_evid(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        # branchLayer = layers.Reshape(,name=tf.compat.v1.get_default_graph().unique_name("branch_reshape"))(prevLayer)
+        # branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        # branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        # branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        # branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(prevLayer)
+        branchlayer = layers.Dense(4096,name=tf.compat.v1.get_default_graph().unique_name("branch_4096"))(branchlayer)
+        branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        # branchLayer = layers.Dense(10, activation="relu", name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchlayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        # output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+        output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+
+        return output
+
+    def branch_conv2d_entropy(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        # branchLayer = layers.Reshape(,name=tf.compat.v1.get_default_graph().unique_name("branch_reshape"))(prevLayer)
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        # branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        # branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        branchLayer = layers.Dense(10, activation="relu", name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchlayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        # output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+        output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
+    def branch_flat_resnet(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        x = tf.keras.layers.Flatten()(prevLayer)
+        x = tf.keras.layers.Dense(1024, activation="relu")(x)
+        x = tf.keras.layers.Dense(512, activation="relu")(x)
+        x = tf.keras.layers.Dense(10, activation="softmax", name="classification")(x)
+        
+        return x
+
+    def branch_conv2d_inception_evidence(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        # branchLayer = layers.Reshape(,name=tf.compat.v1.get_default_graph().unique_name("branch_reshape"))(prevLayer)
+        tf.print(prevLayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        # output = layers.Dense(10, activation="softmax", name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchlayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+    def branch_conv2d_resnet_evidence(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        # branchLayer = layers.Reshape(,name=tf.compat.v1.get_default_graph().unique_name("branch_reshape"))(prevLayer)
+        tf.print(prevLayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        # output = layers.Dense(10, activation="softmax", name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchlayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
+    def branch_conv2d_resnet_evidence2(prevLayer, targets=None, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        # branchLayer = layers.Reshape(,name=tf.compat.v1.get_default_graph().unique_name("branch_reshape"))(prevLayer)
+        tf.print(prevLayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        output = layers.Dense(10, activation="softmax", name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchlayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        # output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
+    def branch_conv2d_evidence(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+        # branchLayer = layers.Reshape(,name=tf.compat.v1.get_default_graph().unique_name("branch_reshape"))(prevLayer)
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchlayer)
+        branchLayer = layers.Dense(4096,name=tf.compat.v1.get_default_graph().unique_name("branch_4096"))(branchlayer)
+        branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        output = branch.CrossEntropyEndpoint(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets)
+        # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
+
+        return output
+
+    def branch_conv2d_2(prevLayer, targets, teacher_sm = None, teaching_features=None):
+        """ Add a new branch to a model connecting at the output of prevLayer. 
+            This branch mimics the branchynet branches for comparison
+            NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
+        """ 
+
+        return output
+
+
+
     def newBranch_softmax(prevLayer,targets=False):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
@@ -678,15 +850,39 @@ class branch:
             output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
         return output
 
+    
+    def branch_distil_evidence(prevLayer, targets, teacher_sm, teaching_features=None):
+        tf.print(prevLayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(prevLayer.shape))(prevLayer)
+        
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)        
+        branchlayer = keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu',name=tf.compat.v1.get_default_graph().unique_name("branch_conv2d"), input_shape=(branchlayer.shape))(branchlayer)
+        branchlayer = keras.layers.BatchNormalization(name=tf.compat.v1.get_default_graph().unique_name("branch_batchnorm"))(branchlayer)
+        # branchlayer = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2),name=tf.compat.v1.get_default_graph().unique_name("branch_maxpool"))(branchlayer)
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        branchlayer = layers.Flatten(name=tf.compat.v1.get_default_graph().unique_name("branch_flatten"))(branchlayer)
+        branchlayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchlayer,teaching_features)    
+        # branchlayer = keras.layers.Dropout(0.2,name=tf.compat.v1.get_default_graph().unique_name("branch_dropout"))(branchlayer)
+        tf.print(branchlayer.shape)  
+        # branchLayer = branch.printFeatureSet()(branchLayer, targets,"FS_3")
+        # output = layers.Dense(10, activation="softmax", name=tf.compat.v1.get_default_graph().unique_name("branch10"))(branchlayer)
+        # branchLayer = layers.LeakyReLU(name=tf.compat.v1.get_default_graph().unique_name("branch_leakyRelu"))(branchLayer)
+        output = branch.CrossEntropyEndpoint_distil(10, name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchlayer, targets, teacher_sm)
+        return output
+
 
     # need a bottleneck layer to squeeze the feature hints down to a viable size.
     def newBranch_distil(prevLayer, targets, teacher_sm, teaching_features=None):
         print("targets::::",targets)
         print("teacher_sm::::",teacher_sm)
         print("teaching_features::::",teaching_features)
-        if prevLayer.shape[1] == 4096:
+        # if prevLayer.shape[1] == 4096:
             #don't add a feature distil to the last branch
-            teaching_features = None
+            # teaching_features = None
         if teaching_features is not None:
             branchLayer = branch.bottleneck(prevLayer,teaching_features)
             branchLayer = branch.FeatureDistillation(name=tf.compat.v1.get_default_graph().unique_name("branch_teaching"))(branchLayer,teaching_features)    
@@ -729,7 +925,7 @@ class branch:
         # else:
             # output = branch.BranchEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer, targets, teacher_sm)
         # output = (layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
-        output = branch.EvidenceEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer, targets)
+        output = branch.CrossEntropyEndpoint(name=tf.compat.v1.get_default_graph().unique_name("branch_output"))(branchLayer, targets)
 
         return output
 

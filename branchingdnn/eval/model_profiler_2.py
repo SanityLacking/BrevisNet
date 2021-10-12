@@ -2,7 +2,7 @@ import tensorflow as tf
 import os
 from tensorflow.python.tools import freeze_graph
 import re
-file_name = 'models/alexNetv5_alt8_branched.hdf5'
+file_name = 'notebooks/models/models/alexNetv6_evidence_conv2d.hdf5'
 log_path = './profiles/cpm_352_profile/'
 
 if not os.path.exists(log_path):
@@ -90,5 +90,5 @@ def get_flops(model):
         #     return flops.total_float_ops
 
 if __name__ == '__main__':
-    model = tf.keras.models.load_model(file_name)
+    model = tf.keras.models.load_model(file_name,custom_objects={"CrossEntropyEndpoint":branching.branches.branch.CrossEntropyEndpoint,"cross_entropy_evidence":loss_function()})
     get_flops(model)

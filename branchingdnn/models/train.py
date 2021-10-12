@@ -59,7 +59,7 @@ def trainModel( model, dataset, loss, optimizer,  resetBranches = False, epocs =
 
 
 
-def trainModelTransfer(model, dataset, loss,  resetBranches = False, epocs = 1,save = False,transfer = True, saveName ="",customOptions="",tags = []):
+def trainModelTransfer(model, dataset, loss, optimizer=None, resetBranches = False, epocs = 1,save = False,transfer = True, saveName ="",customOptions="",tags = []):
     """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
     """
     logs = []
@@ -71,20 +71,23 @@ def trainModelTransfer(model, dataset, loss,  resetBranches = False, epocs = 1,s
     #how to iterate through layers and find main branch ones?
     #simple fix for now: all branch nodes get branch in name.
     if transfer: 
+        print("Freezing Main Layers and setting branch layers training to true")
         for i in range(len(model.layers)):
-            print(model.layers[i].name)
+            # print(model.layers[i].name)
             if "branch" in model.layers[i].name:
-                print("setting branch layer training to true")
+                # print("setting branch layer training to true")
                 model.layers[i].trainable = True
             else: 
-                print("setting main layer training to false")
+                # print("setting main layer training to false")
                 model.layers[i].trainable = False               
     else:
+        print("Setting Main Layers  and branch layers training to true")
         for i in range(len(model.layers)):
-            print(model.layers[i].name)
+            # print(model.layers[i].name)
             model.layers[i].trainable = True
-            print("setting layer training to True")
-
+            # print("setting layer training to True")
+    
+    model.summary()
     # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
     print(customOptions)
     if customOptions == "customLoss": 
@@ -107,7 +110,7 @@ def trainModelTransfer(model, dataset, loss,  resetBranches = False, epocs = 1,s
     else:
         print("customOption: Other")
     # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
-        model.compile(loss={"dense_2":keras.losses.SparseCategoricalCrossentropy(from_logits=True)} , optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'],run_eagerly=True)
+        model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'],run_eagerly=True)
 
     run_logdir = get_run_logdir(model.name)
     tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)

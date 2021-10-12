@@ -52,42 +52,7 @@ root_logdir = os.path.join(os.curdir, "logs\\fit\\")
 
 class BranchingDnn:
 
-    def printStuff():
-        print("helloworld")
-        return 
-
     ALEXNET = False
-    KNOWN_MODELS = [
-        {"name":"mnist","dataset": tf.keras.datasets.mnist.load_data},
-        {"name":"alexnet","dataset":tf.keras.datasets.cifar10.load_data},
-    ]
-    
-    
-
-
-
-
-
-    def checkModelName( modelName):
-        """ check to see if the model's name exists in the known models list
-            if so, return the object of the model's details
-            else, return None
-        """
-        print("modelName:{}".format(modelName))
-        result = None
-        try:
-            for model in BranchingDnn.KNOWN_MODELS:
-                print(model)
-                if model["name"] == modelName:
-                    result = model
-        except Exception as e:
-            print(e)
-            raise
-            # print("could not find model name: {} in known models".format(modelName))
-            
-        return result
-
-
         ###### RUN MODEL SHORTCUTS ######
     
     ''' class version of the model short cut functions
@@ -99,8 +64,8 @@ class BranchingDnn:
             self.saveName=saveName
             self.transfer=transfer
             self.customOptions=customOptions
-            self.originalModel = tf.keras.models.load_model("{}".format(modelName))
-            self.model = self.originalModel
+            self.model = tf.keras.models.load_model("{}".format(modelName))
+            # self.model = self.originalModel
             self.branchName = ""
             self.dataset =""
             return None
@@ -129,9 +94,35 @@ class BranchingDnn:
             self.model = branchingdnn.models.trainModel(self.model, loss, optimizer, self.dataset, epocs = numEpocs, saveName =saveName, transfer = transfer,customOptions=customOptions)
             return self
 
-        def trainTransfer(self,numEpocs, saveName = "", transfer = True,customOptions=""):
-            self.model = branchingdnn.models.trainModelTransfer(self.model,self.dataset, epocs = numEpocs, saveName =saveName, transfer = transfer,customOptions=customOptions)
+        def trainTransfer(self,numEpocs, loss, optimizer, transfer = True,customOptions=""):
+            self.model = branchingdnn.models.trainModelTransfer(self.model,self.dataset, optimizer=optimizer, epocs = numEpocs, loss=loss, saveName =self.saveName, transfer = transfer,customOptions=customOptions)
             return self
+
+    '''
+        class version of the self-distilling branched model. inherits from the standard branched model class
+    '''
+    class distilled_branch_model(branch_model):
+        def __init__(self, modelName="",saveName="",transfer=True,customOptions="") -> None:
+            self.modelName=modelName
+            self.saveName=saveName
+            self.transfer=transfer
+            self.customOptions=customOptions
+            self.model = tf.keras.models.load_model("{}".format(modelName))
+            # self.model = self.originalModel
+            self.branchName = ""
+            self.dataset =""
+            return None
+
+        def add_branches(self,branchName, branchPoints=[], exact = True, target_input = False):
+            if len(branchPoints) == 0:
+                return
+            # ["max_pooling2d","max_pooling2d_1","dense"]
+            # branch.newBranch_flatten
+            self.model = branch.add(self.model,branchPoints,branchName, exact=exact, target_input = target_input)
+            print(self)
+            return self
+
+
         
     def Run_alexNet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
         x = tf.keras.models.load_model("models/{}".format(modelName))
@@ -978,74 +969,3 @@ class BranchingDnn:
         print(results)
         print(pd.DataFrame(results).T)
         return
-
-
-
-
-    def find_mistakes( model, dataset, count = 1):
-        """
-            find rows that the model gets wrong
-        """
-        num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-        (train_images, train_labels), (test_images, test_labels) = dataset
-        
-        
-        print("ALEXNET {}".format(BranchingDnn.ALEXNET))
-        if BranchingDnn.ALEXNET:
-            train_ds, test_ds, validation_ds = prepare.prepareAlexNetDataset(dataset,1)
-        else: 
-            test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
-            test_ds_size = len(list(test_ds))
-            test_ds =  (test_ds
-                # .map(augment_images)
-                .batch(batch_size=1, drop_remainder=True))
-        
-        if BranchingDnn.ALEXNET: 
-            model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.optimizers.SGD(lr=0.001), metrics=['accuracy'])
-            iterator = iter(test_ds)
-            indices = []
-
-            for j in range(5):
-                item = iterator.get_next()
-
-                # for j in [33,2,3,4]:
-                # img = test_images[j].reshape(1,784)
-                prediction = model.predict(item[0])
-                print(np.array(prediction))
-                # print(prediction)
-                for i,exit in enumerate(prediction[0]):
-                    for k, elem in enumerate(exit):
-                        # print(i,end='\r')
-                        Pclass = np.argmax(exit)
-                        Pprob = exit[0][Pclass]
-                        print("image:{}, exit:{}, pred Class:{}, probability: {} actual Class:{}".format(j,i, Pclass,Pprob, item[1]))
-                        if Pclass != item[1]:
-                            indices.append(j)
-                        entropy = calcEntropy(elem)
-                        print("entropy:{}".format(entropy))
-                    
-            print(indices)
-        else:
-            model.compile(loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
-            iterator = iter(test_ds)
-            indices = []
-            # item = iterator.get_next()
-
-            for j in [33,2,3,4]:
-                img = test_images[j].reshape(1,784)
-                prediction = model.predict(img)
-
-                # print(prediction)
-                for i,elem in enumerate(prediction[0][1]):
-                    # print(i,end='\r')
-                    Pclass = np.argmax(elem)
-                    if Pclass != test_labels[j]:
-                        print("test image: {}, pred Class:{}, actual Class:{}".format(j, Pclass,test_labels[j]))
-                        indices.append(i)
-                        entropy = calcEntropy(elem)
-                        print("entropy:{}".format(entropy))
-                print(indices)    
-        pass
-
-
-        return 

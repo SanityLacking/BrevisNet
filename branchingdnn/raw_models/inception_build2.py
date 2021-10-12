@@ -86,7 +86,9 @@ def prepareDataset( batchsize=64):
         # validation_images, validation_labels = train_images[:5000], alt_trainLabels[:5000]
         # train_ds = tf.data.Dataset.from_tensor_slices((train_images, alt_trainLabels))
         # test_ds = tf.data.Dataset.from_tensor_slices((test_images, alt_testLabels))
-
+        train_labels = tf.keras.utils.to_categorical(train_labels,10)   
+        test_labels = tf.keras.utils.to_categorical(test_labels,10)
+        
         ###normal method
         validation_images, validation_labels = train_images[:5000], train_labels[:5000]
         train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
@@ -154,7 +156,7 @@ model = tf.keras.models.Model(inputs=base_model.input, outputs=x)
 
 
 model.compile(optimizer='SGD', 
-                loss='sparse_categorical_crossentropy',
+                loss='categorical_crossentropy',
                 metrics = ['accuracy'])
 
 model.summary()

@@ -148,11 +148,11 @@ class prepare:
         (train_images, train_labels), (test_images, test_labels) = dataset
         train_images = train_images.reshape(50000, 32,32,3).astype("float32") / 255
         test_images = test_images.reshape(10000, 32,32,3).astype("float32") / 255
-
+        print("labels",train_labels[0])
         if categorical:
             train_labels = tf.keras.utils.to_categorical(train_labels,10)
             test_labels = tf.keras.utils.to_categorical(test_labels,10)
-
+        print(train_labels[0])
 
         #hack to get around the limitation of providing additional parameters to the map function for the datasets below 
         def augment_images(image, label,input_size=input_size, channel_first= channel_first):
@@ -168,7 +168,7 @@ class prepare:
         test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
         validation_ds = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels))
 
-
+        # train_ds.tak
         
         
         train_ds_size = len(list(train_ds))
@@ -219,7 +219,10 @@ class prepare:
         (train_images, train_labels), (test_images, test_labels) = dataset
         train_images = train_images.reshape(60000, 784).astype("float32") / 255
         test_images = test_images.reshape(10000, 784).astype("float32") / 255
-
+        if categorical:
+            train_labels = tf.keras.utils.to_categorical(train_labels,10)
+            test_labels = tf.keras.utils.to_categorical(test_labels,10)
+            
         validation_images, validation_labels = train_images[:validation_size], train_labels[:validation_size] #get the first 5k training samples as validation set
         train_images, train_labels = train_images[validation_size:], train_labels[validation_size:] # now remove the validation set from the training set.
         train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
