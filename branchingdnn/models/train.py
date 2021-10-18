@@ -87,7 +87,7 @@ def trainModelTransfer(model, dataset, loss, optimizer=None, resetBranches = Fal
             model.layers[i].trainable = True
             # print("setting layer training to True")
     
-    model.summary()
+    # model.summary()
     # model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=keras.optimizers.Adam(),metrics=["accuracy"])
     print(customOptions)
     if customOptions == "customLoss": 

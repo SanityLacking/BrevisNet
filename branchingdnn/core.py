@@ -73,6 +73,14 @@ class BranchingDnn:
         def build(self):
             return
         
+        ### set the model to an already existing model. This is used primarly to continue training of previously started branch models. 
+        def set_model(self, model):
+            if isinstance(model,str):
+                self.model = tf.keras.models.load_model("{}".format(model))
+            else:
+                self.model = model
+            return self
+
         def set_branches(self, branchName=""):
             self.branchName = branchName
             return self
@@ -101,7 +109,7 @@ class BranchingDnn:
     '''
         class version of the self-distilling branched model. inherits from the standard branched model class
     '''
-    class distilled_branch_model(branch_model):
+    class distilled_branch_model(branched_model):
         def __init__(self, modelName="",saveName="",transfer=True,customOptions="") -> None:
             self.modelName=modelName
             self.saveName=saveName
@@ -119,6 +127,15 @@ class BranchingDnn:
             # ["max_pooling2d","max_pooling2d_1","dense"]
             # branch.newBranch_flatten
             self.model = branch.add(self.model,branchPoints,branchName, exact=exact, target_input = target_input)
+            print(self)
+            return self
+
+        def add_distill(self,branchName, branchPoints, teacher_softmax, teaching_features, exact = True, target_input = False):
+            if len(branchPoints) == 0:
+                return
+            # ["max_pooling2d","max_pooling2d_1","dense"]
+            # branch.newBranch_flatten
+            self.model = branch.add_distil(self.model, teacher_softmax, teaching_features, branchPoints,branchName, exact=exact, target_input = target_input)
             print(self)
             return self
 
