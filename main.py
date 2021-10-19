@@ -52,7 +52,7 @@ if __name__ == "__main__":
     brevis = (branching.core.branched_model(modelName="models/alexNetv6_logits.hdf5",saveName="alexNetv6_entropy_class",transfer=True,customOptions="")
             .add_branches(branching.branches.branch.newBranch_flatten_evidence,["max_pooling2d","max_pooling2d_1","dense"])
             .set_dataset(dataset)
-            .train(30,True, loss=tf.keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), customOptions="CrossE")
+            .train(30,loss=tf.keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), transfer=True, customOptions="CrossE")
             )
 
 

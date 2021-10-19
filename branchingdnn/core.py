@@ -59,12 +59,12 @@ class BranchingDnn:
         designed to provide better control of the entire process at the start rather then having to change the internal files over and over
     '''
     class branched_model:
-        def __init__(self, modelName="",saveName="",transfer=True,customOptions="") -> None:
+        def __init__(self, modelName="",saveName="",transfer=True,options={}) -> None:
             self.modelName=modelName
             self.saveName=saveName
             self.transfer=transfer
-            self.customOptions=customOptions
-            self.model = tf.keras.models.load_model("{}".format(modelName))
+            
+            self.model = tf.keras.models.load_model("{}".format(modelName),options=options)
             # self.model = self.originalModel
             self.branchName = ""
             self.dataset =""

@@ -16,6 +16,9 @@ from branchingdnn.utils import *
 
 class branch:
     #add a branch
+
+    load_options={"CrossEntropyEndpoint":CrossEntropyEndpoint,}
+
     def add(model, identifier =[""], customBranch = [],exact = True, target_input= True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
             identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
@@ -598,7 +601,8 @@ class branch:
         output = (keras.layers.Softmax(name=tf.compat.v1.get_default_graph().unique_name("branch_softmax"))(branchLayer))
 
         return output
-        
+    
+            
     def newBranch_flatten_incept(prevLayer, targets):
         """ Add a new branch to a model connecting at the output of prevLayer. 
             NOTE: use the substring "branch" in all names for branch nodes. this is used as an identifier of the branching layers as opposed to the main branch layers for training
