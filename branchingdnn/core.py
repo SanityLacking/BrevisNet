@@ -64,7 +64,7 @@ class BranchingDnn:
             self.saveName=saveName
             self.transfer=transfer
             
-            self.model = tf.keras.models.load_model("{}".format(modelName),custom_objects=options)
+            self.model = tf.keras.models.load_model("{}".format(modelName),custom_objects=custom_objects)
             # self.model = self.originalModel
             self.branchName = ""
             self.dataset =""
