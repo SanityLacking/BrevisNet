@@ -17,7 +17,6 @@ from branchingdnn.utils import *
 class branch:
     #add a branch
 
-    load_options={"CrossEntropyEndpoint":CrossEntropyEndpoint,}
 
     def add(model, identifier =[""], customBranch = [],exact = True, target_input= True):
         """ add branches to the provided model, aka modifying an existing model to include branches.
