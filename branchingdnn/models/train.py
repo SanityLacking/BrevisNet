@@ -125,7 +125,7 @@ def trainModelTransfer(model, dataset, loss, optimizer=None, resetBranches = Fal
         newModelName = saveName
     checkpoint = keras.callbacks.ModelCheckpoint("models/{}.hdf5".format(newModelName), monitor='val_loss', verbose=1, mode='max')
 
-    neptune_cbk = Neptune.getcallback(name = newModelName, tags =tags)
+    # neptune_cbk = Neptune.getcallback(name = newModelName, tags =tags)
     # print("epoc: {}".format(j))
     # results = [j]           
     history =model.fit(train_ds,
@@ -133,7 +133,7 @@ def trainModelTransfer(model, dataset, loss, optimizer=None, resetBranches = Fal
             validation_data=validation_ds,
             validation_freq=1,
             # batch_size=1,
-            callbacks=[tensorboard_cb,checkpoint,neptune_cbk])
+            callbacks=[tensorboard_cb,checkpoint])
                         # callbacks=[tensorboard_cb,checkpoint])
     print(history)
     test_scores = model.evaluate(test_ds, verbose=2)

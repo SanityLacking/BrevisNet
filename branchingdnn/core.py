@@ -70,9 +70,18 @@ class BranchingDnn:
             self.dataset =""
             return None
         
+     
+
         def build(self):
             return
         
+        def saveName(self, saveName):
+            self.saveName=saveName
+            return self
+
+        def save(self,modelName):
+            saveModel(self.model,"modelName")
+            return self
         ### set the model to an already existing model. This is used primarly to continue training of previously started branch models. 
         def set_model(self, model):
             if isinstance(model,str):

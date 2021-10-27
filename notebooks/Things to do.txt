@@ -1,0 +1,16 @@
+Things to do:
+
+1. finish the runs for my contribution chapter to complete the results tables.
+	- Alexnet
+		- Entropy conv2d
+		- Evidence Flat
+	- ResNet
+		- Entropy conv2d
+	-Inception
+		- need to process
+	-MoblieNet
+		-Need to figure out why the conv2d branches are so inefficient.
+
+2. Make the tables for the results chapters
+
+3. Make the graphs for the results chapters.
