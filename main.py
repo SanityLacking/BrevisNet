@@ -1,5 +1,5 @@
 # import the necessary packages
-from branchingdnn.models import train
+from brevis.models import train
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -19,8 +19,8 @@ import os
 # from utils import *
 
 # from Alexnet_kaggle_v2 import * 
-import branchingdnn as branching
-from branchingdnn.utils import * 
+import brevis as branching
+from brevis.utils import * 
 
 # ALEXNET = False
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))

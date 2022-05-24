@@ -18,8 +18,8 @@ import os
 # from utils import *
 
 # from Alexnet_kaggle_v2 import * 
-import branchingdnn as branching
-from branchingdnn.utils import *
+import brevis as branching
+from brevis.utils import *
 
 # ALEXNET = False
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))

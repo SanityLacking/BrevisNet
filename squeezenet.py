@@ -6,9 +6,9 @@ from tensorflow.keras.layers import Flatten, Dropout
 from tensorflow.keras.layers import Convolution2D, MaxPooling2D
 from tensorflow.keras.layers import GlobalAveragePooling2D
 import sys
-import branchingdnn as branching
-from branchingdnn.utils import *
-from branchingdnn.dataset import prepare
+import brevis as branching
+from brevis.utils import *
+from brevis.dataset import prepare
 
 
 
