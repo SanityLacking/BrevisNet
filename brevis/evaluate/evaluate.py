@@ -61,8 +61,13 @@ def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10, alpha_correction=
 
 
 def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10):
-    # stopping_point = None
+    '''
+        Function for collecting the model's predictions on a test set. 
+
+        Returns a list of DataFrames for each exit of the model.    
+    '''
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
+    print("outputs",num_outputs)
     #     train_ds, test_ds, validation_ds = (dataset)
     Results=[]
     Pred=[]
@@ -77,68 +82,120 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10):
     Entropy = []
     pAcc=[]
     calibration=[]
-    
+
     conf=[]
     entropy_of_exp=[]
     expected_entropy=[]
     mutual_info=[]
     epkl=[]
     dentropy=[]
-            
-    T = 1 ### temperature variable
+    
+    for i in range(num_outputs):
+        Results.append([])
+        Pred.append([])
+        Labels.append([])
+        Uncert.append([])
+        Energy.append([])
+        Energy_softmax.append([])
+        Energy_evidence.append([])
+        Energy_alpha.append([])
+        Energy_Mass.append([])
+        Entropy.append([])
+        pAcc.append([])
+        calibration.append([])
+
+        conf.append([])
+        entropy_of_exp.append([])
+        expected_entropy.append([])
+        mutual_info.append([])
+        epkl.append([])
+        dentropy.append([])
+        
     for i, (x,y) in enumerate(input_set):
         if stopping_point and i > stopping_point:
             break
-        print("prediction: {} of {}".format(i,len(input_set)),end='\r')
+        try:
+            print("prediction: {} of {}".format(i,len(input_set)),end='\r')
+        except:
+            print("prediction: {}".format(i),end='\r')
+            pass
         predictions = model.predict(x)
-        for j, prediction in enumerate(predictions):
-            dirch = dirichlet_prior_network_uncertainty([prediction])
-            # print(dirch)
-            conf.append(dirch["confidence_alea_uncert."])
-            entropy_of_exp.append(dirch["entropy_of_expected"])
-            expected_entropy.append(dirch["expected_entropy"])
-            mutual_info.append(dirch["mutual_information"])
-            epkl.append(dirch["EPKL"])
-            dentropy.append(dirch["differential_entropy"])
+        if num_outputs > 1:
+            _predictions = predictions[0]
+        else:
+            _predictions = [predictions]
+        # print(_predictions)
+        for k, outputs in enumerate(_predictions):
             
-            evidence =exp_evidence(prediction)
-            alpha = evidence +1
-            S = sum(alpha)
-            E = alpha - 1
-            Mass = alpha / S
-            u = num_classes / S
-            Uncert.append(u.numpy().mean())
-            Results.append(np.argmax(prediction))
-            Labels.append(np.argmax(y[j]))
-            Energy.append( -(logsumexp(np.array(prediction))))
-            Energy_softmax.append( -(1 * logsumexp(np.array(tf.nn.softmax(prediction))/1)))
-            Energy_evidence.append( -(1 * logsumexp(np.array(evidence)/1)))
-            Energy_alpha.append( -(1 * logsumexp(np.array(alpha)/1)))
-            Energy_Mass.append( -(1 * logsumexp(np.array(Mass)/1)))
-            Entropy.append(calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
-            calibration.append(np.amax(tf.nn.softmax(prediction).numpy()))
-    print("")
-    _uncert = np.array(Uncert)
-    df = pd.DataFrame({"x":Results,"y":Labels,"uncert":Uncert,
-                        "energy":Energy,
-                        "Energy_softmax":Energy_softmax,
-                        "Energy_evidence":Energy_evidence,
-                        "Energy_alpha":Energy_alpha,
-                        "Energy_Mass":Energy_Mass,
-                        'entropy':Entropy,
-                        'calibration':calibration,
-                        "confidence_alea_uncert":conf,
-                        "entropy_of_expected":entropy_of_exp,
-                        "expected_entropy":expected_entropy,
-                        "mutual_information":mutual_info,
-                        "EPKL":epkl,
-                        "differential_entropy":dentropy,
-                      })
-    
-    conditions = [df['x'] == df['y'],df['x'] != df['y']]
-    choices = [1, 0]
-    df['correct'] = np.int32(np.select(conditions, choices, default=None))
-    return df
+            # print("outputs ", k, outputs)
+            for j, prediction in enumerate(outputs):
+                dirch = evaluate.dirichlet_prior_network_uncertainty([prediction])
+                # print(dirch)
+                conf[k].append(dirch["confidence_alea_uncert."])
+                entropy_of_exp[k].append(dirch["entropy_of_expected"])
+                expected_entropy[k].append(dirch["expected_entropy"])
+                mutual_info[k].append(dirch["mutual_information"])
+                epkl[k].append(dirch["EPKL"])
+                dentropy[k].append(dirch["differential_entropy"])
+
+                evidence =exp_evidence(prediction)
+                alpha = evidence +1
+                S = sum(alpha)
+                E = alpha - 1
+                Mass = alpha / S
+                u = num_classes / S
+                Uncert[k].append(u.numpy().mean())
+                Results[k].append(np.argmax(prediction))
+                Labels[k].append(np.argmax(y[j]))
+                Energy[k].append( -(logsumexp(np.array(prediction))))
+                Energy_softmax[k].append( -(1 * logsumexp(np.array(tf.nn.softmax(prediction))/1)))
+                Energy_evidence[k].append( -(1 * logsumexp(np.array(evidence)/1)))
+                Energy_alpha[k].append( -(1 * logsumexp(np.array(alpha)/1)))
+                Energy_Mass[k].append( -(1 * logsumexp(np.array(Mass)/1)))
+                Entropy[k].append(brevis.utils.calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
+                calibration[k].append(np.amax(tf.nn.softmax(prediction).numpy()))
+                
+                # print(prediction)
+                # for pred
+                # Results[k].append(np.argmax(prediction))
+                # Pred[k].append((np.amax(tf.nn.softplus(prediction))))
+                # print(brevis.utils.calcEntropy_Tensors((prediction)).numpy())
+                # Pred[k].append(calcEntropy_Tensors2((prediction)).numpy())
+                # Pred[k].append((tf.reduce_mean(tf.nn.softplus(prediction)).numpy()))
+                # prediction_sum = tf.reduce_sum((prediction)+1).numpy()
+                # Pred[k].append((tf.nn.softplus(prediction).numpy())/prediction_sum)
+                # Evidence[k].append(tf.reduce_sum(tf.nn.softplus(prediction).numpy()/prediction_sum).numpy() + (10/prediction_sum))
+                
+                # Sum[k].append(prediction_sum)
+                # Uncert[k].append(10/prediction_sum)
+                
+                # print((tf.nn.softplus(prediction).numpy()+1))
+                # Labels[k].append(np.argmax(y[j]))
+    Outputs=[]
+    for j in range(num_outputs):
+#         "probs":Pred[j],
+        # df = pd.DataFrame({"x":Results[j],"y":Labels[j],'sum':Sum[j],'uncert':Uncert[j],"belief masses":Evidence[j]})
+        df = pd.DataFrame({"x":Results[j],"y":Labels[j],"uncert":Uncert[j],
+                            "energy":Energy[j],
+                            "Energy_softmax":Energy_softmax[j],
+                            "Energy_evidence":Energy_evidence[j],
+                            "Energy_alpha":Energy_alpha[j],
+                            "Energy_Mass":Energy_Mass[j],
+                            'entropy':Entropy[j],
+                            'calibration':calibration[j],
+                            "confidence_alea_uncert":conf[j],
+                            "entropy_of_expected":entropy_of_exp[j],
+                            "expected_entropy":expected_entropy[j],
+                            "mutual_information":mutual_info[j],
+                            "EPKL":epkl[j],
+                            "differential_entropy":dentropy[j],
+                          })
+        conditions = [df['x'] == df['y'],df['x'] != df['y']]
+        choices = [1, 0]
+        #create new column in DataFrame that displays results of comparisons
+        df['correct'] = np.int32(np.select(conditions, choices, default=None))
+        Outputs.append(df)
+    return Outputs
 
 
 def buildCompareDistribPlot(ID,OOD,metrics=["energy"], threshold=None):

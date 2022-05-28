@@ -107,7 +107,7 @@ def prepareDataset( batchsize=64):
             # Normalize images to have a mean of 0 and standard deviation of 1
             # image = tf.image.per_image_standardization(image)
             # Resize images from 32x32 to 277x277
-            image = tf.image.resize(image, (224,224))
+            # image = tf.image.resize(image, (224,224))
             return image, label
 
 
@@ -149,7 +149,7 @@ def define_compile_model():
   
   return model
 
-base_model = tf.keras.applications.resnet50.ResNet50(input_shape=(224, 224, 3),
+base_model = tf.keras.applications.resnet50.ResNet50(input_shape=(32, 32, 3),
      weights='imagenet',include_top=False)
 
 
@@ -171,7 +171,7 @@ model.summary()
 train_ds, test_ds, validation_ds = prepareDataset(32)
 EPOCHS = 3
 checkpoint = tf.keras.callbacks.ModelCheckpoint("models/resnet50_finetuned.hdf5", monitor='val_loss', verbose=1, mode='max')
-history = model.fit(train_ds, epochs=EPOCHS, validation_data = validation_ds, batch_size=64,callbacks=[tensorboard_callback,checkpoint])
+history = model.fit(train_ds, epochs=20, validation_data = validation_ds, batch_size=64,callbacks=[tensorboard_callback,checkpoint])
 
 loss, accuracy = model.evaluate(test_ds, batch_size=64)
 model.save("resnet50_finetuned.hdf5")

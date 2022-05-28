@@ -502,7 +502,7 @@ class BranchModel(tf.keras.Model):
         else:
             print("preset: Other")
         # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(learning_rate=0.001), metrics=['accuracy'],run_eagerly=True)
-            super().compile(loss=loss, optimizer=optimizer, metrics=['accuracy'],run_eagerly=True, **kwargs)
+            super().compile(loss=loss, optimizer=optimizer, metrics=['accuracy'], **kwargs)
 
     def setTrainable(self,trainable):
         """ sets the trainable status of all main path layers in the model"""
@@ -555,8 +555,8 @@ class BranchModel(tf.keras.Model):
                 epochs=epochs,
                 validation_data=validation_data,
                 validation_freq=1,
-                callbacks=[tensorboard_cb,checkpoint]+callbacks)
-        print(history)
+                callbacks=[tensorboard_cb]+callbacks)
+        # print(history)
         
         return self
 
