@@ -1,8 +1,8 @@
-import neptune.new as neptune
+# import neptune.new as neptune
 
-run = neptune.init(project='cailen01/AlexNet', api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI2NDJjNzA1Yi1iMTA5LTRjYzgtYTAyNS1lMDE1NTFkZjQ2NDEifQ==')
-from neptune.new.integrations.tensorflow_keras import NeptuneCallback
-neptune_cbk = NeptuneCallback(run=run, base_namespace='metrics')
+# run = neptune.init(project='cailen01/AlexNet', api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI2NDJjNzA1Yi1iMTA5LTRjYzgtYTAyNS1lMDE1NTFkZjQ2NDEifQ==')
+# from neptune.new.integrations.tensorflow_keras import NeptuneCallback
+# neptune_cbk = NeptuneCallback(run=run, base_namespace='metrics')
 
 import tensorflow as tf
 from tensorflow import keras
@@ -28,7 +28,8 @@ CLASS_NAMES= ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'h
 # validation_images, validation_labels = train_images[:5000], alt_trainLabels[:5000]
 # train_ds = tf.data.Dataset.from_tensor_slices((train_images, alt_trainLabels))
 # test_ds = tf.data.Dataset.from_tensor_slices((test_images, alt_testLabels))
-
+train_labels = tf.keras.utils.to_categorical(train_labels,10)
+test_labels = tf.keras.utils.to_categorical(test_labels,10)
 
 ###normal method
 validation_images, validation_labels = train_images[:5000], train_labels[:5000] #get the first 5k training samples as validation set
@@ -41,13 +42,13 @@ def augment_images(image, label):
     # Normalize images to have a mean of 0 and standard deviation of 1
     # image = tf.image.per_image_standardization(image)
     # Resize images from 32x32 to 277x277
-    image = tf.image.resize(image, (227,227))
+    # image = tf.image.resize(image, (227,227))
     return image, label
 def augment_images2(image):
     # Normalize images to have a mean of 0 and standard deviation of 1
     # image = tf.image.per_image_standardization(image)
     # Resize images from 32x32 to 277x277
-    image = tf.image.resize(image, (227,227))
+    # image = tf.image.resize(image, (227,227))
     return image
 
 train_ds_size = len(list(train_ds))
@@ -56,7 +57,7 @@ validation_ds_size = len(list(validation_ds))
 
 train_ds = (train_ds
                   .map(augment_images)
-                  .shuffle(buffer_size=train_ds_size)
+                  .shuffle(buffer_size=train_ds_size,reshuffle_each_iteration=True)
                   .batch(batch_size=32, drop_remainder=True))
 
 test_ds = (test_ds
@@ -157,13 +158,13 @@ tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
 
 if __name__ == '__main__':
 
-    inputs = keras.Input(shape=(224,224,3))
-    x = keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(224,224,3))(inputs)
+    inputs = keras.Input(shape=(32,32,3))
+    x = keras.layers.Conv2D(filters=96, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(32,32,3))(inputs)
     x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(1,1))(x)
     x = keras.layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same")(x)
     x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(2,2))(x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3), strides=(1,1))(x)
     x = keras.layers.Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same")(x)
     x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Conv2D(filters=384, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same")(x)
@@ -192,25 +193,26 @@ if __name__ == '__main__':
     
     # model = keras.Model(inputs=inputs, outputs=[x,branchLayer,branchLayer2], name="alexnet")
     model = keras.Model(inputs=inputs, outputs=[x], name="alexnet")
-    model.save("models/alexNetv6.hdf5")
+    model.save("models/alexNet_32.hdf5")
+    
+    print(model.summary())
 
-
+    earlyStop = tf.keras.callbacks.EarlyStopping(monitor="val_accuracy",patience=8,restore_best_weights=True)
     checkpoint = keras.callbacks.ModelCheckpoint("models/alexNetv7.hdf5", monitor='val_loss',verbose=1,save_best_only=True, mode='auto',period=1)
-    model.compile(loss='sparse_categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
     model.summary()
 
     
 
     model.fit(train_ds,
-          epochs=20,
+          epochs=40,
           validation_data=validation_ds,
           validation_freq=1,
-          callbacks=[tensorboard_cb,checkpoint,neptune_cbk])
+          callbacks=[tensorboard_cb,earlyStop])
 
 
     model.evaluate(test_ds)
-
-    model.call(test_ds)
+    model.save("models/alexNetv7.hdf5")
 
 
     # x = tf.keras.models.load_model("models/saved-model-alexnet-03-0.80.hdf5")

@@ -163,7 +163,7 @@ x = tf.keras.layers.Dense(10, activation="softmax", name="classification")(x)
 model = tf.keras.models.Model(inputs=base_model.input, outputs=x)
 
 
-model.compile(optimizer='SGD', 
+model.compile(optimizer='adam', 
                 loss='categorical_crossentropy',
                 metrics = ['accuracy'])
 
