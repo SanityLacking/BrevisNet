@@ -11,12 +11,12 @@ from IPython import display
 import sys
 sys.path.append("..") # Adds higher directory to python modules path.
 
-import branchingdnn as branching
-from branchingdnn import core
-from branchingdnn.utils import * 
-from branchingdnn.profiler import model_profiler as profiler
-from branchingdnn.dataset import prepare
-from branchingdnn.branches import branch
+import brevis as branching
+from brevis import core_old
+from brevis.utils import * 
+from brevis.profiler import model_profiler as profiler
+from brevis.dataset import prepare
+from brevis.branches import branch
 
 # from tensorflow.examples.tutorials.mnist import input_data
 

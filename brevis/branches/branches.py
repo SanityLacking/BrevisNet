@@ -19,7 +19,7 @@ class branch:
     #add a branch
 
 
-    def add(model, identifier =[""], customBranch = [],exact = True, target_input= True, compact = False, num_outputs=10):
+    def add(model,  customBranch = [], identifier =[""],exact = True, target_input= True, compact = False, num_outputs=10):
         """ add branches to the provided model, aka modifying an existing model to include branches.
             identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
             If identifier is not blank, a branch will be added to each layer with identifier in its name. (identifier = "dense", all dense layers will be branched.)
@@ -115,7 +115,7 @@ class branch:
     
     
     
-    def add_loop(model, identifier =[""], customBranch = [],exact = True, target_input= True, compact = False,num_outputs=10):
+    def add_loop(model, customBranch = [], identifier =[""], exact = True, target_input= True, compact = False,num_outputs=10):
         """ add branches to the provided model, aka modifying an existing model to include branches.
             identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
             If identifier is not blank, a branch will be added to each layer with identifier in its name. (identifier = "dense", all dense layers will be branched.)
@@ -212,58 +212,31 @@ class branch:
         # new_model.summary()
 
         return new_model
-    def add_distil(model, teacher_softmax, teaching_features, identifier =[""], customBranch = [],  exact = True, target_input=True):
+   
+    def add_distil(model, teacher_softmax=None, teaching_features=None,  customBranch = [], identifier =[""], exact = True):
         """ 
             Add branches, self distilation style.
             teacher_softmax and teaching_features are expected to be a string and list of strings respectively. these strings are matched as names of layers to use.
-
-            identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
-            If identifier is not blank, a branch will be added to each layer with identifier in its name. (identifier = "dense", all dense layers will be branched.)
-            Warning! individual layers are defined according to how TF defines them. this means that for layers that would be normally grouped, they will be treated as individual layers (conv2d, pooling, flatten, etc)
-            customBranch: optional function that can be passed to provide a custom branch to be inserted. Check "newBranch" function for default shape of branches and how to build custom branching function. Can be provided as a list and each branch will iterate through provided customBranches, repeating last the last branch until function completes
         """
         outputs = []
         for i in model.outputs:
             outputs.append(i)
-        inputs = []
-        ready = False
         targets= None
-        
-        for i in model.inputs:
-            if i.name == "targets":
-                ready = True
-            inputs.append(i)
-        if target_input:
-            print("targets already present? ",ready)
-            if not ready:
-                print("added targets")
-                targets = keras.Input(shape=(10,), name="targets")
-                inputs.append(targets) #shape is (1,) for sparse_categorical_crossentropy
-            else:
-                targets = model.get_layer('targets').output
-        
-
-        # teaching_features = None
-        # print("teacher_softmax:", teacher_softmax)
-        teacher_softmax = model.get_layer(teacher_softmax).output
-
+        if teacher_softmax:
+            teacher_softmax = model.get_layer(teacher_softmax).output
         ### teaching_features 
-        for i, teacher_name in enumerate(teaching_features):
-            teaching_features[i]=model.get_layer(teacher_name).output
-            print("teaching",teaching_features[i])
+        
+        # if teaching_features:
+        #     if type(teaching_features) != list:
+        #         teaching_features = [teaching_features]
+
+        #     for i, teacher_name in enumerate(teaching_features):
+        #         teaching_features[i]=model.get_layer(teacher_name).output
+        #         print("teaching",teaching_features[i])
         # teaching_features = [model.get_layer('max_pooling2d_1').output, model.get_layer('max_pooling2d_2').output, model.get_layer('max_pooling2d_2').output]
         # print("teaching Feature:", teaching_features)
         # teacher_softmax = [None]
-        if type(teaching_features) != list:
-            teaching_features = [teaching_features]
         #get the loss from the main exit and combine it with the loss of the 
-        old_output = outputs
-        # outputs.append(i in model.outputs) #get model outputs that already exist 
-        # teaching_features= [None]
-        #add target input 
-        model = keras.Model(inputs=inputs, outputs=outputs)
-
-        old_output = outputs
         if type(identifier) != list:
             identifier = [identifier]
         if type(customBranch) != list:
@@ -277,9 +250,9 @@ class branch:
                 for i in identifier: 
                     try:
                         outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,
-                                                                                            targets = targets,
                                                                                             teacher_sm = teacher_softmax, 
-                                                                                            teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
+                                                                                            # teaching_features = teaching_features[min(branches, len(teaching_features))-1])
+                                                                                            ))
                         branches=branches+1
                     except:
                         pass
@@ -289,19 +262,105 @@ class branch:
                     if exact == True:
                         if model.layers[i].name in identifier:
                             print("add Branch to branch point ",model.layers[i].name)
-                            print(teaching_features[min(branches, len(teaching_features))-1])
+                            # print(teaching_features[min(branches, len(teaching_features))-1])
                             outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,
-                                                                                            targets = targets,
-                                                                                            teacher_sm = teacher_softmax, 
-                                                                                            teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
+                                                                                            teacher = teacher_softmax, 
+                                                                                            # teaching_features = teaching_features[min(branches, len(teaching_features))-1])
+                                                                                            ))
                             branches=branches+1
                     else:
                         if any(id in model.layers[i].name for id in identifier):
                             print("add Branch to branch point ",model.layers[i].name)
                             outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,
+                                                                                            teacher = teacher_softmax, 
+                                                                                            # teaching_features = teaching_features[min(branches, len(teaching_features))-1])
+                                                                                            ))
+                            branches=branches+1
+        else: #if identifier is blank or empty
+            # print("nothing")
+            for i in range(1-len(model.layers)-1):
+                # outputs = newBranch(model.layers[i].output,outputs)
+                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,
                                                                                             targets = targets,
-                                                                                            teacher_sm = teacher_softmax, 
-                                                                                            teaching_features = teaching_features[min(branches, len(teaching_features))-1]))
+                                                                                            teacher = teacher_softmax, 
+                                                                                            # teaching_features = teaching_features[min(branches, len(teaching_features))-1]
+                                                                                            )
+                branches=branches+1
+        model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
+            
+        return model
+
+    def add_ensemble(model, identifier =[""], customBranch = [],exact = True, target_input= True, compact = False, num_outputs=10):
+        """ add branches to the provided model organizing the exits as an ensemble of exits.
+            identifier: takes a list of names of layers to branch on is blank, branches will be added to all layers except the input and final layer. Can be a list of layer numbers, following the numbering format of model.layers[]
+            If identifier is not blank, a branch will be added to each layer with identifier in its name. (identifier = "dense", all dense layers will be branched.)
+            Warning! individual layers are defined according to how TF defines them. this means that for layers that would be normally grouped, they will be treated as individual layers (conv2d, pooling, flatten, etc)
+            customBranch: optional function that can be passed to provide a custom branch to be inserted. Check "newBranch" function for default shape of branches and how to build custom branching function. Can be provided as a list and each branch will iterate through provided customBranches, repeating last the last branch until function completes
+        """
+        # model = keras.Model([model.input], [model_old.output], name="{}_branched".format(model_old.name))
+        # model.summary()
+
+        # outputs = [model.outputs]
+        # outputs.append(newBranch(model.layers[6].output))
+        # new_model = keras.Model([model.input], outputs, name="{}_branched".format(model.name))
+        # new_model.summary()
+        outputs = []
+        for i in model.outputs:
+            outputs.append(i)
+        
+        inputs = []
+        ready = False
+        
+        targets= None
+        
+        for i in model.inputs:
+            if i.name == "targets":
+                ready = True
+            inputs.append(i)
+        if target_input:
+            print("targets already present? ",ready)
+
+            if not ready:
+                print("added targets")
+                targets = keras.Input(shape=(num_outputs,), name="targets")
+                inputs.append(targets) #shape is (1,) for sparse_categorical_crossentropy
+            else:
+                targets = model.get_layer('targets').output
+
+        #add targets as an input to the model so it can be used for the custom losses.
+        #   input size is the size of the     
+        #add target input 
+        new_model = brevis.BranchModel(inputs=inputs, outputs=outputs,name = model.name, transfer=model.transfer, custom_objects=model.custom_objects)
+
+        if type(identifier) != list:
+            identifier = [identifier]
+
+        if type(customBranch) != list:
+            customBranch = [customBranch]
+        if len(customBranch) == 0:
+            return new_model    
+        branches = 0
+        if len(identifier) > 0:
+            print("Matching Branchpoint by id number")
+            if type(identifier[0]) == int:
+                for i in identifier: 
+                    try:
+                        outputs.append(customBranch[min(branches, len(customBranch))-1](model.layers[i].output,targets = targets))
+                        branches=branches+1
+                    except:
+                        pass
+            else:
+                print("Matching Branchpoint by name")
+                for i in range(len(model.layers)):
+                    if exact == True:
+                        if model.layers[i].name in identifier:
+                            print("add Branch to branch point ",model.layers[i].name)
+                            outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,targets = targets))
+                            branches=branches+1
+                    else:
+                        if any(id in model.layers[i].name for id in identifier):
+                            print("add Branch to branch point ",model.layers[i].name)
+                            outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,targets = targets))
                             branches=branches+1
         else: #if identifier is blank or empty
             # print("nothing")
@@ -309,15 +368,21 @@ class branch:
                 # print(model.layers[i].name)
                 # if "dense" in model.layers[i].name:
                 # outputs = newBranch(model.layers[i].output,outputs)
-                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,
-                                                                                            targets = targets,
-                                                                                            teacher_sm = teacher_softmax, 
-                                                                                            teaching_features = teaching_features[min(branches, len(teaching_features))-1])
+                outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs,targets = targets)
                 branches=branches+1
-        model = models.Model([model.input], [outputs], name="{}_branched".format(model.name))
-            
-        return model
-
+            # for j in range(len(model.layers[i].inbound_nodes)):
+            #     print(dir(model.layers[i].inbound_nodes[j]))
+            #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
+            #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
+        # print(outputs)
+        # print(new_model.input)
+        # outputs.pop(0)
+        # print(outputs)
+        # input_layer = layers.Input(batch_shape=model.layers[0].input_shape)
+        print(new_model.input)
+        print(outputs)
+        new_model = brevis.BranchModel([new_model.input], [outputs], name = new_model.name, custom_objects=new_model.custom_objects)
+        return new_model
 
     class EvidenceEndpoint_Model(tf.keras.Model):
 
@@ -685,17 +750,14 @@ class branch:
 
 
 
-    class CrossEntropyDistilEndpoint(BranchEndpoint):
-        def __init__(self, num_outputs, name=None, **kwargs):
-            super(branch.CrossEntropyDistilEndpoint, self).__init__(name=name)
+    class SelfDistilEndpoint(BranchEndpoint):
+        def __init__(self, num_outputs, loss_coef=.3, temperature=10, name=None, **kwargs):
+            super(branch.SelfDistilEndpoint, self).__init__(num_outputs=num_outputs, name=name)
             self.num_outputs = num_outputs
-#             self.kl = tf.keras.losses.KLDivergence()
-            self.loss_fn = tf.keras.losses.CategoricalCrossentropy()
-#             self.loss_fn = tf.keras.losses.categorical_crossentropy
-            self.evidence = softplus_evidence
-#             self.evidence = tf.compat.v1.distributions.Dirichlet
-            self.temperature = 10
-            self.lmb = 0.005
+            self.loss_coef = loss_coef
+            self.temperature = temperature 
+            self.distillation_loss_fn=keras.losses.KLDivergence()
+
         def build(self, input_shape):
             tf.print("inputShape",input_shape)
             self.kernel = self.add_weight("kernel", shape=[int(input_shape[-1]), self.num_outputs])
@@ -703,38 +765,24 @@ class branch:
         def get_config(self):
             config = super().get_config().copy()
             config.update({
-                'num_outputs': self.num_outputs,
                 'name': self.name
             })
             return config
 
-        def call(self, inputs, labels,learning_rate=1,teacher_sm=None, sample_weights=None):
+        def call(self, inputs, teaching_distill=None):
+            ''' do the normal kernel operations, then compare the difference between the teacher and this.
+            '''
             outputs = tf.matmul(inputs,self.kernel)
-            softmax = tf.nn.softmax(outputs)
-            evidence = self.evidence(outputs)
-            alpha = evidence + 1
-            u = self.num_outputs / tf.reduce_sum(alpha, axis=1, keepdims=True) #uncertainty
-          
-            # prob = alpha/tf.reduce_sum(alpha, 1, keepdims=True) 
-            pred = tf.argmax(outputs,1)
-            truth = tf.argmax(labels,1)
-            match = tf.reshape(tf.cast(tf.equal(pred, truth), tf.float32),(-1,1))
-            # total_evidence = tf.reduce_sum(evidence,1, keepdims=True)
-            mean_succ = tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*match) / tf.reduce_sum(match+1e-20)
-            mean_fail = tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(evidence,1, keepdims=True)*(1-match)) / (tf.reduce_sum(tf.abs(1-match))+1e-20) )
-            
-            if teacher_sm is not None:
-                kl_loss = tf.keras.losses.KLDivergence(evidence, teacher_sm)
+            outputs = tf.nn.softmax(outputs)
+            # tf.print("outputs",outputs)
+            # tf.print("teaching",teaching_distill)
+            if teaching_distill is not None:
+                distil_loss = self.distillation_loss_fn(outputs/self.temperature, teaching_distill/self.temperature)
+                distil_loss = distil_loss * self.loss_coef
                 # print("KL_LOSS", kl_loss)
                 # self.add_loss(kl_loss)
-                total_loss = kl_loss
-                self.add_metric(kl_loss, name=self.name+"_KL")
-                self.add_loss(total_loss)
-
-            self.add_metric(evidence, name=self.name+"_evidence",aggregation='mean')
-            self.add_metric(mean_succ, name=self.name+"_mean_ev_succ",aggregation='mean')
-            self.add_metric(mean_fail, name=self.name+"_mean_ev_fail",aggregation='mean')
-            
+                self.add_loss(distil_loss)
+                self.add_metric(distil_loss, aggregation='mean',name=self.name+"_distil") # metric so this loss value can be monitored.
             return outputs
         
     class FeatureDistillation(keras.layers.Layer):
