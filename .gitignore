@@ -24,7 +24,13 @@ __pycache__/
 *\images
 #neptune
 *\.neptune
-
+**/*.xlsx
+**/*.txt
+**/data/*
+**/raw_models/*
+**/lightning_logs/*
+**/MNIST/*
+**/MNIST_data/*
 # C extensions
 *.so
 

@@ -437,9 +437,9 @@ class BranchModel(tf.keras.Model):
         # ["max_pooling2d","max_pooling2d_1","dense"]
         # branch.newBranch_flatten
         if loop:
-            newModel = branch.add_loop(self,branchPoints,branchName, exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
+            newModel = branch.add_loop(self,branchName, branchPoints,exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
         else:
-            newModel = branch.add(self,branchPoints,branchName, exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
+            newModel = branch.add(self,branchName,branchPoints, exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
         print("branch added", newModel)
         self.__dict__.update(newModel.__dict__)
 
@@ -449,6 +449,23 @@ class BranchModel(tf.keras.Model):
         ### remap the graph of layers for the model
         # self._map_graph_network(self.inputs,self.outputs, True)
         return self
+    
+    def add_distill(self,teacher_output, branchName, branchPoints=[], exact = True,  loop=True,num_outputs=10):
+        if len(branchPoints) == 0:
+            return
+        # ["max_pooling2d","max_pooling2d_1","dense"]
+        # branch.newBranch_flatten
+        newModel = branch.add_distil(self,teacher_output, None, branchName, branchPoints,exact=exact)
+        print("branch added", newModel)
+        self.__dict__.update(newModel.__dict__)
+
+        # self.set_branchExits(True)
+        # print(self)
+        # self.summary()
+        ### remap the graph of layers for the model
+        # self._map_graph_network(self.inputs,self.outputs, True)
+        return self
+
     def add_targets(self, num_outputs=10):
         outputs = []
         for i in self.outputs:
@@ -476,33 +493,9 @@ class BranchModel(tf.keras.Model):
 
         return self
 
-    def compile(self, loss, optimizer, metrics=['accuracy'], run_eagerly=True, preset="",**kwargs):
+    def compile(self, loss, optimizer, metrics=['accuracy'], run_eagerly=True, **kwargs):
         ''' compile the model with custom options, either ones provided here or ones already set'''
-
-        # if preset == "":
-            # preset = self.customOptions
-        print(preset)
-        if preset == "customLoss": 
-            print("preset: customLoss")
-            loss_fn = evidence_crossentropy()
-            super().compile(loss=loss_fn, optimizer=tf.optimizers.SGD(learning_rate=0.001,momentum=0.9), metrics=['accuracy'],run_eagerly=True,**kwargs)
-        elif preset == "customLoss_onehot": 
-            print("preset: CrossE_onehot")
-            super().compile( loss={"dense_2":keras.losses.CategoricalCrossentropy(from_logits=True)}, optimizer=tf.optimizers.SGD(learning_rate=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True,**kwargs)
-
-        elif preset == "CrossE": 
-            print("preset: CrossE")
-            super().compile( loss =tf.keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(learning_rate=0.01,momentum=0.9), metrics=['accuracy'],run_eagerly=True,**kwargs)
-
-        elif preset == "CrossE_Eadd":
-            print("preset: CrossE_Eadd")
-            entropyAdd = entropyAddition_loss()
-            super().compile( optimizer=tf.optimizers.SGD(learning_rate=0.01,momentum=0.9,clipvalue=0.5), loss=[keras.losses.SparseCategoricalCrossentropy(),entropyAdd,entropyAdd,entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True,**kwargs)
-            # model.compile(optimizer=tf.optimizers.SGD(learning_rate=0.001), loss=[crossE_test, entropyAdd, entropyAdd, entropyAdd], metrics=['accuracy',confidenceScore, unconfidence],run_eagerly=True)
-        else:
-            print("preset: Other")
-        # model.compile(loss=entropyAddition, optimizer=tf.optimizers.SGD(learning_rate=0.001), metrics=['accuracy'],run_eagerly=True)
-            super().compile(loss=loss, optimizer=optimizer, metrics=['accuracy'], **kwargs)
+        super().compile(loss=loss, optimizer=optimizer, metrics=metrics, **kwargs)
 
     def setTrainable(self,trainable):
         """ sets the trainable status of all main path layers in the model"""

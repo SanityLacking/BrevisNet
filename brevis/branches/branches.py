@@ -26,13 +26,6 @@ class branch:
             Warning! individual layers are defined according to how TF defines them. this means that for layers that would be normally grouped, they will be treated as individual layers (conv2d, pooling, flatten, etc)
             customBranch: optional function that can be passed to provide a custom branch to be inserted. Check "newBranch" function for default shape of branches and how to build custom branching function. Can be provided as a list and each branch will iterate through provided customBranches, repeating last the last branch until function completes
         """
-        # model = keras.Model([model.input], [model_old.output], name="{}_branched".format(model_old.name))
-        # model.summary()
-
-        # outputs = [model.outputs]
-        # outputs.append(newBranch(model.layers[6].output))
-        # new_model = keras.Model([model.input], outputs, name="{}_branched".format(model.name))
-        # new_model.summary()
         outputs = []
         for i in model.outputs:
             outputs.append(i)
@@ -57,8 +50,6 @@ class branch:
                 targets = model.get_layer('targets').output
 
         #add targets as an input to the model so it can be used for the custom losses.
-        #   input size is the size of the     
-        #add target input 
         new_model = brevis.BranchModel(inputs=inputs, outputs=outputs,name = model.name, transfer=model.transfer, custom_objects=model.custom_objects)
 
         if type(identifier) != list:
@@ -92,22 +83,9 @@ class branch:
                             outputs.append(customBranch[min(branches, len(customBranch)-1)](model.layers[i].output,targets = targets))
                             branches=branches+1
         else: #if identifier is blank or empty
-            # print("nothing")
             for i in range(1-len(model.layers)-1):
-                # print(model.layers[i].name)
-                # if "dense" in model.layers[i].name:
-                # outputs = newBranch(model.layers[i].output,outputs)
                 outputs = customBranch[min(branches, len(customBranch))-1](model.layers[i].output,outputs,targets = targets)
                 branches=branches+1
-            # for j in range(len(model.layers[i].inbound_nodes)):
-            #     print(dir(model.layers[i].inbound_nodes[j]))
-            #     print("inboundNode: " + model.layers[i].inbound_nodes[j].name)
-            #     print("outboundNode: " + model.layers[i].outbound_nodes[j].name)
-        # print(outputs)
-        # print(new_model.input)
-        # outputs.pop(0)
-        # print(outputs)
-        # input_layer = layers.Input(batch_shape=model.layers[0].input_shape)
         print(new_model.input)
         print(outputs)
         new_model = brevis.BranchModel([new_model.input], [outputs], name = new_model.name, custom_objects=new_model.custom_objects)

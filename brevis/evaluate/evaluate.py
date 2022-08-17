@@ -28,17 +28,19 @@ import brevis.core_v2 as brevis
 from scipy.special import gammaln, digamma
 from scipy.special import logsumexp
 
-
-def calc_AUC(output_df,metrics=['energy'],plot=False):
+def calc_AUC(output_df,metrics=['energy'],plot=False, pos_label = 0):
     '''
     AUC calculation function for list of output dataframes
     returns a list of threshold for the gmean of each set of outputs.    
     '''
-    lessThanMetrics = ["energy","uncert","entropy"]
+    lessThanMetrics = ["uncert","energy","entropy"]
     _thresholds = []
     y_test = np.int32(output_df['correct'])
     plots = []
+    if type(metrics) is not list:
+        metrics = [metrics]
     for metric in metrics:    
+        # print("metric", metric)
         lr_auc = roc_auc_score(y_test, output_df[metric])
         if metric in lessThanMetrics:
             pos_label = 0
@@ -50,25 +52,28 @@ def calc_AUC(output_df,metrics=['energy'],plot=False):
         # locate the index of the largest g-mean
         ix = argmax(gmeans)
         threshold = thresholds[ix]
-        print(metric," lr_auc",lr_auc, 'Best Threshold={}, G-Mean={}, TPR={}, FPR={}'.format(threshold, gmeans[ix],tpr[ix],fpr[ix]))
+        if plot:
+            print(metric," lr_auc",lr_auc, 'Best Threshold={}, G-Mean={}, TPR={}, FPR={}'.format(threshold, gmeans[ix],tpr[ix],fpr[ix]))
         _thresholds.append(threshold)
         # plot the roc curve for the model
         plots.append({"fpr":fpr,"tpr":tpr,"label":metric, "ix":ix})
     if plot:
-        pyplot.plot([0,1], [0,1], linestyle='--', label='No Skill')
+        plt.plot([0,1], [0,1], linestyle='--', label='No Skill')
         for plot in plots:
             ix = plot['ix']
-            pyplot.plot(plot["fpr"], plot["tpr"],  label=plot['label'])
+            plt.plot(plot["fpr"], plot["tpr"],  label=plot['label'])
 
-            pyplot.scatter(plot["fpr"][ix], plot["tpr"][ix], marker='o', color='black')
+            plt.scatter(plot["fpr"][ix], plot["tpr"][ix], marker='o', color='black')
         # axis labels
-        pyplot.xlabel('False Positive Rate')
-        pyplot.ylabel('True Positive Rate')
-        pyplot.title(metric)
-        pyplot.legend()
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(metric)
+        plt.legend()
         # show the plot
-        pyplot.show()
+        plt.show()
     return _thresholds
+
+
 def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10, alpha_correction=True):
     """
     Calculate the Dirichlet prior network uncertainty.
@@ -106,14 +111,16 @@ def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10, alpha_correction=
     return uncertainty
 
 
-def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10):
+
+
+def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10, values =['energy', 'entropy', 'calibration']):
     '''
         Function for collecting the model's predictions on a test set. 
-
         Returns a list of DataFrames for each exit of the model.    
     '''
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
     print("outputs",num_outputs)
+    print(values)
     #     train_ds, test_ds, validation_ds = (dataset)
     Results=[]
     Pred=[]
@@ -135,7 +142,8 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10):
     mutual_info=[]
     epkl=[]
     dentropy=[]
-    
+    if 'energy' in values:
+        print(True)
     for i in range(num_outputs):
         Results.append([])
         Pred.append([])
@@ -175,58 +183,62 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10):
             
             # print("outputs ", k, outputs)
             for j, prediction in enumerate(outputs):
-                dirch = dirichlet_prior_network_uncertainty([prediction])
-                # print(dirch)
-                conf[k].append(dirch["confidence_alea_uncert."])
-                entropy_of_exp[k].append(dirch["entropy_of_expected"])
-                expected_entropy[k].append(dirch["expected_entropy"])
-                mutual_info[k].append(dirch["mutual_information"])
-                epkl[k].append(dirch["EPKL"])
-                dentropy[k].append(dirch["differential_entropy"])
-
-                evidence =exp_evidence(prediction)
-                alpha = evidence +1
-                S = sum(alpha)
-                E = alpha - 1
-                Mass = alpha / S
-                u = num_classes / S
-                Uncert[k].append(u.numpy().mean())
+               
                 Results[k].append(np.argmax(prediction))
                 Labels[k].append(np.argmax(y[j]))
-                Energy[k].append( -(logsumexp(np.array(prediction))))
-                Energy_softmax[k].append( -(1 * logsumexp(np.array(tf.nn.softmax(prediction))/1)))
-                Energy_evidence[k].append( -(1 * logsumexp(np.array(evidence)/1)))
-                Energy_alpha[k].append( -(1 * logsumexp(np.array(alpha)/1)))
-                Energy_Mass[k].append( -(1 * logsumexp(np.array(Mass)/1)))
-                Entropy[k].append(brevis.utils.calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
-                calibration[k].append(np.amax(tf.nn.softmax(prediction).numpy()))
                 
+                if 'energy' in values:
+                    Energy[k].append( -(logsumexp(np.array(prediction))))
+                if 'entropy' in values:
+                    Entropy[k].append(brevis.utils.calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
+                if 'calibration' in values:
+                    calibration[k].append(np.amax(tf.nn.softmax(prediction).numpy()))
+                if 'uncert' in values:
+                    evidence =tf.nn.softplus(prediction)
+                    alpha = evidence +1
+                    S = sum(alpha)
+                    E = alpha - 1
+                    Mass = alpha / S
+                    u = num_classes / S
+                    Uncert[k].append(u.numpy().mean())
+                # Entropy[k].append(brevis.utils.calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
+                # dirch = evaluate.dirichlet_prior_network_uncertainty([prediction])
+                # # print(dirch)
+                # conf[k].append(dirch["confidence_alea_uncert."])
+                # entropy_of_exp[k].append(dirch["entropy_of_expected"])
+                # expected_entropy[k].append(dirch["expected_entropy"])
+                # mutual_info[k].append(dirch["mutual_information"])
+                # epkl[k].append(dirch["EPKL"])
+                # dentropy[k].append(dirch["differential_entropy"])
     Outputs=[]
     for j in range(num_outputs):
 #         "probs":Pred[j],
         # df = pd.DataFrame({"x":Results[j],"y":Labels[j],'sum':Sum[j],'uncert':Uncert[j],"belief masses":Evidence[j]})
-        df = pd.DataFrame({"x":Results[j],"y":Labels[j],"uncert":Uncert[j],
-                            "energy":Energy[j],
-                            "Energy_softmax":Energy_softmax[j],
-                            "Energy_evidence":Energy_evidence[j],
-                            "Energy_alpha":Energy_alpha[j],
-                            "Energy_Mass":Energy_Mass[j],
-                            'entropy':Entropy[j],
-                            'calibration':calibration[j],
-                            "confidence_alea_uncert":conf[j],
-                            "entropy_of_expected":entropy_of_exp[j],
-                            "expected_entropy":expected_entropy[j],
-                            "mutual_information":mutual_info[j],
-                            "EPKL":epkl[j],
-                            "differential_entropy":dentropy[j],
-                          })
+        results = {"x":Results[j],"y":Labels[j]}
+        if 'energy' in values:
+            results["energy"]=Energy[j]
+        if 'entropy' in values:
+            results['entropy']=Entropy[j]
+        if 'calibration' in values:
+            results['calibration']=calibration[j]
+        if 'uncert' in values:
+            results['uncert']=Uncert[j]
+#         {"x":Results[j],"y":Labels[j],
+#                         # "confidence_alea_uncert":conf[j],
+#                         # "entropy_of_expected":entropy_of_exp[j],
+#                         # "expected_entropy":expected_entropy[j],
+#                         # "mutual_information":mutual_info[j],
+#                         # "EPKL":epkl[j],
+#                         # "differential_entropy":dentropy[j],
+#                       }
+        # print(results)
+        df = pd.DataFrame(results)
         conditions = [df['x'] == df['y'],df['x'] != df['y']]
         choices = [1, 0]
         #create new column in DataFrame that displays results of comparisons
         df['correct'] = np.int32(np.select(conditions, choices, default=None))
         Outputs.append(df)
     return Outputs
-
 
 def calculateBranching(outputs,metrics=["energy"], threshold=None, main_exit_included=False,plot=True, exit_labels=['exit_1']):
     '''
@@ -352,7 +364,188 @@ def calculateBranching(outputs,metrics=["energy"], threshold=None, main_exit_inc
         with pd.option_context('expand_frame_repr', False):
             print (df)
 
+
+def buildComparePlot(ID,OOD,metrics=["energy"], threshold=None, exit=-1, legend=["In Distribution","Out of Distribution"],main_exit_included=True,plot=True,exit_labels=['exit_1']):
+    '''
+    Depricated alternative name for EvaluateOOD
+    '''
+    return EvaluateOOD(ID,OOD,metrics, threshold, exit, legend,main_exit_included,plot,exit_labels)
+
+def EvaluateOOD(ID,OOD,metrics=["energy"], threshold=None, exit=-1, legend=["In Distribution","Out of Distribution"],main_exit_included=True,plot=True,exit_labels=['exit_1']):
+    '''
+    Build an evaluation plot of the branched model's performance on ID and OOD datasets.
+
+    ::Variables::
+    ID: in-distribution dataset
+    OOD: out of distribution dataset
+    metrics: list of strings of metrics to evaluate branch results with. can be any of the following: ["gmean", "mean", "PR_AUC"]
+    exit: #if a specific exit number is specified, only output the results of that exit. counts from 0 - N, with 0 being the main exit. -1 returns all exits
+    legend: specify a legend to use for the plot
+    main_exit_included: specify if the last exit must answer all inputs recieved, if False, it will use the threshold to accept and reject inputs
+    plot: choose to produce a plot or just the table of branch results
+    exit_labels: what labels to use for the exits, defaults to "exit_N" 
+    '''
+    lessThanMetrics = ["energy","uncert","entropy"]
+    if type(metrics) is not list:
+        metrics = [metrics]
+    for j, metric in enumerate(metrics):
+        print("metric: ", metric, "threshold: ",threshold)
+        rollOver_ID_indices = pd.Index([])
+        rollOver_OOD_indices = pd.Index([])
+        Exit_Name=[]
+        _ID = ID.copy()
+        _OOD = OOD.copy()
+        _ID.append(_ID.pop(0))
+        _OOD.append(_OOD.pop(0))
+        Accepted_df = pd.DataFrame()
+        Input_ID=[]
+        Input_OOD=[]
+        Accepted_list =[]
+        Accepted_ID_list = []
+        Accepted_OOD_list = []
+        Acceptance_correct =[]
+        Input_predictions =[]
+        Accepted_Ratio_list=[]
+        Accepted_Accuracy_list=[]
+        Branch_flops = []
+        Thresholds=[]
+        Test_accuracy =[]
+        Rollover_accuracy=[]
+        Results=[]
+        
+        if exit > 0: #if a specific exit number is specified, only output the results of that exit.
+            _ID = [_ID[max(exit-1,0)]]
+            _OOD = [_OOD[max(exit-1,0)]]
+            exit_labels=['exit_{}'.format(exit)]
+        for i, (output_ID, output_OOD) in enumerate(zip(_ID, _OOD)): 
+            Test_accuracy.append(len(output_ID.loc[(output_ID["correct"] == True)])/len(output_ID))
+            if threshold:
+                if type(threshold) is list:
+                    if i >= len(threshold): #no threshold in the array so treat as None.
+                        continue
+                    _threshold = threshold[i]
+                    print("threshold",_threshold)
+                else:
+                    _threshold = threshold
+                if _threshold == "mean":
+                    Correct = output_ID.loc[(output_ID["correct"] == True)]
+                    _threshold = np.array(Correct[metric]).mean()
+                if _threshold == "gmean":
+                    AUC_thresholds = calc_AUC(output_ID, metrics=metric, plot = False)
+                    _threshold = AUC_thresholds[j]
+                if _threshold == "PR_AUC":
+                    precision_, recall_, proba = precision_recall_curve(output_ID['correct'], output_ID[metric])
+                    _threshold = sorted(list(zip(np.abs(precision_ - recall_), proba)), key=lambda i: i[0], reverse=False)[0][1]
+                else:
+                    _threshold = np.float32(_threshold)
+
+            if len(rollOver_ID_indices)>0:
+                # print("rollover enabled, {} ID predictions provided".format(len(rollOver_ID_indices)))
+                output_ID = output_ID.iloc[rollOver_ID_indices]
+            if len(rollOver_OOD_indices)>0:
+                # if plot:
+                # print("rollover enabled, {} OOD predictions provided".format(len(rollOver_OOD_indices)))
+                output_OOD = output_OOD.iloc[rollOver_OOD_indices]
+            
+            legend = ["threshold","correct","incorrect", "OOD"]
+            Correct = output_ID.loc[(output_ID['correct'] == True)]
+            Incorrect = output_ID.loc[(output_ID['correct'] == False)]
+            if plot:
+                _ = plt.hist(Correct[metric].tolist(), bins=100)  # arguments are passed to np.histogram
+                _ = plt.hist(Incorrect[metric].tolist(), bins=100,color ="red", alpha = 0.5)  # arguments are passed to np.histogram
+                _ = plt.hist(output_OOD[metric].tolist(), bins=100,color="grey",alpha=0.5)  # arguments are passed to np.histogram
+
+            if plot:
+                plt.axvline(x=_threshold, color='k', linestyle='--',label="threshold")
+                plt.title(metric + " outliers")
+                plt.legend(legend)
+                plt.xlabel("entropy")
+                plt.ylabel("frequency")
+                plt.show()
+            if main_exit_included and i == len(_ID)-1 :
+                Exit_Name.append("Main_exit")
+                _threshold
+                if plot:
+                    print("main_exit")
+                OOD_accepted = output_OOD
+                OOD_rejected = None
+                ID_accepted = output_ID
+                ID_rejected = None
+                accepted_correct = ID_accepted.loc[(ID_accepted["correct"] == True )] #TP
+                rejected_correct = None
+                accepted_incorrect = ID_accepted.loc[(ID_accepted[metric] ==False)] #FP
+                rejected_incorrect = None
+                accepted_ID_acc = len(accepted_correct) / (len( ID_accepted))
+                overall_accepted_acc = len(accepted_correct) / (len( ID_accepted) + len(OOD_accepted))
+                _threshold = "NA"
+            else:
+                if metric in lessThanMetrics: ## metrics that require less than metric
+                    OOD_accepted = output_OOD.loc[(output_OOD[metric].tolist() <= _threshold)] #FP
+                    OOD_rejected = output_OOD.loc[(output_OOD[metric].tolist() > _threshold)] #TN
+                    ID_accepted = output_ID.loc[(output_ID[metric] <= _threshold)] #TP
+                    ID_rejected = output_ID.loc[(output_ID[metric] > _threshold)] #FN
+
+                    accepted_correct = ID_accepted.loc[(ID_accepted["correct"] == True )] #TP
+                    rejected_correct = ID_rejected.loc[(ID_rejected["correct"] == True)]  #FN
+                    accepted_incorrect = ID_accepted.loc[(ID_accepted[metric] ==False)] #FP
+                    rejected_incorrect = ID_rejected.loc[(ID_rejected[metric] ==False)] #TN
+
+                    accepted_ID_acc = len(accepted_correct) / (len( ID_accepted))
+                    overall_accepted_acc = len(accepted_correct) / (len( ID_accepted) + len(OOD_accepted))
+                else: ### metrics that require greater than metric
+                    OOD_accepted = output_OOD.loc[(output_OOD[metric].tolist() >= _threshold)] #FP
+                    OOD_rejected = output_OOD.loc[(output_OOD[metric].tolist() < _threshold)] #TN
+                    ID_accepted = output_ID.loc[(output_ID[metric] >= _threshold)] #TP
+                    ID_rejected = output_ID.loc[(output_ID[metric] < _threshold)] #FN
+
+                    accepted_correct = ID_accepted.loc[(ID_accepted["correct"] == True )] #TP
+                    rejected_correct = ID_rejected.loc[(ID_rejected["correct"] == True)]  #FN
+                    accepted_incorrect = ID_accepted.loc[(ID_accepted[metric] ==False)] #FP
+                    rejected_incorrect = ID_rejected.loc[(ID_rejected[metric] ==False)] #TN
+                    accepted_ID_acc = len(accepted_correct) / (len( ID_accepted))
+                    overall_accepted_acc = len(accepted_correct) / (len( ID_accepted) + len(OOD_accepted))
+                rollOver_ID_indices = ID_rejected.index
+                rollOver_OOD_indices = OOD_rejected.index
+                if i >= len(exit_labels):
+                    exit_labels.append("exit_{}".format(i+1))
+                print(exit_labels)
+                Exit_Name.append(exit_labels[i])
+            Thresholds.append(_threshold)
+            
+            Results.append(accepted_correct + accepted_incorrect)
+            Input_ID.append(len(output_ID))
+            Input_OOD.append(len(output_OOD))
+            Accepted_ID_list.append(len(ID_accepted))
+            Accepted_OOD_list.append(len(OOD_accepted))
+            Accepted_Ratio_list.append(len(ID_accepted)/(len(ID_accepted) + len(OOD_accepted)))
+            Acceptance_correct.append(len(accepted_correct))
+            Accepted_Accuracy_list.append(overall_accepted_acc)
+        df = pd.DataFrame({
+        "Exit_Name":Exit_Name,
+        "ID_Inputs":Input_ID,
+        "OOD_Inputs":Input_OOD,
+        "Test_Accuracy":Test_accuracy,
+        # "RollOver_Accuracy":Rollover_accuracy,
+        "Threshold":Thresholds,
+        "Accepted ID":Accepted_ID_list,
+        "Accepted OOD":Accepted_OOD_list,
+            
+        "Accepted_Correct":Acceptance_correct,
+        "Accepted_ID_Ratio":Accepted_Ratio_list,
+        "Acceptance_Accuracy":Accepted_Accuracy_list,
+
+        # "Flops":Branch_flops,
+        # "Cost Ratio":,                                  
+                        })
+        with pd.option_context('expand_frame_repr', False):
+            print (df)
+
+
 def buildCompareDistribPlot(ID,OOD,metrics=["energy"], threshold=None, legend=["In Distribution","Out of Distribution"],main_exit_included=True,plot=True,exit_labels=['exit_1']):
+        '''
+        Deprecated, use EvaluateOOD
+        '''
+
         lessThanMetrics = ["energy","uncert","entropy"]
         if type(metrics ) is not list:
             metrics = [metrics]
@@ -364,9 +557,9 @@ def buildCompareDistribPlot(ID,OOD,metrics=["energy"], threshold=None, legend=["
             _ID = ID.copy()
             _OOD = OOD.copy()
                 # print(_branch_predictions)
-            if main_exit_included:
-                _ID.append(_ID.pop(0))
-                _OOD.append(_OOD.pop(0))
+            # if main_exit_included:
+            _ID.append(_ID.pop(0))
+            _OOD.append(_OOD.pop(0))
             Accepted_df = pd.DataFrame()
             Input_ID=[]
             Input_OOD=[]
@@ -410,7 +603,7 @@ def buildCompareDistribPlot(ID,OOD,metrics=["energy"], threshold=None, legend=["
                         Correct = output_ID.loc[(output_ID["correct"] == True)]
                         _threshold = np.array(Correct[metric]).mean()
                     if _threshold == "gmean":
-                        AUC_thresholds = calc_AUC(output_ID, metrics=metrics,plot = False)
+                        AUC_thresholds = calc_AUC(output_ID, metrics=metric,plot = False)
                         _threshold = AUC_thresholds[j]
                     if _threshold == "PR_AUC":
                         precision_, recall_, proba = precision_recall_curve(output_ID['correct'], output_ID[metric])

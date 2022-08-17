@@ -141,7 +141,7 @@ def define_compile_model():
   
   return model
 
-base_model = tf.keras.applications.inception_v3.InceptionV3(input_shape=(32, 32, 3),
+base_model = tf.keras.applications.inception_v3.InceptionV3(input_shape=(224, 224, 3),
      weights='imagenet',include_top=False)
 
 
