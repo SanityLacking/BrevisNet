@@ -16,8 +16,8 @@ Early exiting is a deep learning model augmentation technique where additional c
 This repository contains code to build and run early exit models in tensorflow 2 along with our novel contributions of loss function, model uncertanity measurement and exit thresholding.
 
 # How to use this repository?
-/brevis contains all the nessecary code to build and run the early exiting models.
-/Notebooks contains examples of building and evaluating the early exiting models on a vareity of different DNN model types.
+/brevis contains all the nessecary code to build and run the early exiting models. <br>
+/Notebooks contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
 
 # Setup
 
