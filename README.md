@@ -16,8 +16,8 @@ Early exiting is a deep learning model augmentation technique where additional c
 This repository contains code to build and run early exit models in tensorflow 2 along with our novel contributions of loss function, model uncertanity measurement and exit thresholding.
 
 # How to use this repository?
-/brevis contains all the nessecary code to build and run the early exiting models. <br>
-/[Notebooks](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks) contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
+[/brevis](https://github.com/SanityLacking/BrevisNet/tree/main/brevis) contains all the nessecary code to build and run the early exiting models. <br>
+[/notebooks](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks) contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
 
 # Requirements
   Tensorflow 2.+ <br>
@@ -52,8 +52,9 @@ pip install neptune-tensorflow-keras
 ```
 and add your project name and credentials to neptuneCredentials.py
 
-<hr>
-Special thanks to [BranchyNet](https://github.com/kunglab/branchynet) who originally proposed the idea of branching models, and whose work this repo is inspired by. <BR>
-Dirichlet Uncertanity loss functions inspired by [Andrey Malinin](https://github.com/KaosEngineer/PriorNetworks)<br>
-Energy based loss functions inspired by [Sven Elflein](https://github.com/selflein/MA-EBM) and [Will Grathwohl](https://github.com/wgrathwohl/JEM)<br>
+
+# Recognitions
+Special thanks to [BranchyNet](https://github.com/kunglab/branchynet) who originally proposed the idea of branching models, and whose work this repo is inspired by. <br>
+Dirichlet Uncertanity loss functions inspired by works from [Andrey Malinin](https://github.com/KaosEngineer/PriorNetworks)<br>
+Energy based loss functions inspired by works from  [Sven Elflein](https://github.com/selflein/MA-EBM) and [Will Grathwohl](https://github.com/wgrathwohl/JEM)<br>
 
