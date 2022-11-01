@@ -17,12 +17,35 @@ This repository contains code to build and run early exit models in tensorflow 2
 
 # How to use this repository?
 /brevis contains all the nessecary code to build and run the early exiting models. <br>
-/Notebooks contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
+/[Notebooks](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks) contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
+
+# Requirements
+  Tensorflow 2.+ <br>
+  Python 3.7 + <br>
+  Jupyter <br>
 
 # Setup
 
 Clone the Repository 
 ```
 git clone https://github.com/SanityLacking/BrevisNet.git
-
 ```
+Access the notebooks via Jupyter
+```
+cd BrevisNet
+cd notebooks
+jupyter lab
+```
+Open [examplebranching.ipynb]()
+
+# Logging
+
+This project uses [neptuneAI](https://www.google.com) for logging of training data, this is completely optional and only active if the module is installed.
+to enable it, 
+```
+pip install neptune-client
+pip install neptune-tensorflow-keras
+```
+and add your project name and credentials to neptuneCredentials.py
+
+
