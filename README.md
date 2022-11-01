@@ -40,8 +40,7 @@ Open [examplebranching.ipynb](https://github.com/SanityLacking/BrevisNet/blob/ma
 [notebooks/experiments](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks/experiments) contains notebooks to branch and evaluate each of the tested models from the journal experiment. <br>
 
 # Model Building
-
-
+Pre-trained models can be built using scripts in [/Brevis/Raw_Models/](https://github.com/SanityLacking/BrevisNet/tree/main/brevis/raw_models). Each model was trained on Cifar10 for a minimum of 50 epochs until convergence. 
 
 # Logging
 
