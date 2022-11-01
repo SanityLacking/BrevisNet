@@ -21,7 +21,12 @@ __pycache__/
 **/notebooks/*.csv
 **/profiles/*
 **/models/*.txt
+#datasetfiles
+**/notebooks/input
+
+## images
 *\images
+
 #neptune
 *\.neptune
 **/*.xlsx
@@ -33,6 +38,7 @@ __pycache__/
 **/MNIST_data/*
 # C extensions
 *.so
+
 
 # Distribution / packaging
 .Python
