@@ -52,4 +52,8 @@ pip install neptune-tensorflow-keras
 ```
 and add your project name and credentials to neptuneCredentials.py
 
+<hr>
+Special thanks to [BranchyNet](https://github.com/kunglab/branchynet) who originally proposed the idea of branching models, and whose work this repo is inspired by. <BR>
+Dirichlet Uncertanity loss functions inspired by [Andrey Malinin](https://github.com/KaosEngineer/PriorNetworks)<br>
+Energy based loss functions inspired by [Sven Elflein](https://github.com/selflein/MA-EBM) and [Will Grathwohl](https://github.com/wgrathwohl/JEM)<br>
 
