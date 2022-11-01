@@ -49,11 +49,13 @@ class BranchModel(tf.keras.Model):
     """
     Branched model sub-class. Acts as a drop in replacement keras model class, with the additional functionality of adding branches to the model.
     """
+
+
     def __init__(self, inputs=None, outputs=None, name="", model=None, transfer=True, custom_objects=None):
         if custom_objects is None:
             custom_objects = {}
         ## add default custom objects to the custom objects dictionary, this saves having to define them everytime.
-        custom_objects = {**branching.default_custom_objects,**custom_objects}
+        # custom_objects = {**self.default_custom_objects,**custom_objects}
         if inputs  is None and model is None and name is not "":
             model = tf.keras.models.load_model(name,custom_objects=custom_objects)
             self.saveLocation = name
