@@ -18,7 +18,7 @@ __pycache__/
 */imagenette2-320/*
 **/results/*
 **/logs_entropy/*
-**/notebooks/*.csv
+**/notebooks/*.csv/*
 **/profiles/*
 **/models/*.txt
 #datasetfiles
