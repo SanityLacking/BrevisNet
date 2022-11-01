@@ -36,7 +36,12 @@ cd BrevisNet
 cd notebooks
 jupyter lab
 ```
-Open [examplebranching.ipynb]()
+Open [examplebranching.ipynb](https://github.com/SanityLacking/BrevisNet/blob/main/notebooks/Example_branching.ipynb) for a walk through of how the module is used. <br>
+[notebooks/experiments](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks/experiments) contains notebooks to branch and evaluate each of the tested models from the journal experiment. <br>
+
+# Model Building
+
+
 
 # Logging
 
