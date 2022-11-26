@@ -24,7 +24,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 from brevis.utils import *
 import brevis as branching
-import brevis.core_v2 as brevis
+import brevis.core as brevis
 from scipy.special import gammaln, digamma
 from scipy.special import logsumexp
 
@@ -33,7 +33,7 @@ def calc_AUC(output_df,metrics=['energy'],plot=False, pos_label = 0):
     AUC calculation function for list of output dataframes
     returns a list of threshold for the gmean of each set of outputs.    
     '''
-    lessThanMetrics = ["uncert","energy","entropy"]
+    lessThanMetrics = ["uncertainty","energy","entropy"]
     _thresholds = []
     y_test = np.int32(output_df['correct'])
     plots = []
@@ -113,19 +113,19 @@ def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10, alpha_correction=
 
 
 
-def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10, values =['energy', 'entropy', 'calibration']):
+def getPredictions(model, input_set, stopping_point=None,num_classes=10, threshold_type =['energy', 'entropy', 'uncertainty', 'calibration'],outliers=False):
     '''
         Function for collecting the model's predictions on a test set. 
         Returns a list of DataFrames for each exit of the model.    
     '''
     num_outputs = len(model.outputs) # the number of output layers for the purpose of providing labels
-    print("outputs",num_outputs)
-    print(values)
+    print("Outputs",num_outputs)
+    print("Evaluation values chosen: ", threshold_type)
     #     train_ds, test_ds, validation_ds = (dataset)
     Results=[]
     Pred=[]
     Labels =[]
-    Uncert = []
+    Uncertainty = []
     Outputs = pd.DataFrame()
     Energy = []
     Energy_softmax = []
@@ -142,13 +142,13 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10, 
     mutual_info=[]
     epkl=[]
     dentropy=[]
-    if 'energy' in values:
+    if 'energy' in threshold_type:
         print(True)
     for i in range(num_outputs):
         Results.append([])
         Pred.append([])
         Labels.append([])
-        Uncert.append([])
+        Uncertainty.append([])
         Energy.append([])
         Energy_softmax.append([])
         Energy_evidence.append([])
@@ -187,20 +187,20 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10, 
                 Results[k].append(np.argmax(prediction))
                 Labels[k].append(np.argmax(y[j]))
                 
-                if 'energy' in values:
+                if 'energy' in threshold_type:
                     Energy[k].append( -(logsumexp(np.array(prediction))))
-                if 'entropy' in values:
+                if 'entropy' in threshold_type:
                     Entropy[k].append(brevis.utils.calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
-                if 'calibration' in values:
+                if 'calibration' in threshold_type:
                     calibration[k].append(np.amax(tf.nn.softmax(prediction).numpy()))
-                if 'uncert' in values:
+                if 'uncertainty' in threshold_type:
                     evidence =tf.nn.softplus(prediction)
                     alpha = evidence +1
                     S = sum(alpha)
                     E = alpha - 1
                     Mass = alpha / S
                     u = num_classes / S
-                    Uncert[k].append(u.numpy().mean())
+                    Uncertainty[k].append(u.numpy().mean())
                 # Entropy[k].append(brevis.utils.calcEntropy_Tensors2(tf.nn.softmax(prediction)).numpy())
                 # dirch = evaluate.dirichlet_prior_network_uncertainty([prediction])
                 # # print(dirch)
@@ -213,16 +213,16 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10, 
     Outputs=[]
     for j in range(num_outputs):
 #         "probs":Pred[j],
-        # df = pd.DataFrame({"x":Results[j],"y":Labels[j],'sum':Sum[j],'uncert':Uncert[j],"belief masses":Evidence[j]})
+        # df = pd.DataFrame({"x":Results[j],"y":Labels[j],'sum':Sum[j],'uncertainty':uncertainty[j],"belief masses":Evidence[j]})
         results = {"x":Results[j],"y":Labels[j]}
-        if 'energy' in values:
+        if 'energy' in threshold_type:
             results["energy"]=Energy[j]
-        if 'entropy' in values:
+        if 'entropy' in threshold_type:
             results['entropy']=Entropy[j]
-        if 'calibration' in values:
+        if 'calibration' in threshold_type:
             results['calibration']=calibration[j]
-        if 'uncert' in values:
-            results['uncert']=Uncert[j]
+        if 'uncertainty' in threshold_type:
+            results['uncertainty']=Uncertainty[j]
 #         {"x":Results[j],"y":Labels[j],
 #                         # "confidence_alea_uncert":conf[j],
 #                         # "entropy_of_expected":entropy_of_exp[j],
@@ -238,6 +238,17 @@ def getPredictions_Energy(model, input_set, stopping_point=None,num_classes=10, 
         #create new column in DataFrame that displays results of comparisons
         df['correct'] = np.int32(np.select(conditions, choices, default=None))
         Outputs.append(df)
+    
+    ### moved check to indicate that results are outliers/OOD input and need to be labeled as always incorrect and outliers.
+    if outliers:
+        for i in Outputs:
+            i['correct']=0
+            i['outlier']=1
+    else:
+        for i in Outputs:            
+            i['outlier']=1
+
+
     return Outputs
 
 def calculateBranching(outputs,metrics=["energy"], threshold=None, main_exit_included=False,plot=True, exit_labels=['exit_1']):
@@ -245,7 +256,7 @@ def calculateBranching(outputs,metrics=["energy"], threshold=None, main_exit_inc
     Calculate the Correct/Incorrect performance of the threshold for the provided results. 
     for single exit models, set main_exit_included to False to not accept all results at last exit.        
     '''
-    lessThanMetrics = ["energy","uncert","entropy"]
+    lessThanMetrics = ["energy","uncertainty","entropy"]
     
     if type(outputs ) is not list: #if not a list, put dataframe in a list, this allows us to use the same function for single and multiple exit model results.
         num_outputs = 1
@@ -342,7 +353,7 @@ def calculateBranching(outputs,metrics=["energy"], threshold=None, main_exit_inc
                 plt.xlabel("entropy")
                 plt.ylabel("frequency")
                 plt.show()
-            # cumulativeClassification(output['correct'].tolist(),output['uncert'].tolist(),20,thresholdType="<=")
+            # cumulativeClassification(output['correct'].tolist(),output['uncertainty'].tolist(),20,thresholdType="<=")
                 print("-----------------")
         _Results = pd.concat(Results)
         # print(_Results)
@@ -385,7 +396,7 @@ def EvaluateOOD(ID,OOD,metrics=["energy"], threshold=None, exit=-1, legend=["In 
     plot: choose to produce a plot or just the table of branch results
     exit_labels: what labels to use for the exits, defaults to "exit_N" 
     '''
-    lessThanMetrics = ["energy","uncert","entropy"]
+    lessThanMetrics = ["energy","uncertainty","entropy"]
     if type(metrics) is not list:
         metrics = [metrics]
     for j, metric in enumerate(metrics):
@@ -546,7 +557,7 @@ def buildCompareDistribPlot(ID,OOD,metrics=["energy"], threshold=None, legend=["
         Deprecated, use EvaluateOOD
         '''
 
-        lessThanMetrics = ["energy","uncert","entropy"]
+        lessThanMetrics = ["energy","uncertainty","entropy"]
         if type(metrics ) is not list:
             metrics = [metrics]
         for j, metric in enumerate(metrics):

@@ -48,7 +48,7 @@ class branch:
                 targets = model.get_layer('targets').output
 
         #add targets as an input to the model so it can be used for the custom losses.
-        new_model = brevis.BranchModel(inputs=inputs, outputs=outputs,name = model.name, transfer=model.transfer, custom_objects=model.custom_objects)
+        new_model = brevis.BranchModel(inputs=inputs, outputs=outputs,name = model.name, custom_objects=model.custom_objects)
 
         if type(identifier) != list:
             identifier = [identifier]
