@@ -16,8 +16,8 @@ Early exiting is a deep learning model augmentation technique where additional c
 This repository contains code to build and run early exit models in tensorflow 2 along with our novel contributions of loss function, model uncertanity measurement and exit thresholding.
 
 # How to use this repository?
-/brevis contains all the nessecary code to build and run the early exiting models. <br>
-/[Notebooks](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks) contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
+[/brevis](https://github.com/SanityLacking/BrevisNet/tree/main/brevis) contains all the nessecary code to build and run the early exiting models. <br>
+[/notebooks](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks) contains examples of building and evaluating the early exiting models on a vareity of different DNN model types. <br>
 
 # Requirements
   Tensorflow 2.+ <br>
@@ -40,8 +40,7 @@ Open [examplebranching.ipynb](https://github.com/SanityLacking/BrevisNet/blob/ma
 [notebooks/experiments](https://github.com/SanityLacking/BrevisNet/tree/main/notebooks/experiments) contains notebooks to branch and evaluate each of the tested models from the journal experiment. <br>
 
 # Model Building
-
-
+Pre-trained models can be built using scripts in [/Brevis/Raw_Models/](https://github.com/SanityLacking/BrevisNet/tree/main/brevis/raw_models). Each model was trained on Cifar10 for a minimum of 50 epochs until convergence. 
 
 # Logging
 
@@ -53,4 +52,9 @@ pip install neptune-tensorflow-keras
 ```
 and add your project name and credentials to neptuneCredentials.py
 
+
+# Recognitions
+Special thanks to [BranchyNet](https://github.com/kunglab/branchynet) who originally proposed the idea of branching models, and whose work this repo is inspired by. <br>
+Dirichlet Uncertanity loss functions inspired by works from [Andrey Malinin](https://github.com/KaosEngineer/PriorNetworks)<br>
+Energy based loss functions inspired by works from  [Sven Elflein](https://github.com/selflein/MA-EBM) and [Will Grathwohl](https://github.com/wgrathwohl/JEM)<br>
 
