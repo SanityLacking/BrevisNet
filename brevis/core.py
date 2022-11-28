@@ -156,6 +156,26 @@ class BranchModel(tf.keras.Model):
         ''' compile the model with custom options, either ones provided here or ones already set'''
         super().compile(loss=loss, optimizer=optimizer, metrics=['accuracy'], **kwargs)
 
+
+
+    def setFrozenTraining(self,Frozen):
+        """ sets the trainable status of all main path layers in the model"""
+        if Frozen == True: 
+            print("Freezing Main Layers and setting branch layers training to true")
+            for i in range(len(self.layers)):
+                if "branch" in self.layers[i].name:
+                    self.layers[i].trainable = True
+                else: 
+                    self.layers[i].trainable = False               
+        else:
+            print("Setting Main Layers  and branch layers training to true")
+            for i in range(len(self.layers)):
+                self.layers[i].trainable = True
+                # print("setting ",self.layers[i].name," training to true")
+
+
+
+
     def setTrainable(self,trainable):
         """ sets the trainable status of all main path layers in the model"""
         if trainable == True: 
@@ -199,7 +219,7 @@ class BranchModel(tf.keras.Model):
         Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
         # custom_objects = {**self.default_custom_objects,**custom_objects} 
-        self.setTrainable(freeze) #Freeze main branch layers
+        # self.setTrainable(freeze) #Freeze main branch layers
         run_logdir = get_run_logdir(self.name)
         tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
         if saveName =="":
