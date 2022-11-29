@@ -1,0 +1,14 @@
+{
+	"folders": [
+        {
+            "path": "../../../Self_Distillation"
+        },
+        {
+            "path": "."
+        },
+        {
+            "path": "../Split_deployment_2"
+        }
+    ],
+    "settings": {}
+}
