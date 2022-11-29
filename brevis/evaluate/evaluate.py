@@ -530,7 +530,7 @@ def EvaluateOOD(ID,OOD,metrics=["energy"], threshold=None, exit=-1, legend=["In 
             Accepted_OOD_list.append(len(OOD_accepted))
             Accepted_Ratio_list.append(len(ID_accepted)/(len(ID_accepted) + len(OOD_accepted)))
             Acceptance_correct.append(len(accepted_correct))
-            Accepted_Accuracy_list.append(overall_accepted_acc)
+            Accepted_Accuracy_list.append(len(accepted_correct)/len(ID_accepted))
         df = pd.DataFrame({
         "Exit_Name":Exit_Name,
         "ID_Inputs":Input_ID,
