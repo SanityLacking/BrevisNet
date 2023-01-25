@@ -13,6 +13,14 @@ This Repository contains both the source models for building branching models ef
 
 Early exiting is a deep learning model augmentation technique where additional classfifier exits are added to pre-existing model. The added classifier exits and their produced predictions become potential results for a given input, and if chosen as the accepted output, mean that the rest of the model's layers do not need to be processed, saving time and energy.
 <br>
+<img src="https://user-images.githubusercontent.com/4435648/214493679-4f2f9364-e0bd-4336-a685-c1912c6d1d58.jpg" width=50% height=50%>
+<br>
+*Each added branch to the model produces a potential prediction that can be chosen as the accepted result.* <br>
+
+<img src="https://user-images.githubusercontent.com/4435648/214499532-3ec1e561-47e2-48dc-be09-fceeac5cd9ab.png" width=50% height=50%> <br>
+*Brevis Net reduces the average processing cost of predictions across a range of classification DNN models.*<br>
+
+
 This repository contains code to build and run early exit models in tensorflow 2 along with our novel contributions of loss function, model uncertanity measurement and exit thresholding.
 
 # How to use this repository?
